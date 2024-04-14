@@ -14,6 +14,7 @@ const (
     INT = "INT"
 
     ASSIGN = "="
+    BANG = "!"
     PLUS = "+"
 
     COMMA = ","
@@ -26,6 +27,9 @@ const (
 
     FUNCTION = "FUNCTION"
     LET = "LET"
+
+    EQUALS = "=="
+    NOT_EQUALS = "!="
 )
 
 func LookupIdentifier(identifier string) TokenType {

@@ -73,3 +73,23 @@ func TestNextToken(t *testing.T) {
         }
     }
 }
+
+func TestDoubleTokens(t *testing.T) {
+    equals := `==`
+
+    l := New(equals)
+    tok := l.NextToken()
+
+    if tok.Type != token.EQUALS {
+        t.Fatalf("Expected '==', got %q", tok.Type)
+    }
+
+    not_equals := `!=`
+
+    notEqualsLexer := New(not_equals)
+    readToken := notEqualsLexer.NextToken()
+
+    if readToken.Type != token.NOT_EQUALS {
+        t.Fatalf("Expected '!=', got %q", tok.Type)
+    }
+}
