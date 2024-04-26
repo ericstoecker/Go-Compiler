@@ -1,9 +1,18 @@
 package main
 
-import "fmt"
-
-import "rsc.io/quote"
+import (
+    "fmt"
+    "os"
+    "os/user"
+    "example/hello/repl"
+)
 
 func main() {
-    fmt.Println(quote.Go())
+    user, err := user.Current()
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("Hello %s! This is the Monkey programming language!\n", user.Username)
+    fmt.Printf("Feel free to type in commands\n")
+    repl.Start(os.Stdin, os.Stdout)
 }
