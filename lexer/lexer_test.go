@@ -93,3 +93,4 @@ func TestDoubleTokens(t *testing.T) {
         t.Fatalf("Expected '!=', got %q", tok.Type)
     }
 }
+
