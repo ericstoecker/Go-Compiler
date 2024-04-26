@@ -3,62 +3,64 @@ package token
 type TokenType string
 
 type Token struct {
-    Type TokenType
-    Literal string
+	Type    TokenType
+	Literal string
 }
 
 const (
-    ILLEGAL = "ILLEGAL"
-    EOF = "EOF"
-    IDENT = "IDENT"
-    INT = "INT"
+	ILLEGAL = "ILLEGAL"
+	EOF     = "EOF"
+	IDENT   = "IDENT"
+	INT     = "INT"
 
-    ASSIGN = "="
-    BANG = "!"
-    PLUS = "+"
-    MINUS = "-"
+	ASSIGN = "="
+	BANG   = "!"
+	PLUS   = "+"
+	MINUS  = "-"
 
-    SLASH = "/"
-    ASTERIK = "*"
-    LT = "<"
-    GT = ">"
+	SLASH   = "/"
+	ASTERIK = "*"
+	LT      = "<"
+	GT      = ">"
 
-    COMMA = ","
-    SEMICOLON = ";"
+	COMMA     = ","
+	SEMICOLON = ";"
 
-    LPAREN = "("
-    RPAREN = ")"
-    LBRACE = "{"
-    RBRACE = "}"
+	LPAREN = "("
+	RPAREN = ")"
+	LBRACE = "{"
+	RBRACE = "}"
 
-    FUNCTION = "FUNCTION"
-    LET = "LET"
+	FUNCTION = "FUNCTION"
+	LET      = "LET"
 
-    EQUALS = "=="
-    NOT_EQUALS = "!="
+	EQUALS        = "=="
+	NOT_EQUALS    = "!="
+	LESS_EQUAL    = "<="
+	GREATER_EQUAL = ">="
 
-    IF = "if"
-    ELSE = "else"
+	IF   = "if"
+	ELSE = "else"
 
-    RETURN = "return"
+	RETURN = "return"
 
-    TRUE = "true"
-    FALSE = "false"
+	TRUE  = "true"
+	FALSE = "false"
 )
 
 func LookupIdentifier(identifier string) TokenType {
-    if tok, ok := keywords[identifier]; ok {
-        return tok
-    }
-    return IDENT
+	if tok, ok := keywords[identifier]; ok {
+		return tok
+	}
+	return IDENT
 }
 
-var keywords = map[string]TokenType {
-    "fn": FUNCTION,
-    "let": LET,
-    "if": IF,
-    "else": ELSE,
-    "return": RETURN,
-    "true": TRUE,
-    "false": FALSE,
+var keywords = map[string]TokenType{
+	"fn":     FUNCTION,
+	"let":    LET,
+	"if":     IF,
+	"else":   ELSE,
+	"return": RETURN,
+	"true":   TRUE,
+	"false":  FALSE,
 }

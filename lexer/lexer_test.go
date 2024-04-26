@@ -17,6 +17,9 @@ func TestNextToken(t *testing.T) {
 
     ==
     !=
+    <=
+    >=
+    !
     `
 
 	tests := []struct {
@@ -61,6 +64,9 @@ func TestNextToken(t *testing.T) {
 		{token.SEMICOLON, ";"},
 		{token.EQUALS, "=="},
 		{token.NOT_EQUALS, "!="},
+		{token.LESS_EQUAL, "<="},
+		{token.GREATER_EQUAL, ">="},
+		{token.BANG, "!"},
 		{token.EOF, ""},
 	}
 
