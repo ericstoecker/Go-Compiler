@@ -32,25 +32,9 @@ func (l *Lexer) NextToken() token.Token {
 
 	switch l.ch {
 	case '=':
-		nextChar := l.peek()
-		if nextChar == '=' {
-			tok.Type = token.EQUALS
-			ch := l.ch
-			l.readChar()
-			tok.Literal = string(ch) + string(l.ch)
-		} else {
-			tok = newToken(token.ASSIGN, l.ch)
-		}
+		tok = l.readTwoCharToken(tok, '=', token.EQUALS, token.ASSIGN)
 	case '!':
-		nextChar := l.peek()
-		if nextChar == '=' {
-			tok.Type = token.NOT_EQUALS
-			ch := l.ch
-			l.readChar()
-			tok.Literal = string(ch) + string(l.ch)
-		} else {
-			tok = newToken(token.BANG, l.ch)
-		}
+		tok = l.readTwoCharToken(tok, '=', token.NOT_EQUALS, token.BANG)
 	case ';':
 		tok = newToken(token.SEMICOLON, l.ch)
 	case ',':
@@ -72,15 +56,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '*':
 		tok = newToken(token.ASTERIK, l.ch)
 	case '<':
-		nextChar := l.peek()
-		if nextChar == '=' {
-			tok.Type = token.LESS_EQUAL
-			ch := l.ch
-			l.readChar()
-			tok.Literal = string(ch) + string(l.ch)
-		} else {
-			tok = newToken(token.LT, l.ch)
-		}
+		tok = l.readTwoCharToken(tok, '=', token.LESS_EQUAL, token.LT)
 	case '>':
 		tok = l.readTwoCharToken(tok, '=', token.GREATER_EQUAL, token.GT)
 	case 0:
