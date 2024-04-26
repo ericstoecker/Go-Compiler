@@ -82,15 +82,7 @@ func (l *Lexer) NextToken() token.Token {
 			tok = newToken(token.LT, l.ch)
 		}
 	case '>':
-		nextChar := l.peek()
-		if nextChar == '=' {
-			tok.Type = token.GREATER_EQUAL
-			ch := l.ch
-			l.readChar()
-			tok.Literal = string(ch) + string(l.ch)
-		} else {
-			tok = newToken(token.GT, l.ch)
-		}
+		tok = l.readTwoCharToken(tok, '=', token.GREATER_EQUAL, token.GT)
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
@@ -124,10 +116,6 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
-func newToken(tokenType token.TokenType, ch byte) token.Token {
-	return token.Token{Type: tokenType, Literal: string(ch)}
-}
-
 func (l *Lexer) readIdentifier() string {
 	position := l.position
 	for isLetter(l.ch) {
@@ -136,16 +124,33 @@ func (l *Lexer) readIdentifier() string {
 	return l.input[position:l.position]
 }
 
-func isLetter(ch byte) bool {
-	return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ch == '_'
-}
-
 func (l *Lexer) readNumber() string {
 	position := l.position
 	for isDigit(l.ch) {
 		l.readChar()
 	}
 	return l.input[position:l.position]
+}
+
+func (l *Lexer) readTwoCharToken(tok token.Token, nextByte byte, nextType token.TokenType, alternative token.TokenType) token.Token {
+	nextChar := l.peek()
+	if nextChar == nextByte {
+		tok.Type = nextType
+		ch := l.ch
+		l.readChar()
+		tok.Literal = string(ch) + string(l.ch)
+	} else {
+		tok = newToken(alternative, l.ch)
+	}
+	return tok
+}
+
+func isLetter(ch byte) bool {
+	return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ch == '_'
+}
+
+func newToken(tokenType token.TokenType, ch byte) token.Token {
+	return token.Token{Type: tokenType, Literal: string(ch)}
 }
 
 func isDigit(ch byte) bool {
