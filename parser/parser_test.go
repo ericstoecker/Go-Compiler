@@ -60,3 +60,22 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	}
 	return true
 }
+
+func TestErrorHandling(t *testing.T) {
+	input := `
+    let x 5
+    `
+	l := lexer.New(input)
+	p := New(l)
+
+	p.ParseProgram()
+
+	errors := p.Errors
+	if errors == nil {
+		t.Fatalf("Expected error. Got nil")
+	}
+
+	if len(errors) != 1 {
+		t.Fatalf("Expected 1 error. Got %d", len(errors))
+	}
+}

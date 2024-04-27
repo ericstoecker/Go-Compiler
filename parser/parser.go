@@ -11,6 +11,8 @@ type Parser struct {
 
 	currentToken token.Token
 	peekToken    token.Token
+
+	Errors []string
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -28,6 +30,7 @@ func (p *Parser) nextToken() {
 }
 
 func (p *Parser) ParseProgram() *ast.Program {
+	p.Errors = make([]string, 0)
 	var statements []ast.Statement
 
 	for p.currentToken.Type != token.EOF {
@@ -55,8 +58,7 @@ func (p *Parser) parseStatement() ast.Statement {
 
 	p.nextToken()
 	if p.currentToken.Type != token.ASSIGN {
-		// TODO add error handling
-		// extract this
+		p.Errors = append(p.Errors, "Expected an ASSIGN")
 	}
 	p.nextToken()
 
