@@ -17,9 +17,7 @@ func TestLetStatement(t *testing.T) {
 	p := New(l)
 
 	program := p.ParseProgram()
-	if program == nil {
-		t.Fatalf("ParserProgram() returned nil")
-	}
+	expectNotNil(t, program)
 
 	if len(program.Statements) != 3 {
 		t.Fatalf("Program has wrong number of statements. Expected 3. Got %d", len(program.Statements))
@@ -41,24 +39,29 @@ func TestLetStatement(t *testing.T) {
 	}
 }
 
-func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
-	if s.TokenLiteral() != "let" {
-		t.Errorf("s.TokenLiteral not 'let'. Got '%q'", s.TokenLiteral())
-		return false
-	}
-	lst, ok := s.(*ast.LetStatement)
-	if !ok {
-		t.Errorf("Not a let statement.")
+func TestReturnStatement(t *testing.T) {
+	input := `
+    return 10;
+    return foobar;
+    return;
+    `
+
+	l := lexer.New(input)
+	p := New(l)
+
+	program := p.ParseProgram()
+	expectNotNil(t, program)
+
+	if len(program.Statements) != 3 {
+		t.Fatalf("Program has wrong numer of statements. Expected 3. Got %d", len(program.Statements))
 	}
 
-	if lst.Name.Value != name {
-		t.Errorf("Expected lst.Name.Value to be %s. Got '%s'", name, lst.Name.Value)
+	for _, stmt := range program.Statements {
+		_, ok := stmt.(*ast.ReturnStatement)
+		if !ok {
+			t.Errorf("Not a return statement")
+		}
 	}
-
-	if lst.Name.TokenLiteral() != name {
-		t.Errorf("Expected lst.Name.TokenLiteral() to be %s. Got '%s'", name, lst.Name.TokenLiteral())
-	}
-	return true
 }
 
 func TestErrorHandling(t *testing.T) {
@@ -78,4 +81,30 @@ func TestErrorHandling(t *testing.T) {
 	if len(errors) != 1 {
 		t.Fatalf("Expected 1 error. Got %d", len(errors))
 	}
+}
+
+func expectNotNil(t *testing.T, program *ast.Program) {
+	if program == nil {
+		t.Fatalf("ParseProgram() returned nil")
+	}
+}
+
+func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
+	if s.TokenLiteral() != "let" {
+		t.Errorf("s.TokenLiteral not 'let'. Got '%q'", s.TokenLiteral())
+		return false
+	}
+	lst, ok := s.(*ast.LetStatement)
+	if !ok {
+		t.Errorf("Not a let statement.")
+	}
+
+	if lst.Name.Value != name {
+		t.Errorf("Expected lst.Name.Value to be %s. Got '%s'", name, lst.Name.Value)
+	}
+
+	if lst.Name.TokenLiteral() != name {
+		t.Errorf("Expected lst.Name.TokenLiteral() to be %s. Got '%s'", name, lst.Name.TokenLiteral())
+	}
+	return true
 }

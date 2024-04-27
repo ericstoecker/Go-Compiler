@@ -51,23 +51,38 @@ func (p *Parser) parseExpression() ast.Expression {
 }
 
 func (p *Parser) parseStatement() ast.Statement {
-
-	stmt := &ast.LetStatement{Token: p.currentToken}
-	p.nextToken()
-	stmt.Name = &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
-
-	if !p.expectPeek(token.ASSIGN) {
-		p.Errors = append(p.Errors, "Expected a "+string(token.ASSIGN))
-	}
-	p.nextToken()
-
-	stmt.Value = p.parseExpression()
-
-	if p.currentTokenIs(token.SEMICOLON) {
+	switch p.currentToken.Type {
+	case token.LET:
+		stmt := &ast.LetStatement{Token: p.currentToken}
 		p.nextToken()
-	}
+		stmt.Name = &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 
-	return stmt
+		if !p.expectPeek(token.ASSIGN) {
+			p.Errors = append(p.Errors, "Expected a "+string(token.ASSIGN))
+		}
+		p.nextToken()
+
+		p.nextToken()
+
+		if p.currentTokenIs(token.SEMICOLON) {
+			p.nextToken()
+		}
+		return stmt
+	case token.RETURN:
+		stmt := &ast.ReturnStatement{Token: p.currentToken}
+
+		for !p.currentTokenIs(token.SEMICOLON) {
+			p.nextToken()
+		}
+
+		if p.currentTokenIs(token.SEMICOLON) {
+			p.nextToken()
+		}
+
+		return stmt
+	default:
+		return nil
+	}
 }
 
 func (p *Parser) expectPeek(expected token.TokenType) bool {
