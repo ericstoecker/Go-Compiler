@@ -39,6 +39,11 @@ func (p *Parser) ParseProgram() *ast.Program {
 }
 
 func (p *Parser) parseExpression() ast.Expression {
+	// switch p.currentToken.Type {
+	// case token.INT:
+	// 	return &ast.Identifier{}
+	// }
+	p.nextToken()
 	return &ast.Identifier{}
 }
 
@@ -47,11 +52,19 @@ func (p *Parser) parseStatement() ast.Statement {
 	lstmt := &ast.LetStatement{Token: p.currentToken}
 	p.nextToken()
 	lstmt.Name = &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+
 	p.nextToken()
+	if p.currentToken.Type != token.ASSIGN {
+		// TODO add error handling
+		// extract this
+	}
+	p.nextToken()
+
 	lstmt.Value = p.parseExpression()
-	p.nextToken()
-	p.nextToken()
-	p.nextToken()
+
+	if p.currentToken.Type == token.SEMICOLON {
+		p.nextToken()
+	}
 
 	return lstmt
 }
