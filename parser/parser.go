@@ -53,36 +53,44 @@ func (p *Parser) parseExpression() ast.Expression {
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.currentToken.Type {
 	case token.LET:
-		stmt := &ast.LetStatement{Token: p.currentToken}
-		p.nextToken()
-		stmt.Name = &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
-
-		if !p.expectPeek(token.ASSIGN) {
-			p.Errors = append(p.Errors, "Expected a "+string(token.ASSIGN))
-		}
-		p.nextToken()
-
-		p.nextToken()
-
-		if p.currentTokenIs(token.SEMICOLON) {
-			p.nextToken()
-		}
-		return stmt
+		return p.parseLetStatement()
 	case token.RETURN:
-		stmt := &ast.ReturnStatement{Token: p.currentToken}
-
-		for !p.currentTokenIs(token.SEMICOLON) {
-			p.nextToken()
-		}
-
-		if p.currentTokenIs(token.SEMICOLON) {
-			p.nextToken()
-		}
-
-		return stmt
+		return p.parseReturnStatement()
 	default:
 		return nil
 	}
+}
+
+func (p *Parser) parseLetStatement() *ast.LetStatement {
+	stmt := &ast.LetStatement{Token: p.currentToken}
+	p.nextToken()
+	stmt.Name = &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+
+	if !p.expectPeek(token.ASSIGN) {
+		p.Errors = append(p.Errors, "Expected a "+string(token.ASSIGN))
+	}
+	p.nextToken()
+
+	p.nextToken()
+
+	if p.currentTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+	return stmt
+}
+
+func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	stmt := &ast.ReturnStatement{Token: p.currentToken}
+
+	for !p.currentTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	if p.currentTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
 }
 
 func (p *Parser) expectPeek(expected token.TokenType) bool {
