@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"example/hello/token"
+	"compiler/token"
 	"testing"
 )
 

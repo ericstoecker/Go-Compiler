@@ -2,8 +2,8 @@ package repl
 
 import (
 	"bufio"
-	"example/hello/lexer"
-	"example/hello/token"
+	"compiler/lexer"
+	"compiler/token"
 	"fmt"
 	"io"
 )
