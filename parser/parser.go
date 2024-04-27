@@ -5,6 +5,7 @@ import (
 	"compiler/lexer"
 	"compiler/token"
 	"fmt"
+	"strconv"
 )
 
 type Parser struct {
@@ -58,8 +59,19 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 }
 
 func (p *Parser) parseExpression() ast.Expression {
-	ident := &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
-	return ident
+	switch p.currentToken.Type {
+	case token.IDENT:
+		return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+	case token.INT:
+		value, err := strconv.ParseInt(p.currentToken.Literal, 0, 64)
+		if err != nil {
+			msg := fmt.Sprintf("Error when trying to parse %s to int", p.currentToken.Literal)
+			p.Errors = append(p.Errors, msg)
+		}
+		return &ast.IntegerExpression{Token: p.currentToken, Value: value}
+	default:
+		return nil
+	}
 }
 
 func (p *Parser) parseStatement() ast.Statement {

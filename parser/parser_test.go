@@ -92,9 +92,7 @@ func TestIdentifier(t *testing.T) {
 	program := p.ParseProgram()
 	statements := program.Statements
 
-	if len(statements) != 1 {
-		t.Fatalf("Program has wrong numer of statements. Expected 1. Got %d", len(program.Statements))
-	}
+	expectProgramLength(t, statements, 1)
 
 	stmt, ok := statements[0].(*ast.ExpressionStatement)
 	if !ok {
@@ -112,6 +110,41 @@ func TestIdentifier(t *testing.T) {
 
 	if ident.Value != "foobar" {
 		t.Fatalf("Expected ident.Value to be 'foobar'. Got '%s'", ident.Value)
+	}
+}
+
+func TestIntegerLiteralExpression(t *testing.T) {
+	input := "10;"
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	statements := program.Statements
+
+	expectProgramLength(t, statements, 1)
+
+	stmt, ok := statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatement. Got %T", statements[0])
+	}
+
+	integer, ok := stmt.Expression.(*ast.IntegerExpression)
+	if !ok {
+		t.Fatalf("Expected IntegerExpression. Got %T", stmt.Expression)
+	}
+
+	if integer.Token.Type != token.INT {
+		t.Fatalf("Expected token.Type to be INT. Got '%s'", integer.Token.Type)
+	}
+
+	if integer.Value != 10 {
+		t.Fatalf("Expected integer.Value to be '10'. Got '%d'", integer.Value)
+	}
+}
+
+func expectProgramLength(t *testing.T, statements []ast.Statement, expected int) {
+	if len(statements) != expected {
+		t.Fatalf("Program has wrong numer of statements. Expected %d. Got %d", expected, len(statements))
 	}
 }
 

@@ -67,3 +67,13 @@ func (expressionStmt *ExpressionStatement) TokenLiteral() string {
 	return expressionStmt.Token.Literal
 }
 func (expressionStmt *ExpressionStatement) statementNode() {}
+
+type IntegerExpression struct {
+	Token token.Token
+	Value int64
+}
+
+func (intExpression *IntegerExpression) TokenLiteral() string {
+	return intExpression.Token.Literal
+}
+func (intExpression *IntegerExpression) expressionNode() {}
