@@ -1,9 +1,13 @@
 package ast
 
-import "compiler/token"
+import (
+	"bytes"
+	"compiler/token"
+)
 
 type Node interface {
 	TokenLiteral() string
+	String() string
 }
 
 type Statement interface {
@@ -26,6 +30,15 @@ func (p *Program) TokenLiteral() string {
 	}
 	return ""
 }
+func (p *Program) String() string {
+	var out bytes.Buffer
+
+	for _, s := range p.Statements {
+		out.WriteString(s.String())
+	}
+
+	return out.String()
+}
 
 type LetStatement struct {
 	Token token.Token
@@ -37,6 +50,18 @@ func (lst *LetStatement) TokenLiteral() string {
 	return lst.Token.Literal
 }
 func (lst *LetStatement) statementNode() {}
+func (lst *LetStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("let ")
+	out.WriteString(lst.TokenLiteral())
+	out.WriteString(" = ")
+	out.WriteString(lst.Value.String())
+
+	out.WriteString(";")
+
+	return out.String()
+}
 
 type Identifier struct {
 	Token token.Token
@@ -47,6 +72,9 @@ func (ident *Identifier) TokenLiteral() string {
 	return ident.Token.Literal
 }
 func (ident *Identifier) expressionNode() {}
+func (ident *Identifier) String() string {
+	return ident.TokenLiteral()
+}
 
 type ReturnStatement struct {
 	Token       token.Token
@@ -57,6 +85,16 @@ func (returnStmt *ReturnStatement) TokenLiteral() string {
 	return returnStmt.Token.Literal
 }
 func (returnStmt *ReturnStatement) statementNode() {}
+func (returnStmt *ReturnStatement) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(returnStmt.TokenLiteral() + " ")
+	out.WriteString(returnStmt.ReturnValue.String())
+
+	out.WriteString(";")
+
+	return out.String()
+}
 
 type ExpressionStatement struct {
 	Token      token.Token
@@ -67,6 +105,12 @@ func (expressionStmt *ExpressionStatement) TokenLiteral() string {
 	return expressionStmt.Token.Literal
 }
 func (expressionStmt *ExpressionStatement) statementNode() {}
+func (expressionStmt *ExpressionStatement) String() string {
+	if expressionStmt.Expression != nil {
+		return expressionStmt.String()
+	}
+	return ""
+}
 
 type IntegerExpression struct {
 	Token token.Token
@@ -77,3 +121,6 @@ func (intExpression *IntegerExpression) TokenLiteral() string {
 	return intExpression.Token.Literal
 }
 func (intExpression *IntegerExpression) expressionNode() {}
+func (intExpression *IntegerExpression) String() string {
+	return intExpression.TokenLiteral()
+}
