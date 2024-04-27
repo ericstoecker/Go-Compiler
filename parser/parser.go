@@ -52,21 +52,36 @@ func (p *Parser) parseExpression() ast.Expression {
 
 func (p *Parser) parseStatement() ast.Statement {
 
-	lstmt := &ast.LetStatement{Token: p.currentToken}
+	stmt := &ast.LetStatement{Token: p.currentToken}
 	p.nextToken()
-	lstmt.Name = &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+	stmt.Name = &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 
-	p.nextToken()
-	if p.currentToken.Type != token.ASSIGN {
-		p.Errors = append(p.Errors, "Expected an ASSIGN")
+	if !p.expectPeek(token.ASSIGN) {
+		p.Errors = append(p.Errors, "Expected a "+string(token.ASSIGN))
 	}
 	p.nextToken()
 
-	lstmt.Value = p.parseExpression()
+	stmt.Value = p.parseExpression()
 
-	if p.currentToken.Type == token.SEMICOLON {
+	if p.currentTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 
-	return lstmt
+	return stmt
+}
+
+func (p *Parser) expectPeek(expected token.TokenType) bool {
+	if p.peekTokenIs(expected) {
+		p.nextToken()
+		return true
+	}
+	return false
+}
+
+func (p *Parser) peekTokenIs(expected token.TokenType) bool {
+	return p.peekToken.Type == expected
+}
+
+func (p *Parser) currentTokenIs(expected token.TokenType) bool {
+	return p.currentToken.Type == expected
 }
