@@ -18,6 +18,8 @@ func TestLetStatement(t *testing.T) {
 	p := New(l)
 
 	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
 	expectNotNil(t, program)
 
 	if len(program.Statements) != 3 {
@@ -51,6 +53,8 @@ func TestReturnStatement(t *testing.T) {
 	p := New(l)
 
 	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
 	expectNotNil(t, program)
 
 	if len(program.Statements) != 3 {
@@ -90,8 +94,9 @@ func TestIdentifier(t *testing.T) {
 	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()
-	statements := program.Statements
+	checkParserErrors(t, p)
 
+	statements := program.Statements
 	expectProgramLength(t, statements, 1)
 
 	stmt, ok := statements[0].(*ast.ExpressionStatement)
@@ -119,8 +124,9 @@ func TestIntegerLiteralExpression(t *testing.T) {
 	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()
-	statements := program.Statements
+	checkParserErrors(t, p)
 
+	statements := program.Statements
 	expectProgramLength(t, statements, 1)
 
 	stmt, ok := statements[0].(*ast.ExpressionStatement)
@@ -172,4 +178,17 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 		t.Errorf("Expected lst.Name.TokenLiteral() to be %s. Got '%s'", name, lst.Name.TokenLiteral())
 	}
 	return true
+}
+
+func checkParserErrors(t *testing.T, p *Parser) {
+	errors := p.Errors
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("parser had %d errors", len(errors))
+	for _, msg := range errors {
+		t.Errorf("parser error: %q", msg)
+	}
+	t.FailNow()
 }
