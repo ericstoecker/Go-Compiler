@@ -57,3 +57,13 @@ func (returnStmt *ReturnStatement) TokenLiteral() string {
 	return returnStmt.Token.Literal
 }
 func (returnStmt *ReturnStatement) statementNode() {}
+
+type ExpressionStatement struct {
+	Token      token.Token
+	Expression Expression
+}
+
+func (expressionStmt *ExpressionStatement) TokenLiteral() string {
+	return expressionStmt.Token.Literal
+}
+func (expressionStmt *ExpressionStatement) statementNode() {}

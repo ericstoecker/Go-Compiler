@@ -3,6 +3,7 @@ package parser
 import (
 	"compiler/ast"
 	"compiler/lexer"
+	"compiler/token"
 	"testing"
 )
 
@@ -80,6 +81,37 @@ func TestErrorHandling(t *testing.T) {
 
 	if len(errors) != 1 {
 		t.Fatalf("Expected 1 error. Got %d", len(errors))
+	}
+}
+
+func TestIdentifier(t *testing.T) {
+	input := "foobar;"
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	statements := program.Statements
+
+	if len(statements) != 1 {
+		t.Fatalf("Program has wrong numer of statements. Expected 1. Got %d", len(program.Statements))
+	}
+
+	stmt, ok := statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatement. Got %T", statements[0])
+	}
+
+	ident, ok := stmt.Expression.(*ast.Identifier)
+	if !ok {
+		t.Fatalf("Expected Identifier. Got %T", stmt.Expression)
+	}
+
+	if ident.Token.Type != token.IDENT {
+		t.Fatalf("Expected token.Type to be IDENT. Got '%s'", ident.Token.Type)
+	}
+
+	if ident.Value != "foobar" {
+		t.Fatalf("Expected ident.Value to be 'foobar'. Got '%s'", ident.Value)
 	}
 }
 

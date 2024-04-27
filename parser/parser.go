@@ -41,13 +41,22 @@ func (p *Parser) ParseProgram() *ast.Program {
 	return &ast.Program{Statements: statements}
 }
 
+func (p *Parser) parseExpressionStatement() ast.Statement {
+	expressionStatement := &ast.ExpressionStatement{Token: p.currentToken}
+
+	expressionStatement.Expression = p.parseExpression()
+
+	if p.currentTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return expressionStatement
+}
+
 func (p *Parser) parseExpression() ast.Expression {
-	// switch p.currentToken.Type {
-	// case token.INT:
-	// 	return &ast.Identifier{}
-	// }
+	ident := &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 	p.nextToken()
-	return &ast.Identifier{}
+	return ident
 }
 
 func (p *Parser) parseStatement() ast.Statement {
@@ -57,7 +66,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
