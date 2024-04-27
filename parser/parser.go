@@ -4,6 +4,7 @@ import (
 	"compiler/ast"
 	"compiler/lexer"
 	"compiler/token"
+	"fmt"
 )
 
 type Parser struct {
@@ -35,7 +36,10 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 	for p.currentToken.Type != token.EOF {
 		statement := p.parseStatement()
-		statements = append(statements, statement)
+		if statement != nil {
+			statements = append(statements, statement)
+		}
+		p.nextToken()
 	}
 
 	return &ast.Program{Statements: statements}
@@ -46,7 +50,7 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 
 	expressionStatement.Expression = p.parseExpression()
 
-	if p.currentTokenIs(token.SEMICOLON) {
+	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 
@@ -55,7 +59,6 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 
 func (p *Parser) parseExpression() ast.Expression {
 	ident := &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
-	p.nextToken()
 	return ident
 }
 
@@ -72,30 +75,34 @@ func (p *Parser) parseStatement() ast.Statement {
 
 func (p *Parser) parseLetStatement() *ast.LetStatement {
 	stmt := &ast.LetStatement{Token: p.currentToken}
-	p.nextToken()
+
+	if !p.expectPeek(token.IDENT) {
+		return nil
+	}
+
 	stmt.Name = &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 
 	if !p.expectPeek(token.ASSIGN) {
-		p.Errors = append(p.Errors, "Expected a "+string(token.ASSIGN))
+		return nil
 	}
-	p.nextToken()
 
 	p.nextToken()
 
-	if p.currentTokenIs(token.SEMICOLON) {
+	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
+
 	return stmt
 }
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	stmt := &ast.ReturnStatement{Token: p.currentToken}
 
-	for !p.currentTokenIs(token.SEMICOLON) {
+	if !p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 
-	if p.currentTokenIs(token.SEMICOLON) {
+	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 
@@ -107,6 +114,8 @@ func (p *Parser) expectPeek(expected token.TokenType) bool {
 		p.nextToken()
 		return true
 	}
+	msg := fmt.Sprintf("Expected next token to be %s. Got '%s'", expected, p.peekToken)
+	p.Errors = append(p.Errors, msg)
 	return false
 }
 
