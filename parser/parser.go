@@ -28,9 +28,9 @@ type Parser struct {
 	currentToken token.Token
 	peekToken    token.Token
 
-	precedences   map[token.TokenType]int
-	prefixParseFn map[token.TokenType]PrefixParseFn
-	infixParseFn  map[token.TokenType]InfixParseFn
+	precedences         map[token.TokenType]int
+	prefixParseFn       map[token.TokenType]PrefixParseFn
+	infixParseFunctions map[token.TokenType]InfixParseFn
 
 	Errors []string
 }
@@ -40,6 +40,11 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.precedences = make(map[token.TokenType]int)
 	p.precedences[token.PLUS] = SUM
+	p.precedences[token.MINUS] = SUM
+
+	p.infixParseFunctions = make(map[token.TokenType]InfixParseFn)
+	p.infixParseFunctions[token.PLUS] = p.parseInfixExpression
+	p.infixParseFunctions[token.MINUS] = p.parseInfixExpression
 
 	p.nextToken()
 	p.nextToken()
@@ -104,10 +109,14 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		leftExpr = nil
 	}
 
-	for !p.peekTokenIs(token.SEMICOLON) && p.peekPrecedence() > precedence {
+	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
+		infix, ok := p.infixParseFunctions[p.peekToken.Type]
+		if !ok {
+			return leftExpr
+		}
 		p.nextToken()
 
-		leftExpr = p.parseInfixExpression(leftExpr)
+		leftExpr = infix(leftExpr)
 	}
 	return leftExpr
 }
