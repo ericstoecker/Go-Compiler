@@ -49,7 +49,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 func (p *Parser) parseExpressionStatement() ast.Statement {
 	expressionStatement := &ast.ExpressionStatement{Token: p.currentToken}
 
-	expressionStatement.Expression = p.parseExpression()
+	expressionStatement.Expression = p.parseExpression(0)
 
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
@@ -58,7 +58,7 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 	return expressionStatement
 }
 
-func (p *Parser) parseExpression() ast.Expression {
+func (p *Parser) parseExpression(precedence int) ast.Expression {
 	var leftExpr ast.Expression
 
 	switch p.currentToken.Type {
@@ -66,7 +66,7 @@ func (p *Parser) parseExpression() ast.Expression {
 		prefixExpression := &ast.PrefixExpression{Token: p.currentToken, Operator: p.currentToken.Type}
 
 		p.nextToken()
-		prefixExpression.Right = p.parseExpression()
+		prefixExpression.Right = p.parseExpression(1)
 
 		leftExpr = prefixExpression
 	case token.IDENT:
@@ -83,18 +83,17 @@ func (p *Parser) parseExpression() ast.Expression {
 		leftExpr = nil
 	}
 
-	// parse Left side above
-
 	// check peekToken and see if an infix is available
-	if p.peekToken.Type == token.PLUS {
+	for !p.peekTokenIs(token.SEMICOLON) && precedence == 0 && p.peekToken.Type == token.PLUS {
 		// if so => pass left side to parseInfixExpression
-		infixExpr := &ast.InfixExpression{Left: leftExpr, Operator: p.peekToken.Type}
-
 		p.nextToken()
-		p.nextToken()
-		infixExpr.Right = p.parseExpression()
 
-		return infixExpr
+		// parse infix expression
+		infixExpr := &ast.InfixExpression{Left: leftExpr, Operator: p.currentToken.Type}
+		p.nextToken()
+		infixExpr.Right = p.parseExpression(1)
+
+		leftExpr = infixExpr
 	}
 	// if not => return left
 	return leftExpr

@@ -187,18 +187,33 @@ func TestPrefixExpressions(t *testing.T) {
 }
 
 func TestInfixExpressions(t *testing.T) {
-	input := `
-    5 + 5
-    `
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			"5 + 5",
+			"(5 + 5)",
+		},
+		{
+			"5 + 5 + 5",
+			"((5 + 5) + 5)",
+		},
+	}
 
+	for _, tt := range tests {
+		testInfixExpression(t, tt.input, tt.expected)
+	}
+}
+func testInfixExpression(t *testing.T, input string, expected string) {
 	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()
 	checkParserErrors(t, p)
 
 	programString := program.String()
-	if programString != "(5 + 5)" {
-		t.Fatalf("Expected '(5 + 5)'. Got '%s'", programString)
+	if programString != expected {
+		t.Fatalf("Expected '%s'. Got '%s'", expected, programString)
 	}
 }
 
