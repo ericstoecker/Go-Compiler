@@ -207,6 +207,10 @@ func TestInfixExpressions(t *testing.T) {
 			"2 * 10",
 			"(2 * 10)",
 		},
+		{
+			"3 / 2",
+			"(3 / 2)",
+		},
 	}
 
 	for _, tt := range tests {

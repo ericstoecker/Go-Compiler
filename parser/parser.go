@@ -42,11 +42,13 @@ func New(l *lexer.Lexer) *Parser {
 	p.precedences[token.PLUS] = SUM
 	p.precedences[token.MINUS] = SUM
 	p.precedences[token.ASTERIK] = PRODUCT
+	p.precedences[token.SLASH] = PRODUCT
 
 	p.infixParseFunctions = make(map[token.TokenType]InfixParseFn)
 	p.infixParseFunctions[token.PLUS] = p.parseInfixExpression
 	p.infixParseFunctions[token.MINUS] = p.parseInfixExpression
 	p.infixParseFunctions[token.ASTERIK] = p.parseInfixExpression
+	p.infixParseFunctions[token.SLASH] = p.parseInfixExpression
 
 	p.nextToken()
 	p.nextToken()
