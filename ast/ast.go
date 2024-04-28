@@ -125,6 +125,19 @@ func (intExpression *IntegerExpression) String() string {
 	return intExpression.TokenLiteral()
 }
 
+type BooleanExpression struct {
+	Token token.Token
+	Value bool
+}
+
+func (boolExpression *BooleanExpression) TokenLiteral() string {
+	return boolExpression.Token.Literal
+}
+func (boolExpression *BooleanExpression) expressionNode() {}
+func (boolExpression *BooleanExpression) String() string {
+	return boolExpression.TokenLiteral()
+}
+
 type PrefixExpression struct {
 	Token    token.Token
 	Operator token.TokenType

@@ -223,6 +223,10 @@ func TestInfixExpressions(t *testing.T) {
 			"10 * 3 / 4",
 			"((10 * 3) / 4)",
 		},
+		{
+			"true == false",
+			"(true == false)",
+		},
 	}
 
 	for _, tt := range tests {

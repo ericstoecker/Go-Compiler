@@ -39,6 +39,7 @@ func New(l *lexer.Lexer) *Parser {
 	p := &Parser{lexer: l}
 
 	p.precedences = make(map[token.TokenType]int)
+	p.precedences[token.EQUALS] = EQUALS
 	p.precedences[token.PLUS] = SUM
 	p.precedences[token.MINUS] = SUM
 	p.precedences[token.ASTERIK] = PRODUCT
@@ -48,12 +49,15 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFunctions[token.MINUS] = p.parsePrefixExpression
 	p.prefixParseFunctions[token.IDENT] = p.parseIdentifier
 	p.prefixParseFunctions[token.INT] = p.parseInteger
+	p.prefixParseFunctions[token.TRUE] = p.parseBoolean
+	p.prefixParseFunctions[token.FALSE] = p.parseBoolean
 
 	p.infixParseFunctions = make(map[token.TokenType]InfixParseFn)
 	p.infixParseFunctions[token.PLUS] = p.parseInfixExpression
 	p.infixParseFunctions[token.MINUS] = p.parseInfixExpression
 	p.infixParseFunctions[token.ASTERIK] = p.parseInfixExpression
 	p.infixParseFunctions[token.SLASH] = p.parseInfixExpression
+	p.infixParseFunctions[token.EQUALS] = p.parseInfixExpression
 
 	p.nextToken()
 	p.nextToken()
@@ -96,7 +100,7 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix, ok := p.prefixParseFunctions[p.currentToken.Type]
 	if !ok {
-		msg := fmt.Sprintf("No prefix parse function for token %T", p.currentToken)
+		msg := fmt.Sprintf("No prefix parse function for token '%s' with literal '%s'", p.currentToken.Type, p.currentToken.Literal)
 		p.Errors = append(p.Errors, msg)
 		return nil
 	}
@@ -135,6 +139,15 @@ func (p *Parser) parseInteger() ast.Expression {
 		p.Errors = append(p.Errors, msg)
 	}
 	return &ast.IntegerExpression{Token: p.currentToken, Value: value}
+}
+
+func (p *Parser) parseBoolean() ast.Expression {
+	value, err := strconv.ParseBool(p.currentToken.Literal)
+	if err != nil {
+		msg := fmt.Sprintf("Error when trying to parse %s to bool", p.currentToken.Literal)
+		p.Errors = append(p.Errors, msg)
+	}
+	return &ast.BooleanExpression{Token: p.currentToken, Value: value}
 }
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
