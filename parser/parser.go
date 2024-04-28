@@ -8,17 +8,38 @@ import (
 	"strconv"
 )
 
+const (
+	_ int = iota
+	LOWEST
+	EQUALS
+	LESSGREATER
+	SUM
+	PRODUCT
+	PREFIX
+	CALL
+)
+
+type PrefixParseFn func() *ast.PrefixExpression
+type InfixParseFn func(ast.Expression) *ast.InfixExpression
+
 type Parser struct {
 	lexer *lexer.Lexer
 
 	currentToken token.Token
 	peekToken    token.Token
 
+	precedences   map[token.TokenType]int
+	prefixParseFn map[token.TokenType]PrefixParseFn
+	infixParseFn  map[token.TokenType]InfixParseFn
+
 	Errors []string
 }
 
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{lexer: l}
+
+	p.precedences = make(map[token.TokenType]int)
+	p.precedences[token.PLUS] = SUM
 
 	p.nextToken()
 	p.nextToken()
@@ -49,7 +70,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 func (p *Parser) parseExpressionStatement() ast.Statement {
 	expressionStatement := &ast.ExpressionStatement{Token: p.currentToken}
 
-	expressionStatement.Expression = p.parseExpression(0)
+	expressionStatement.Expression = p.parseExpression(LOWEST)
 
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
@@ -83,24 +104,37 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		leftExpr = nil
 	}
 
-	// check peekToken and see if an infix is available
-	for !p.peekTokenIs(token.SEMICOLON) && precedence == 0 && p.peekToken.Type == token.PLUS {
-		// if so => pass left side to parseInfixExpression
+	for !p.peekTokenIs(token.SEMICOLON) && p.peekPrecedence() > precedence {
 		p.nextToken()
 
-		// parse infix expression
-		infixExpr := &ast.InfixExpression{Left: leftExpr, Operator: p.currentToken.Type}
-		p.nextToken()
-		infixExpr.Right = p.parseExpression(1)
-
-		leftExpr = infixExpr
+		leftExpr = p.parseInfixExpression(leftExpr)
 	}
-	// if not => return left
 	return leftExpr
 }
 
-func (p *Parser) parseInfixExpression(leftExpr ast.Expression) *ast.InfixExpression {
-	return nil
+func (p *Parser) parseInfixExpression(left ast.Expression) *ast.InfixExpression {
+	infixExpr := &ast.InfixExpression{Left: left, Operator: p.currentToken.Type}
+
+	precedence := p.currentPrecedence()
+	p.nextToken()
+
+	infixExpr.Right = p.parseExpression(precedence)
+
+	return infixExpr
+}
+
+func (p *Parser) currentPrecedence() int {
+	if currentPrecedence, ok := p.precedences[p.currentToken.Type]; ok {
+		return currentPrecedence
+	}
+	return LOWEST
+}
+
+func (p *Parser) peekPrecedence() int {
+	if currentPrecedence, ok := p.precedences[p.peekToken.Type]; ok {
+		return currentPrecedence
+	}
+	return LOWEST
 }
 
 func (p *Parser) parseStatement() ast.Statement {
