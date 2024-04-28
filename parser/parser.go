@@ -96,6 +96,8 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix, ok := p.prefixParseFunctions[p.currentToken.Type]
 	if !ok {
+		msg := fmt.Sprintf("No prefix parse function for token %T", p.currentToken)
+		p.Errors = append(p.Errors, msg)
 		return nil
 	}
 
