@@ -40,6 +40,11 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.precedences = make(map[token.TokenType]int)
 	p.precedences[token.EQUALS] = EQUALS
+	p.precedences[token.NOT_EQUALS] = EQUALS
+	p.precedences[token.GREATER_EQUAL] = EQUALS
+	p.precedences[token.LESS_EQUAL] = EQUALS
+	p.precedences[token.GT] = LESSGREATER
+	p.precedences[token.LT] = LESSGREATER
 	p.precedences[token.PLUS] = SUM
 	p.precedences[token.MINUS] = SUM
 	p.precedences[token.ASTERIK] = PRODUCT
@@ -53,11 +58,16 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFunctions[token.FALSE] = p.parseBoolean
 
 	p.infixParseFunctions = make(map[token.TokenType]InfixParseFn)
+	p.infixParseFunctions[token.EQUALS] = p.parseInfixExpression
+	p.infixParseFunctions[token.NOT_EQUALS] = p.parseInfixExpression
+	p.infixParseFunctions[token.GREATER_EQUAL] = p.parseInfixExpression
+	p.infixParseFunctions[token.LESS_EQUAL] = p.parseInfixExpression
+	p.infixParseFunctions[token.GT] = p.parseInfixExpression
+	p.infixParseFunctions[token.LT] = p.parseInfixExpression
 	p.infixParseFunctions[token.PLUS] = p.parseInfixExpression
 	p.infixParseFunctions[token.MINUS] = p.parseInfixExpression
 	p.infixParseFunctions[token.ASTERIK] = p.parseInfixExpression
 	p.infixParseFunctions[token.SLASH] = p.parseInfixExpression
-	p.infixParseFunctions[token.EQUALS] = p.parseInfixExpression
 
 	p.nextToken()
 	p.nextToken()

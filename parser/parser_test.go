@@ -148,6 +148,7 @@ func TestIntegerLiteralExpression(t *testing.T) {
 	}
 }
 
+// extend this
 func TestPrefixExpressions(t *testing.T) {
 	input := `
     -5;
@@ -226,6 +227,22 @@ func TestInfixExpressions(t *testing.T) {
 		{
 			"true == false",
 			"(true == false)",
+		},
+		{
+			"10 != false",
+			"(10 != false)",
+		},
+		{
+			"4 < 2 == 3 > 1",
+			"((4 < 2) == (3 > 1))",
+		},
+		{
+			"4 >= 2",
+			"(4 >= 2)",
+		},
+		{
+			"0 <= 2",
+			"(0 <= 2)",
 		},
 	}
 
