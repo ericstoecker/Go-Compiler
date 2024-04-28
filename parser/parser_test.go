@@ -211,12 +211,25 @@ func TestInfixExpressions(t *testing.T) {
 			"3 / 2",
 			"(3 / 2)",
 		},
+		{
+			"3 + 5 * 7",
+			"(3 + (5 * 7))",
+		},
+		{
+			"2 / 3 - 2",
+			"((2 / 3) - 2)",
+		},
+		{
+			"10 * 3 / 4",
+			"((10 * 3) / 4)",
+		},
 	}
 
 	for _, tt := range tests {
 		testInfixExpression(t, tt.input, tt.expected)
 	}
 }
+
 func testInfixExpression(t *testing.T, input string, expected string) {
 	l := lexer.New(input)
 	p := New(l)
