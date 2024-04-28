@@ -151,8 +151,12 @@ func (prefixExpr *PrefixExpression) expressionNode() {}
 func (prefixExpr *PrefixExpression) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(prefixExpr.TokenLiteral() + " ")
+	out.WriteString("(")
+
+	out.WriteString(prefixExpr.TokenLiteral())
 	out.WriteString(prefixExpr.Right.String())
+
+	out.WriteString(")")
 
 	return out.String()
 }

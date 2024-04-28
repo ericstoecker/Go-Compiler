@@ -52,6 +52,7 @@ func New(l *lexer.Lexer) *Parser {
 
 	p.prefixParseFunctions = make(map[token.TokenType]PrefixParseFn)
 	p.prefixParseFunctions[token.MINUS] = p.parsePrefixExpression
+	p.prefixParseFunctions[token.BANG] = p.parsePrefixExpression
 	p.prefixParseFunctions[token.IDENT] = p.parseIdentifier
 	p.prefixParseFunctions[token.INT] = p.parseInteger
 	p.prefixParseFunctions[token.TRUE] = p.parseBoolean

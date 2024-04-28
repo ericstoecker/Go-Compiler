@@ -244,6 +244,10 @@ func TestInfixExpressions(t *testing.T) {
 			"0 <= 2",
 			"(0 <= 2)",
 		},
+		{
+			"!false == true",
+			"((!false) == true)",
+		},
 	}
 
 	for _, tt := range tests {
