@@ -148,6 +148,60 @@ func TestIntegerLiteralExpression(t *testing.T) {
 	}
 }
 
+func TestPrefixExpressions(t *testing.T) {
+	input := `
+    -5;
+    `
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	statements := program.Statements
+	expectProgramLength(t, statements, 1)
+
+	stmt, ok := statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatement. Got %T", statements[0])
+	}
+
+	prefixExpr, ok := stmt.Expression.(*ast.PrefixExpression)
+	if !ok {
+		t.Fatalf("Expected PrefixExpression. Got %T", statements[0])
+	}
+
+	operator := prefixExpr.Operator
+	if operator != token.MINUS {
+		t.Fatalf("Exprected token.MINUS as operator. Got %s", operator)
+	}
+
+	rightExpr, ok := prefixExpr.Right.(*ast.IntegerExpression)
+	if !ok {
+		t.Fatalf("Expected IntegerExpression. Got %T", prefixExpr.Right)
+	}
+
+	if rightExpr.Value != 5 {
+		t.Fatalf("Expected Value to be 5. Got %d", rightExpr.Value)
+	}
+}
+
+func TestInfixExpressions(t *testing.T) {
+	input := `
+    5 + 5
+    `
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	programString := program.String()
+	if programString != "(5 + 5)" {
+		t.Fatalf("Expected '(5 + 5)'. Got '%s'", programString)
+	}
+}
+
 func expectProgramLength(t *testing.T, statements []ast.Statement, expected int) {
 	if len(statements) != expected {
 		t.Fatalf("Program has wrong numer of statements. Expected %d. Got %d", expected, len(statements))

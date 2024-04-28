@@ -59,19 +59,49 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 }
 
 func (p *Parser) parseExpression() ast.Expression {
+	var leftExpr ast.Expression
+
 	switch p.currentToken.Type {
+	case token.MINUS:
+		prefixExpression := &ast.PrefixExpression{Token: p.currentToken, Operator: p.currentToken.Type}
+
+		p.nextToken()
+		prefixExpression.Right = p.parseExpression()
+
+		leftExpr = prefixExpression
 	case token.IDENT:
-		return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+		leftExpr = &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 	case token.INT:
 		value, err := strconv.ParseInt(p.currentToken.Literal, 0, 64)
 		if err != nil {
 			msg := fmt.Sprintf("Error when trying to parse %s to int", p.currentToken.Literal)
 			p.Errors = append(p.Errors, msg)
 		}
-		return &ast.IntegerExpression{Token: p.currentToken, Value: value}
+		leftExpr = &ast.IntegerExpression{Token: p.currentToken, Value: value}
 	default:
-		return nil
+		// this will need to be error NO PREFIX PARSER
+		leftExpr = nil
 	}
+
+	// parse Left side above
+
+	// check peekToken and see if an infix is available
+	if p.peekToken.Type == token.PLUS {
+		// if so => pass left side to parseInfixExpression
+		infixExpr := &ast.InfixExpression{Left: leftExpr, Operator: p.peekToken.Type}
+
+		p.nextToken()
+		p.nextToken()
+		infixExpr.Right = p.parseExpression()
+
+		return infixExpr
+	}
+	// if not => return left
+	return leftExpr
+}
+
+func (p *Parser) parseInfixExpression(leftExpr ast.Expression) *ast.InfixExpression {
+	return nil
 }
 
 func (p *Parser) parseStatement() ast.Statement {
@@ -130,6 +160,8 @@ func (p *Parser) expectPeek(expected token.TokenType) bool {
 	p.Errors = append(p.Errors, msg)
 	return false
 }
+
+// func (p *Parser) Error() string {}
 
 func (p *Parser) peekTokenIs(expected token.TokenType) bool {
 	return p.peekToken.Type == expected

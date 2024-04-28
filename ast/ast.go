@@ -107,7 +107,7 @@ func (expressionStmt *ExpressionStatement) TokenLiteral() string {
 func (expressionStmt *ExpressionStatement) statementNode() {}
 func (expressionStmt *ExpressionStatement) String() string {
 	if expressionStmt.Expression != nil {
-		return expressionStmt.String()
+		return expressionStmt.Expression.String()
 	}
 	return ""
 }
@@ -123,4 +123,48 @@ func (intExpression *IntegerExpression) TokenLiteral() string {
 func (intExpression *IntegerExpression) expressionNode() {}
 func (intExpression *IntegerExpression) String() string {
 	return intExpression.TokenLiteral()
+}
+
+type PrefixExpression struct {
+	Token    token.Token
+	Operator token.TokenType
+	Right    Expression
+}
+
+func (prefixExpr *PrefixExpression) TokenLiteral() string {
+	return prefixExpr.Token.Literal
+}
+func (prefixExpr *PrefixExpression) expressionNode() {}
+func (prefixExpr *PrefixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(prefixExpr.TokenLiteral() + " ")
+	out.WriteString(prefixExpr.Right.String())
+
+	return out.String()
+}
+
+type InfixExpression struct {
+	Token    token.Token
+	Left     Expression
+	Operator token.TokenType
+	Right    Expression
+}
+
+func (infixExpr *InfixExpression) TokenLiteral() string {
+	return infixExpr.Token.Literal
+}
+func (infixExpr *InfixExpression) expressionNode() {}
+func (infixExpr *InfixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+
+	out.WriteString(infixExpr.Left.String())
+	out.WriteString(" " + string(infixExpr.Operator) + " ")
+	out.WriteString(infixExpr.Right.String())
+
+	out.WriteString(")")
+
+	return out.String()
 }
