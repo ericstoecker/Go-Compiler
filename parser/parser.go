@@ -19,8 +19,8 @@ const (
 	CALL
 )
 
-type PrefixParseFn func() *ast.PrefixExpression
-type InfixParseFn func(ast.Expression) *ast.InfixExpression
+type PrefixParseFn func() ast.Expression
+type InfixParseFn func(ast.Expression) ast.Expression
 
 type Parser struct {
 	lexer *lexer.Lexer
@@ -28,9 +28,9 @@ type Parser struct {
 	currentToken token.Token
 	peekToken    token.Token
 
-	precedences         map[token.TokenType]int
-	prefixParseFn       map[token.TokenType]PrefixParseFn
-	infixParseFunctions map[token.TokenType]InfixParseFn
+	precedences          map[token.TokenType]int
+	prefixParseFunctions map[token.TokenType]PrefixParseFn
+	infixParseFunctions  map[token.TokenType]InfixParseFn
 
 	Errors []string
 }
@@ -43,6 +43,11 @@ func New(l *lexer.Lexer) *Parser {
 	p.precedences[token.MINUS] = SUM
 	p.precedences[token.ASTERIK] = PRODUCT
 	p.precedences[token.SLASH] = PRODUCT
+
+	p.prefixParseFunctions = make(map[token.TokenType]PrefixParseFn)
+	p.prefixParseFunctions[token.MINUS] = p.parsePrefixExpression
+	p.prefixParseFunctions[token.IDENT] = p.parseIdentifier
+	p.prefixParseFunctions[token.INT] = p.parseInteger
 
 	p.infixParseFunctions = make(map[token.TokenType]InfixParseFn)
 	p.infixParseFunctions[token.PLUS] = p.parseInfixExpression
@@ -89,29 +94,12 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	var leftExpr ast.Expression
-
-	switch p.currentToken.Type {
-	case token.MINUS:
-		prefixExpression := &ast.PrefixExpression{Token: p.currentToken, Operator: p.currentToken.Type}
-
-		p.nextToken()
-		prefixExpression.Right = p.parseExpression(1)
-
-		leftExpr = prefixExpression
-	case token.IDENT:
-		leftExpr = &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
-	case token.INT:
-		value, err := strconv.ParseInt(p.currentToken.Literal, 0, 64)
-		if err != nil {
-			msg := fmt.Sprintf("Error when trying to parse %s to int", p.currentToken.Literal)
-			p.Errors = append(p.Errors, msg)
-		}
-		leftExpr = &ast.IntegerExpression{Token: p.currentToken, Value: value}
-	default:
-		// this will need to be error NO PREFIX PARSER
-		leftExpr = nil
+	prefix, ok := p.prefixParseFunctions[p.currentToken.Type]
+	if !ok {
+		return nil
 	}
+
+	leftExpr := prefix()
 
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix, ok := p.infixParseFunctions[p.peekToken.Type]
@@ -125,7 +113,29 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	return leftExpr
 }
 
-func (p *Parser) parseInfixExpression(left ast.Expression) *ast.InfixExpression {
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	prefixExpression := &ast.PrefixExpression{Token: p.currentToken, Operator: p.currentToken.Type}
+
+	p.nextToken()
+	prefixExpression.Right = p.parseExpression(PREFIX)
+
+	return prefixExpression
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
+}
+
+func (p *Parser) parseInteger() ast.Expression {
+	value, err := strconv.ParseInt(p.currentToken.Literal, 0, 64)
+	if err != nil {
+		msg := fmt.Sprintf("Error when trying to parse %s to int", p.currentToken.Literal)
+		p.Errors = append(p.Errors, msg)
+	}
+	return &ast.IntegerExpression{Token: p.currentToken, Value: value}
+}
+
+func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	infixExpr := &ast.InfixExpression{Left: left, Operator: p.currentToken.Type}
 
 	precedence := p.currentPrecedence()
