@@ -255,6 +255,48 @@ func TestInfixExpressions(t *testing.T) {
 	}
 }
 
+func TestIfExpression(t *testing.T) {
+	input := `
+    if (true) {5 + 5}
+    `
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	statements := program.Statements
+	expectProgramLength(t, statements, 1)
+
+	stmt, ok := statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatement. Got %T", statements[0])
+	}
+
+	ifExpr, ok := stmt.Expression.(*ast.IfExpression)
+	if !ok {
+		t.Fatalf("Expected IfExpression. Got %T", stmt)
+	}
+
+	_, ok = ifExpr.Condition.(*ast.BooleanExpression)
+	if !ok {
+		t.Fatalf("Expected BooleanExpression. Got %T", ifExpr.Condition)
+	}
+
+	t.Log(program.String())
+
+	blockExpr := ifExpr.Consequence.Statements[0]
+	exprStmt, ok := blockExpr.(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatement in BlockStatement. Got %T", blockExpr)
+	}
+
+	_, ok = exprStmt.Expression.(*ast.InfixExpression)
+	if !ok {
+		t.Fatalf("Expected InfixExpression. Got %T", exprStmt)
+	}
+}
+
 func testInfixExpression(t *testing.T, input string, expected string) {
 	l := lexer.New(input)
 	p := New(l)

@@ -57,6 +57,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFunctions[token.INT] = p.parseInteger
 	p.prefixParseFunctions[token.TRUE] = p.parseBoolean
 	p.prefixParseFunctions[token.FALSE] = p.parseBoolean
+	p.prefixParseFunctions[token.IF] = p.parseIfExpression
 
 	p.infixParseFunctions = make(map[token.TokenType]InfixParseFn)
 	p.infixParseFunctions[token.EQUALS] = p.parseInfixExpression
@@ -195,6 +196,50 @@ func (p *Parser) parseStatement() ast.Statement {
 	default:
 		return p.parseExpressionStatement()
 	}
+}
+
+func (p *Parser) parseIfExpression() ast.Expression {
+	expr := &ast.IfExpression{Token: p.currentToken}
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+	p.nextToken()
+
+	expr.Condition = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+	expr.Consequence = p.parseBlockStatement()
+
+	if p.peekTokenIs(token.ELSE) {
+		p.nextToken()
+		expr.Alternative = p.parseBlockStatement()
+	}
+
+	return expr
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	blockStatement := &ast.BlockStatement{Token: p.currentToken}
+	p.nextToken()
+
+	statements := make([]ast.Statement, 0)
+	for p.currentToken.Type != token.RBRACE {
+		statement := p.parseStatement()
+		if statement != nil {
+			statements = append(statements, statement)
+		}
+		p.nextToken()
+	}
+	blockStatement.Statements = statements
+
+	return blockStatement
 }
 
 func (p *Parser) parseLetStatement() *ast.LetStatement {
