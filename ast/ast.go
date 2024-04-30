@@ -235,3 +235,27 @@ func (bstmt *BlockStatement) String() string {
 	return out.String()
 
 }
+
+type FunctionExpression struct {
+	Token      token.Token
+	Parameters []*Identifier
+	Body       *BlockStatement
+}
+
+func (fn *FunctionExpression) TokenLiteral() string {
+	return fn.Token.Literal
+}
+func (fn *FunctionExpression) expressionNode() {}
+func (fn *FunctionExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("fn(")
+	for _, s := range fn.Parameters {
+		out.WriteString(s.String())
+	}
+	out.WriteString(")")
+
+	out.WriteString(fn.Body.String())
+
+	return out.String()
+}

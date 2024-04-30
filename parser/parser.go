@@ -58,6 +58,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFunctions[token.TRUE] = p.parseBoolean
 	p.prefixParseFunctions[token.FALSE] = p.parseBoolean
 	p.prefixParseFunctions[token.IF] = p.parseIfExpression
+	p.prefixParseFunctions[token.FUNCTION] = p.parseFunctionExpression
 
 	p.infixParseFunctions = make(map[token.TokenType]InfixParseFn)
 	p.infixParseFunctions[token.EQUALS] = p.parseInfixExpression
@@ -226,6 +227,43 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	return expr
 }
 
+func (p *Parser) parseFunctionExpression() ast.Expression {
+	function := &ast.FunctionExpression{Token: p.currentToken}
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+
+	function.Parameters = p.parseParameters()
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+	function.Body = p.parseBlockStatement()
+
+	return function
+}
+
+func (p *Parser) parseParameters() []*ast.Identifier {
+	p.nextToken()
+
+	params := make([]*ast.Identifier, 0)
+	for p.peekToken.Type != token.RPAREN {
+		param := p.parseIdentifier()
+		if param != nil {
+			params = append(params, param.(*ast.Identifier))
+		}
+
+		p.nextToken()
+	}
+
+	return params
+}
+
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	blockStatement := &ast.BlockStatement{Token: p.currentToken}
 	p.nextToken()
@@ -266,17 +304,16 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 }
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
-	stmt := &ast.ReturnStatement{Token: p.currentToken}
+	returnStmt := &ast.ReturnStatement{Token: p.currentToken}
 
-	if !p.peekTokenIs(token.SEMICOLON) {
-		p.nextToken()
-	}
+	p.nextToken()
+	returnStmt.ReturnValue = p.parseExpression(LOWEST)
 
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 
-	return stmt
+	return returnStmt
 }
 
 func (p *Parser) expectPeek(expected token.TokenType) bool {

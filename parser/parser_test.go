@@ -353,6 +353,61 @@ func TestIfElseExpression(t *testing.T) {
 	}
 }
 
+func TestFunctionDefinition(t *testing.T) {
+	input := `
+    fn (arg, anotherArg) {
+        return arg + anotherArg;
+    }
+    `
+	program := constructProgram(input, t)
+
+	statements := program.Statements
+	expectProgramLength(t, statements, 1)
+
+	exprStatement, ok := statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected FunctionExpression. Got %T", statements[0])
+	}
+
+	fnExpr, ok := exprStatement.Expression.(*ast.FunctionExpression)
+	if !ok {
+		t.Fatalf("Expected FunctionExpression. Got %T", exprStatement.Expression)
+	}
+
+	parameters := fnExpr.Parameters
+	if len(parameters) != 2 {
+		t.Fatalf("Expected 2 paramaters. Got %d", len(parameters))
+	}
+
+	firstParam := parameters[0]
+	if firstParam == nil {
+		t.Fatalf("Expected first parameter to be defined. Got nil")
+	}
+	secondParam := parameters[0]
+	if secondParam == nil {
+		t.Fatalf("Expected second parameter to be defined. Got nil")
+	}
+
+	body := fnExpr.Body
+	if body == nil {
+		t.Fatalf("Expected body to be defined. Got nil")
+	}
+
+	returnStmt, ok := body.Statements[0].(*ast.ReturnStatement)
+	if !ok {
+		t.Fatalf("Expected ReturnStatement. Got %T", returnStmt)
+	}
+}
+
+func constructProgram(input string, t *testing.T) *ast.Program {
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	return program
+}
+
 func testInfixExpression(t *testing.T, input string, expected string) {
 	l := lexer.New(input)
 	p := New(l)
