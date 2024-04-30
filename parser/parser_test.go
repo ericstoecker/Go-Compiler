@@ -295,6 +295,62 @@ func TestIfExpression(t *testing.T) {
 	if !ok {
 		t.Fatalf("Expected InfixExpression. Got %T", exprStmt)
 	}
+
+	alternative := ifExpr.Alternative
+	if alternative != nil {
+		t.Fatalf("Expected alternative to be nil. Got %T", alternative)
+	}
+}
+
+func TestIfElseExpression(t *testing.T) {
+	input := `
+    if (true) {5 + 5} else { 10 }
+    `
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	statements := program.Statements
+	expectProgramLength(t, statements, 1)
+
+	stmt, ok := statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatement. Got %T", statements[0])
+	}
+
+	ifExpr, ok := stmt.Expression.(*ast.IfExpression)
+	if !ok {
+		t.Fatalf("Expected IfExpression. Got %T", stmt)
+	}
+
+	_, ok = ifExpr.Condition.(*ast.BooleanExpression)
+	if !ok {
+		t.Fatalf("Expected BooleanExpression. Got %T", ifExpr.Condition)
+	}
+
+	blockExpr := ifExpr.Consequence.Statements[0]
+	exprStmt, ok := blockExpr.(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatement in BlockStatement. Got %T", blockExpr)
+	}
+
+	_, ok = exprStmt.Expression.(*ast.InfixExpression)
+	if !ok {
+		t.Fatalf("Expected InfixExpression. Got %T", exprStmt)
+	}
+
+	alternativeBlock := ifExpr.Alternative.Statements[0]
+	alternative, ok := alternativeBlock.(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatement in alternative. Got %T", alternativeBlock)
+	}
+
+	_, ok = alternative.Expression.(*ast.IntegerExpression)
+	if !ok {
+		t.Fatalf("Expected IntegerExpression in alternative. Got %T", alternative.Expression)
+	}
 }
 
 func testInfixExpression(t *testing.T, input string, expected string) {

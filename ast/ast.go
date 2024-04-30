@@ -202,7 +202,14 @@ func (ifExpression *IfExpression) String() string {
 
 	out.WriteString("if (")
 	out.WriteString(ifExpression.Condition.String())
-	out.WriteString(")")
+	out.WriteString(") ")
+
+	out.WriteString(ifExpression.Consequence.String())
+
+	if ifExpression.Alternative != nil {
+		out.WriteString(" ")
+		out.WriteString(ifExpression.Alternative.String())
+	}
 
 	return out.String()
 }

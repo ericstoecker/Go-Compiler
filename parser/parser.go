@@ -219,6 +219,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 	if p.peekTokenIs(token.ELSE) {
 		p.nextToken()
+		p.nextToken()
 		expr.Alternative = p.parseBlockStatement()
 	}
 
