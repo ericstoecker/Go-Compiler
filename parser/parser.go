@@ -49,6 +49,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.precedences[token.MINUS] = SUM
 	p.precedences[token.ASTERIK] = PRODUCT
 	p.precedences[token.SLASH] = PRODUCT
+	p.precedences[token.LPAREN] = CALL
 
 	p.prefixParseFunctions = make(map[token.TokenType]PrefixParseFn)
 	p.prefixParseFunctions[token.MINUS] = p.parsePrefixExpression
@@ -59,6 +60,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFunctions[token.FALSE] = p.parseBoolean
 	p.prefixParseFunctions[token.IF] = p.parseIfExpression
 	p.prefixParseFunctions[token.FUNCTION] = p.parseFunctionExpression
+	p.prefixParseFunctions[token.LPAREN] = p.parseParen
 
 	p.infixParseFunctions = make(map[token.TokenType]InfixParseFn)
 	p.infixParseFunctions[token.EQUALS] = p.parseInfixExpression
@@ -249,6 +251,18 @@ func (p *Parser) parseFunctionExpression() ast.Expression {
 	function.Body = p.parseBlockStatement()
 
 	return function
+}
+
+func (p *Parser) parseParen() ast.Expression {
+	p.nextToken()
+
+	expr := p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return expr
 }
 
 func (p *Parser) parseCallExpression() ast.Expression {

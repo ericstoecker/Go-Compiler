@@ -248,6 +248,10 @@ func TestInfixExpressions(t *testing.T) {
 			"!false == true",
 			"((!false) == true)",
 		},
+		{
+			"10 * (2 + 2)",
+			"(10 * (2 + 2))",
+		},
 	}
 
 	for _, tt := range tests {
