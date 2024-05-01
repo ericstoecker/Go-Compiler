@@ -142,6 +142,9 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
+	if p.peekTokenIs(token.LPAREN) {
+		return p.parseCallExpression()
+	}
 	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 }
 
@@ -248,6 +251,27 @@ func (p *Parser) parseFunctionExpression() ast.Expression {
 	return function
 }
 
+func (p *Parser) parseCallExpression() ast.Expression {
+	call := &ast.CallExpression{Token: p.currentToken}
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+	p.nextToken()
+
+	arguments := make([]ast.Expression, 0)
+	for p.currentToken.Type != token.RPAREN {
+		argument := p.parseExpression(LOWEST)
+		if argument != nil {
+			arguments = append(arguments, argument)
+		}
+		p.nextToken()
+	}
+	call.Arguments = arguments
+
+	return call
+}
+
 func (p *Parser) parseParameters() []*ast.Identifier {
 	p.nextToken()
 
@@ -307,7 +331,9 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	returnStmt := &ast.ReturnStatement{Token: p.currentToken}
 
 	p.nextToken()
-	returnStmt.ReturnValue = p.parseExpression(LOWEST)
+	if !p.currentTokenIs(token.SEMICOLON) {
+		returnStmt.ReturnValue = p.parseExpression(LOWEST)
+	}
 
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()

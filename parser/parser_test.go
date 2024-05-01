@@ -366,7 +366,7 @@ func TestFunctionDefinition(t *testing.T) {
 
 	exprStatement, ok := statements[0].(*ast.ExpressionStatement)
 	if !ok {
-		t.Fatalf("Expected FunctionExpression. Got %T", statements[0])
+		t.Fatalf("Expected ExpressionStatement. Got %T", statements[0])
 	}
 
 	fnExpr, ok := exprStatement.Expression.(*ast.FunctionExpression)
@@ -396,6 +396,37 @@ func TestFunctionDefinition(t *testing.T) {
 	returnStmt, ok := body.Statements[0].(*ast.ReturnStatement)
 	if !ok {
 		t.Fatalf("Expected ReturnStatement. Got %T", returnStmt)
+	}
+}
+
+func TestFunctionCall(t *testing.T) {
+	input := `
+	func(2 + 2)
+	`
+
+	program := constructProgram(input, t)
+
+	statements := program.Statements
+	expectProgramLength(t, statements, 1)
+
+	exprStatement, ok := statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatement. Got %T", statements[0])
+	}
+
+	callExpr, ok := exprStatement.Expression.(*ast.CallExpression)
+	if !ok {
+		t.Fatalf("Expected CallExpression. Got %T", exprStatement.Expression)
+	}
+
+	arguments := callExpr.Arguments
+	if len(arguments) != 1 {
+		t.Fatalf("Expected 1 argument. Got %d", len(arguments))
+	}
+
+	firstParam := arguments[0]
+	if firstParam == nil {
+		t.Fatalf("Expected first argument to be defined. Got nil")
 	}
 }
 
