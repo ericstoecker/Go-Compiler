@@ -236,17 +236,17 @@ func (bstmt *BlockStatement) String() string {
 
 }
 
-type FunctionExpression struct {
+type FunctionLiteral struct {
 	Token      token.Token
 	Parameters []*Identifier
 	Body       *BlockStatement
 }
 
-func (fn *FunctionExpression) TokenLiteral() string {
+func (fn *FunctionLiteral) TokenLiteral() string {
 	return fn.Token.Literal
 }
-func (fn *FunctionExpression) expressionNode() {}
-func (fn *FunctionExpression) String() string {
+func (fn *FunctionLiteral) expressionNode() {}
+func (fn *FunctionLiteral) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("fn(")
