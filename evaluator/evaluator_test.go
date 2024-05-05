@@ -6,20 +6,34 @@ import (
 	"testing"
 )
 
-func TestSimpleExpressions(t *testing.T) {
-	input := `
-    10
-    `
+func TestIntegerExpression(t *testing.T) {
 
-	l := lexer.New(input)
-	p := parser.New(l)
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{
+			"10",
+			10,
+		},
+		{
+			"5",
+			5,
+		},
+	}
 
-	program := p.ParseProgram()
-	evaluator := New()
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := parser.New(l)
 
-	output := evaluator.Evaluate(program)
+		program := p.ParseProgram()
+		evaluator := New()
 
-	if output.String() != "10" {
-		t.Fatalf("Expected 10. Got %s", output.String())
+		output := evaluator.Evaluate(program)
+
+		intResult := output.(*IntegerObject)
+		if intResult.Value != tt.expected {
+			t.Fatalf("Expected %d. Got %d", tt.expected, intResult.Value)
+		}
 	}
 }

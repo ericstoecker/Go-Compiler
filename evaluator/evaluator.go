@@ -10,10 +10,27 @@ func New() *Evaluator {
 }
 
 func (eval *Evaluator) Evaluate(program *ast.Program) Object {
-	stmt := program.Statements[0]
-	exprStmt := stmt.(*ast.ExpressionStatement)
-	intStmt := exprStmt.Expression.(*ast.IntegerExpression)
-	return &IntegerObject{Value: intStmt.Value}
+	var result Object
+
+	for _, stmt := range program.Statements {
+		result = eval.evaluateStatement(stmt)
+	}
+
+	return result
+}
+
+func (eval *Evaluator) evaluateStatement(stmt ast.Statement) Object {
+	switch v := stmt.(type) {
+	case *ast.ExpressionStatement:
+		return eval.evaluateExpression(v.Expression)
+	default:
+		return nil
+	}
+}
+
+func (eval *Evaluator) evaluateExpression(expression ast.Expression) Object {
+	intExpr := expression.(*ast.IntegerExpression)
+	return &IntegerObject{Value: intExpr.Value}
 }
 
 type Object interface {
