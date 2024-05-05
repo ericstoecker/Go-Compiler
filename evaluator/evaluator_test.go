@@ -28,6 +28,10 @@ func TestIntegerExpression(t *testing.T) {
 			"10 + 3",
 			13,
 		},
+		{
+			"-2 - -10",
+			8,
+		},
 	}
 
 	for _, tt := range tests {

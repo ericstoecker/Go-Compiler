@@ -64,21 +64,33 @@ func (eval *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression
 }
 
 func (eval *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression) Object {
+	left := eval.evaluateExpression(infixExpr.Left)
+	right := eval.evaluateExpression(infixExpr.Right)
 	switch infixExpr.Operator {
 	case token.PLUS:
-		left := eval.evaluateExpression(infixExpr.Left)
 		intLeft, ok := left.(*IntegerObject)
 		if !ok {
 			return nil
 		}
 
-		right := eval.evaluateExpression(infixExpr.Right)
 		intRight, ok := right.(*IntegerObject)
 		if !ok {
 			return nil
 		}
 
 		return &IntegerObject{Value: intLeft.Value + intRight.Value}
+	case token.MINUS:
+		intLeft, ok := left.(*IntegerObject)
+		if !ok {
+			return nil
+		}
+
+		intRight, ok := right.(*IntegerObject)
+		if !ok {
+			return nil
+		}
+
+		return &IntegerObject{Value: intLeft.Value - intRight.Value}
 	default:
 		return nil
 	}
