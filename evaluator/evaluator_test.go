@@ -42,6 +42,12 @@ func TestIntegerExpression(t *testing.T) {
             `,
 			10,
 		},
+		{
+			`let x = -2
+            x + 2
+            `,
+			0,
+		},
 	}
 
 	for _, tt := range tests {
