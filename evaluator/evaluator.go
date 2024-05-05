@@ -66,31 +66,23 @@ func (eval *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression
 func (eval *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression) Object {
 	left := eval.evaluateExpression(infixExpr.Left)
 	right := eval.evaluateExpression(infixExpr.Right)
+	intLeft, ok := left.(*IntegerObject)
+	if !ok {
+		return nil
+	}
+
+	intRight, ok := right.(*IntegerObject)
+	if !ok {
+		return nil
+	}
+
 	switch infixExpr.Operator {
 	case token.PLUS:
-		intLeft, ok := left.(*IntegerObject)
-		if !ok {
-			return nil
-		}
-
-		intRight, ok := right.(*IntegerObject)
-		if !ok {
-			return nil
-		}
-
 		return &IntegerObject{Value: intLeft.Value + intRight.Value}
 	case token.MINUS:
-		intLeft, ok := left.(*IntegerObject)
-		if !ok {
-			return nil
-		}
-
-		intRight, ok := right.(*IntegerObject)
-		if !ok {
-			return nil
-		}
-
 		return &IntegerObject{Value: intLeft.Value - intRight.Value}
+	case token.ASTERIK:
+		return &IntegerObject{Value: intLeft.Value * intRight.Value}
 	default:
 		return nil
 	}

@@ -32,6 +32,10 @@ func TestIntegerExpression(t *testing.T) {
 			"-2 - -10",
 			8,
 		},
+		{
+			"(10 + 2) * 2",
+			24,
+		},
 	}
 
 	for _, tt := range tests {
