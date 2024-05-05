@@ -392,9 +392,16 @@ func TestFunctionDefinition(t *testing.T) {
 	if firstParam == nil {
 		t.Fatalf("Expected first parameter to be defined. Got nil")
 	}
-	secondParam := parameters[0]
+	if firstParam.Value != "arg" {
+		t.Fatalf("Expected first parameter to have name arg. Got %s", firstParam.Value)
+	}
+
+	secondParam := parameters[1]
 	if secondParam == nil {
 		t.Fatalf("Expected second parameter to be defined. Got nil")
+	}
+	if secondParam.Value != "anotherArg" {
+		t.Fatalf("Expected second parameter to have name anotherArg. Got %s", secondParam.Value)
 	}
 
 	body := fnExpr.Body

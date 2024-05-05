@@ -59,7 +59,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFunctions[token.TRUE] = p.parseBoolean
 	p.prefixParseFunctions[token.FALSE] = p.parseBoolean
 	p.prefixParseFunctions[token.IF] = p.parseIfExpression
-	p.prefixParseFunctions[token.FUNCTION] = p.parseFunctionExpression
+	p.prefixParseFunctions[token.FUNCTION] = p.parseFunctionLiteral
 	p.prefixParseFunctions[token.LPAREN] = p.parseParen
 
 	p.infixParseFunctions = make(map[token.TokenType]InfixParseFn)
@@ -232,7 +232,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	return expr
 }
 
-func (p *Parser) parseFunctionExpression() ast.Expression {
+func (p *Parser) parseFunctionLiteral() ast.Expression {
 	function := &ast.FunctionLiteral{Token: p.currentToken}
 
 	if !p.expectPeek(token.LPAREN) {
@@ -287,16 +287,18 @@ func (p *Parser) parseCallExpression() ast.Expression {
 }
 
 func (p *Parser) parseParameters() []*ast.Identifier {
-	p.nextToken()
 
 	params := make([]*ast.Identifier, 0)
 	for p.peekToken.Type != token.RPAREN {
+		p.nextToken()
 		param := p.parseIdentifier()
 		if param != nil {
 			params = append(params, param.(*ast.Identifier))
 		}
 
-		p.nextToken()
+		if p.peekTokenIs(token.COMMA) {
+			p.nextToken()
+		}
 	}
 
 	return params
