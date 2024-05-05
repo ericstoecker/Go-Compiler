@@ -6,10 +6,12 @@ import (
 )
 
 type Evaluator struct {
+	environment map[string]Object
 }
 
 func New() *Evaluator {
-	return nil
+	environment := make(map[string]Object)
+	return &Evaluator{environment: environment}
 }
 
 func (eval *Evaluator) Evaluate(program *ast.Program) Object {
@@ -29,6 +31,9 @@ func (eval *Evaluator) evaluateStatement(stmt ast.Statement) Object {
 	case *ast.ReturnStatement:
 		return nil
 	case *ast.LetStatement:
+		value := eval.evaluateExpression(v.Value)
+		// add result to environment
+		eval.environment[v.Name.Value] = value
 		return nil
 	default:
 		return nil
@@ -43,6 +48,8 @@ func (eval *Evaluator) evaluateExpression(expression ast.Expression) Object {
 		return eval.evaluateInfixExpression(v)
 	case *ast.IntegerExpression:
 		return &IntegerObject{Value: v.Value}
+	case *ast.Identifier:
+		return eval.environment[v.Value]
 	default:
 		return nil
 	}

@@ -28,15 +28,16 @@ func TestLetStatement(t *testing.T) {
 
 	tests := []struct {
 		expectedIdentifier string
+		expectedValue      int64
 	}{
-		{"x"},
-		{"y"},
-		{"foobar"},
+		{"x", 5},
+		{"y", 10},
+		{"foobar", 6934},
 	}
 
 	for i, tt := range tests {
 		stmt := program.Statements[i]
-		if !testLetStatement(t, stmt, tt.expectedIdentifier) {
+		if !testLetStatement(t, stmt, tt.expectedIdentifier, tt.expectedValue) {
 			return
 		}
 	}
@@ -471,7 +472,7 @@ func expectNotNil(t *testing.T, program *ast.Program) {
 	}
 }
 
-func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
+func testLetStatement(t *testing.T, s ast.Statement, name string, value int64) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. Got '%q'", s.TokenLiteral())
 		return false
@@ -487,6 +488,15 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 
 	if lst.Name.TokenLiteral() != name {
 		t.Errorf("Expected lst.Name.TokenLiteral() to be %s. Got '%s'", name, lst.Name.TokenLiteral())
+	}
+
+	intExpr, ok := lst.Value.(*ast.IntegerExpression)
+	if !ok {
+		t.Errorf("Expected lst.Value to be an IntegerExpression. Got %T", lst.Value)
+	}
+
+	if intExpr.Value != value {
+		t.Errorf("Expected value to be %d. Got %d", value, intExpr.Value)
 	}
 	return true
 }
