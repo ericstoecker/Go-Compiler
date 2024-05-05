@@ -39,6 +39,8 @@ func (eval *Evaluator) evaluateExpression(expression ast.Expression) Object {
 	switch v := expression.(type) {
 	case *ast.PrefixExpression:
 		return eval.evaluatePrefixExpression(v)
+	case *ast.InfixExpression:
+		return eval.evaluateInfixExpression(v)
 	case *ast.IntegerExpression:
 		return &IntegerObject{Value: v.Value}
 	default:
@@ -56,6 +58,27 @@ func (eval *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression
 		}
 
 		return &IntegerObject{Value: -intExpr.Value}
+	default:
+		return nil
+	}
+}
+
+func (eval *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression) Object {
+	switch infixExpr.Operator {
+	case token.PLUS:
+		left := eval.evaluateExpression(infixExpr.Left)
+		intLeft, ok := left.(*IntegerObject)
+		if !ok {
+			return nil
+		}
+
+		right := eval.evaluateExpression(infixExpr.Right)
+		intRight, ok := right.(*IntegerObject)
+		if !ok {
+			return nil
+		}
+
+		return &IntegerObject{Value: intLeft.Value + intRight.Value}
 	default:
 		return nil
 	}

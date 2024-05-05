@@ -24,6 +24,10 @@ func TestIntegerExpression(t *testing.T) {
 			"-3",
 			-3,
 		},
+		{
+			"10 + 3",
+			13,
+		},
 	}
 
 	for _, tt := range tests {
@@ -35,7 +39,11 @@ func TestIntegerExpression(t *testing.T) {
 
 		output := evaluator.Evaluate(program)
 
-		intResult := output.(*IntegerObject)
+		intResult, ok := output.(*IntegerObject)
+		if !ok {
+			t.Fatalf("Expected IntegerObject. Got %T", output)
+		}
+
 		if intResult.Value != tt.expected {
 			t.Fatalf("Expected %d. Got %d", tt.expected, intResult.Value)
 		}
