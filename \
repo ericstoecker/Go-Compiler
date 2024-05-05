@@ -233,7 +233,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 }
 
 func (p *Parser) parseFunctionExpression() ast.Expression {
-	function := &ast.FunctionLiteral{Token: p.currentToken}
+	function := &ast.FunctionExpression{Token: p.currentToken}
 
 	if !p.expectPeek(token.LPAREN) {
 		return nil

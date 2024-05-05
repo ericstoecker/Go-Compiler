@@ -377,7 +377,7 @@ func TestFunctionDefinition(t *testing.T) {
 		t.Fatalf("Expected ExpressionStatement. Got %T", statements[0])
 	}
 
-	fnExpr, ok := exprStatement.Expression.(*ast.FunctionExpression)
+	fnExpr, ok := exprStatement.Expression.(*ast.FunctionLiteral)
 	if !ok {
 		t.Fatalf("Expected FunctionExpression. Got %T", exprStatement.Expression)
 	}
