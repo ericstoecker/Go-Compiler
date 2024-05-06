@@ -287,7 +287,6 @@ func (p *Parser) parseCallExpression() ast.Expression {
 }
 
 func (p *Parser) parseParameters() []*ast.Identifier {
-
 	params := make([]*ast.Identifier, 0)
 	for p.peekToken.Type != token.RPAREN {
 		p.nextToken()
