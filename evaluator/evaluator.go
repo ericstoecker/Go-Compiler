@@ -142,6 +142,16 @@ func (e *Evaluator) evaluateIntegerInfixExpression(operator token.TokenType, lef
 		return &IntegerObject{Value: left.Value * right.Value}
 	case token.EQUALS:
 		return &BooleanObject{Value: left.Value == right.Value}
+	case token.NOT_EQUALS:
+		return &BooleanObject{Value: left.Value != right.Value}
+	case token.GT:
+		return &BooleanObject{Value: left.Value > right.Value}
+	case token.LT:
+		return &BooleanObject{Value: left.Value < right.Value}
+	case token.GREATER_EQUAL:
+		return &BooleanObject{Value: left.Value >= right.Value}
+	case token.LESS_EQUAL:
+		return &BooleanObject{Value: left.Value <= right.Value}
 	default:
 		return nil
 	}
@@ -151,6 +161,8 @@ func (e *Evaluator) evaluateBooleanInfixExpression(operator token.TokenType, lef
 	switch operator {
 	case token.EQUALS:
 		return &BooleanObject{Value: left.Value == right.Value}
+	case token.NOT_EQUALS:
+		return &BooleanObject{Value: left.Value != right.Value}
 	default:
 		return nil
 	}

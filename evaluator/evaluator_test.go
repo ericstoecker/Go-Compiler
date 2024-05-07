@@ -112,6 +112,30 @@ func TestBooleanExpression(t *testing.T) {
 			"10 + 2 == 12",
 			true,
 		},
+		{
+			"true != false",
+			true,
+		},
+		{
+			"10 != 10",
+			false,
+		},
+		{
+			"10 < 5",
+			false,
+		},
+		{
+			"10 > 5",
+			true,
+		},
+		{
+			"5 <= 5",
+			true,
+		},
+		{
+			"4 >= 5",
+			false,
+		},
 	}
 
 	for _, tt := range tests {
