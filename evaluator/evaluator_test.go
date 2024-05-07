@@ -54,6 +54,21 @@ func TestIntegerExpression(t *testing.T) {
             `,
 			3,
 		},
+		{
+			`let x = 10
+            let y = fn(x) { return x }
+            y(3)
+            `,
+			3,
+		},
+		{
+			`let x = 10
+            let y = fn(x) { return x }
+            y(4)
+            x
+            `,
+			10,
+		},
 	}
 
 	for _, tt := range tests {
