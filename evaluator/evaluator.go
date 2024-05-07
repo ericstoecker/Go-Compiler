@@ -6,11 +6,11 @@ import (
 )
 
 type Evaluator struct {
-	environment map[string]Object
+	environment *Environment
 }
 
 func New() *Evaluator {
-	environment := make(map[string]Object)
+	environment := NewEnvironment()
 	return &Evaluator{environment: environment}
 }
 
@@ -24,13 +24,13 @@ func (eval *Evaluator) Evaluate(program *ast.Program) Object {
 	return result
 }
 
-func (eval *Evaluator) evaluateStatement(stmt ast.Statement, env map[string]Object) Object {
+func (eval *Evaluator) evaluateStatement(stmt ast.Statement, env *Environment) Object {
 	switch v := stmt.(type) {
 	case *ast.ExpressionStatement:
 		return eval.evaluateExpression(v.Expression, env)
 	case *ast.LetStatement:
 		value := eval.evaluateExpression(v.Value, env)
-		eval.environment[v.Name.Value] = value
+		eval.environment.put(v.Name.Value, value)
 		return nil
 	case *ast.ReturnStatement:
 		return &ReturnObject{ReturnValue: eval.evaluateExpression(v.ReturnValue, env)}
@@ -39,7 +39,7 @@ func (eval *Evaluator) evaluateStatement(stmt ast.Statement, env map[string]Obje
 	}
 }
 
-func (eval *Evaluator) evaluateExpression(expression ast.Expression, env map[string]Object) Object {
+func (eval *Evaluator) evaluateExpression(expression ast.Expression, env *Environment) Object {
 	switch v := expression.(type) {
 	case *ast.PrefixExpression:
 		return eval.evaluatePrefixExpression(v, env)
@@ -48,7 +48,7 @@ func (eval *Evaluator) evaluateExpression(expression ast.Expression, env map[str
 	case *ast.IntegerExpression:
 		return &IntegerObject{Value: v.Value}
 	case *ast.Identifier:
-		return env[v.Value]
+		return env.get(v.Value)
 	case *ast.FunctionLiteral:
 		params := make([]string, 0)
 		for _, param := range v.Parameters {
@@ -56,18 +56,15 @@ func (eval *Evaluator) evaluateExpression(expression ast.Expression, env map[str
 		}
 		return &FunctionObject{Parameters: params, Body: v.Body}
 	case *ast.CallExpression:
-		functionObj, ok := env[v.TokenLiteral()].(*FunctionObject)
+		functionObj, ok := env.get(v.TokenLiteral()).(*FunctionObject)
 		if !ok {
 			return nil
 		}
 
-		newEnv := make(map[string]Object)
-		for k, v := range env {
-			newEnv[k] = v
-		}
+		newEnv := FromEnvironment(env)
 
 		for i, param := range functionObj.Parameters {
-			newEnv[param] = eval.evaluateExpression(v.Arguments[i], env)
+			newEnv.put(param, eval.evaluateExpression(v.Arguments[i], env))
 		}
 
 		return eval.evaluateBlockStatement(functionObj.Body, newEnv)
@@ -76,7 +73,7 @@ func (eval *Evaluator) evaluateExpression(expression ast.Expression, env map[str
 	}
 }
 
-func (eval *Evaluator) evaluateBlockStatement(blockStmt *ast.BlockStatement, env map[string]Object) Object {
+func (eval *Evaluator) evaluateBlockStatement(blockStmt *ast.BlockStatement, env *Environment) Object {
 	var result Object
 
 	for _, stmt := range blockStmt.Statements {
@@ -91,7 +88,7 @@ func (eval *Evaluator) evaluateBlockStatement(blockStmt *ast.BlockStatement, env
 	return result
 }
 
-func (eval *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression, env map[string]Object) Object {
+func (eval *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression, env *Environment) Object {
 	switch prefixExpr.Operator {
 	case token.MINUS:
 		expr := eval.evaluateExpression(prefixExpr.Right, env)
@@ -106,7 +103,7 @@ func (eval *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression
 	}
 }
 
-func (eval *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression, env map[string]Object) Object {
+func (eval *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression, env *Environment) Object {
 	left := eval.evaluateExpression(infixExpr.Left, env)
 	right := eval.evaluateExpression(infixExpr.Right, env)
 	intLeft, ok := left.(*IntegerObject)
