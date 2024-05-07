@@ -90,3 +90,34 @@ func TestIntegerExpression(t *testing.T) {
 		}
 	}
 }
+
+func TestBooleanExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{
+			"true",
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := parser.New(l)
+
+		program := p.ParseProgram()
+		evaluator := New()
+
+		output := evaluator.Evaluate(program)
+
+		intResult, ok := output.(*BooleanObject)
+		if !ok {
+			t.Fatalf("Expected BooleanObject. Got %T", output)
+		}
+
+		if intResult.Value != tt.expected {
+			t.Fatalf("Expected %t. Got %t", tt.expected, intResult.Value)
+		}
+	}
+}

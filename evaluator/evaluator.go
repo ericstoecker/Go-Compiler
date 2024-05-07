@@ -47,6 +47,8 @@ func (eval *Evaluator) evaluateExpression(expression ast.Expression, env *Enviro
 		return eval.evaluateInfixExpression(v, env)
 	case *ast.IntegerExpression:
 		return &IntegerObject{Value: v.Value}
+	case *ast.BooleanExpression:
+		return &BooleanObject{Value: v.Value}
 	case *ast.Identifier:
 		return env.get(v.Value)
 	case *ast.FunctionLiteral:
@@ -150,3 +152,9 @@ type ReturnObject struct {
 }
 
 func (returnObj *ReturnObject) object() {}
+
+type BooleanObject struct {
+	Value bool
+}
+
+func (boolObj *BooleanObject) object() {}
