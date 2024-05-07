@@ -91,15 +91,22 @@ func (eval *Evaluator) evaluateBlockStatement(blockStmt *ast.BlockStatement, env
 }
 
 func (eval *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression, env *Environment) Object {
+	expr := eval.evaluateExpression(prefixExpr.Right, env)
 	switch prefixExpr.Operator {
 	case token.MINUS:
-		expr := eval.evaluateExpression(prefixExpr.Right, env)
 		intExpr, ok := expr.(*IntegerObject)
 		if !ok {
 			return nil
 		}
 
 		return &IntegerObject{Value: -intExpr.Value}
+	case token.BANG:
+		boolExpr, ok := expr.(*BooleanObject)
+		if !ok {
+			return nil
+		}
+
+		return &BooleanObject{Value: !boolExpr.Value}
 	default:
 		return nil
 	}

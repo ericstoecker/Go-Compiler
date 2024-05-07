@@ -100,6 +100,10 @@ func TestBooleanExpression(t *testing.T) {
 			"true",
 			true,
 		},
+		{
+			"!true",
+			false,
+		},
 	}
 
 	for _, tt := range tests {
