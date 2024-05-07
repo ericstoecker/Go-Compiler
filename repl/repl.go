@@ -2,17 +2,19 @@ package repl
 
 import (
 	"bufio"
+	"compiler/evaluator"
 	"compiler/lexer"
 	"compiler/parser"
 	"fmt"
 	"io"
 )
 
-const PROMPT = ">>"
+const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 
+	e := evaluator.New()
 	for {
 		fmt.Fprintf(out, PROMPT)
 		scanned := scanner.Scan()
@@ -28,9 +30,12 @@ func Start(in io.Reader, out io.Writer) {
 		if len(p.Errors) != 0 {
 			printParserErrors(out, p.Errors)
 		}
+		evaluationResult := e.Evaluate(program)
 
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		if evaluationResult != nil {
+			io.WriteString(out, evaluationResult.String())
+			io.WriteString(out, "\n")
+		}
 	}
 }
 
