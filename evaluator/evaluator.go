@@ -112,56 +112,93 @@ func (eval *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression
 	}
 }
 
-func (eval *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression, env *Environment) Object {
-	left := eval.evaluateExpression(infixExpr.Left, env)
-	right := eval.evaluateExpression(infixExpr.Right, env)
-	intLeft, ok := left.(*IntegerObject)
-	if !ok {
-		return nil
-	}
+func (e *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression, env *Environment) Object {
+	left := e.evaluateExpression(infixExpr.Left, env)
+	right := e.evaluateExpression(infixExpr.Right, env)
 
-	intRight, ok := right.(*IntegerObject)
-	if !ok {
-		return nil
-	}
+	switch true {
+	case left.Type() == "INT" && right.Type() == "INT":
+		leftInt := left.(*IntegerObject)
+		rightInt := right.(*IntegerObject)
 
-	switch infixExpr.Operator {
-	case token.PLUS:
-		return &IntegerObject{Value: intLeft.Value + intRight.Value}
-	case token.MINUS:
-		return &IntegerObject{Value: intLeft.Value - intRight.Value}
-	case token.ASTERIK:
-		return &IntegerObject{Value: intLeft.Value * intRight.Value}
+		return e.evaluateIntegerInfixExpression(infixExpr.Operator, leftInt, rightInt)
+	case left.Type() == "BOOLEAN" && right.Type() == "BOOLEAN":
+		leftBool := left.(*BooleanObject)
+		rightBool := right.(*BooleanObject)
+
+		return e.evaluateBooleanInfixExpression(infixExpr.Operator, leftBool, rightBool)
 	default:
 		return nil
 	}
 }
 
+func (e *Evaluator) evaluateIntegerInfixExpression(operator token.TokenType, left *IntegerObject, right *IntegerObject) Object {
+	switch operator {
+	case token.PLUS:
+		return &IntegerObject{Value: left.Value + right.Value}
+	case token.MINUS:
+		return &IntegerObject{Value: left.Value - right.Value}
+	case token.ASTERIK:
+		return &IntegerObject{Value: left.Value * right.Value}
+	case token.EQUALS:
+		return &BooleanObject{Value: left.Value == right.Value}
+	default:
+		return nil
+	}
+}
+
+func (e *Evaluator) evaluateBooleanInfixExpression(operator token.TokenType, left *BooleanObject, right *BooleanObject) Object {
+	switch operator {
+	case token.EQUALS:
+		return &BooleanObject{Value: left.Value == right.Value}
+	default:
+		return nil
+	}
+}
+
+func (e *Evaluator) evaluateEquals(infixExpr *ast.InfixExpression, env *Environment) Object {
+	left := e.evaluateExpression(infixExpr.Left, env)
+	right := e.evaluateExpression(infixExpr.Right, env)
+
+	intLeft, ok := left.(*BooleanObject)
+	if !ok {
+		return nil
+	}
+
+	intRight, ok := right.(*BooleanObject)
+	if !ok {
+		return nil
+	}
+	return &BooleanObject{Value: intLeft.Value == intRight.Value}
+}
+
+type ObjectType string
+
 type Object interface {
-	object()
+	Type() ObjectType
 }
 
 type IntegerObject struct {
 	Value int64
 }
 
-func (intObj *IntegerObject) object() {}
+func (intObj *IntegerObject) Type() ObjectType { return "INT" }
 
 type FunctionObject struct {
 	Parameters []string
 	Body       *ast.BlockStatement
 }
 
-func (funcObj *FunctionObject) object() {}
+func (funcObj *FunctionObject) Type() ObjectType { return "FUNCTION" }
 
 type ReturnObject struct {
 	ReturnValue Object
 }
 
-func (returnObj *ReturnObject) object() {}
+func (returnObj *ReturnObject) Type() ObjectType { return "RETURN_OBJ" }
 
 type BooleanObject struct {
 	Value bool
 }
 
-func (boolObj *BooleanObject) object() {}
+func (boolObj *BooleanObject) Type() ObjectType { return "BOOLEAN" }

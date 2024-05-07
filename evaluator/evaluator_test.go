@@ -50,23 +50,23 @@ func TestIntegerExpression(t *testing.T) {
 		},
 		{
 			`let x = fn (a) { return a + 1 }
-            x(2)
-            `,
+		       x(2)
+		       `,
 			3,
 		},
 		{
 			`let x = 10
-            let y = fn(x) { return x }
-            y(3)
-            `,
+		       let y = fn(x) { return x }
+		       y(3)
+		       `,
 			3,
 		},
 		{
 			`let x = 10
-            let y = fn(x) { return x }
-            y(4)
-            x
-            `,
+		       let y = fn(x) { return x }
+		       y(4)
+		       x
+		       `,
 			10,
 		},
 	}
@@ -103,6 +103,14 @@ func TestBooleanExpression(t *testing.T) {
 		{
 			"!true",
 			false,
+		},
+		{
+			"true == false",
+			false,
+		},
+		{
+			"10 + 2 == 12",
+			true,
 		},
 	}
 
