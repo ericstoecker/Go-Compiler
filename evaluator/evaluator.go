@@ -70,7 +70,29 @@ func (eval *Evaluator) evaluateExpression(expression ast.Expression, env *Enviro
 			newEnv.put(param, eval.evaluateExpression(v.Arguments[i], env))
 		}
 
-		return eval.evaluateBlockStatement(functionObj.Body, newEnv)
+		result := eval.evaluateBlockStatement(functionObj.Body, newEnv)
+
+		returnStmt, ok := result.(*object.ReturnObject)
+		if ok {
+			return returnStmt.ReturnValue
+		}
+		return result
+	case *ast.IfExpression:
+		evaluatedCondition := eval.evaluateExpression(v.Condition, env)
+
+		booleanEvalResult, ok := evaluatedCondition.(*object.BooleanObject)
+		if !ok {
+			return nil
+		}
+
+		if booleanEvalResult.Value {
+			return eval.evaluateBlockStatement(v.Consequence, env)
+		} else if v.Alternative != nil {
+			return eval.evaluateBlockStatement(v.Alternative, env)
+		}
+
+		// TODO return null object
+		return nil
 	default:
 		return nil
 	}
@@ -84,7 +106,7 @@ func (eval *Evaluator) evaluateBlockStatement(blockStmt *ast.BlockStatement, env
 
 		returnStmt, ok := result.(*object.ReturnObject)
 		if ok {
-			return returnStmt.ReturnValue
+			return returnStmt
 		}
 	}
 

@@ -137,6 +137,12 @@ func TestBooleanExpression(t *testing.T) {
 			"4 >= 5",
 			false,
 		},
+		{
+			`let x = fn(l) { if (l > 3) { return true } return false }
+            x(5)
+            `,
+			true,
+		},
 	}
 
 	for _, tt := range tests {
