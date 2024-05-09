@@ -159,12 +159,12 @@ func (e *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression, env 
 	right := e.evaluateExpression(infixExpr.Right, env)
 
 	switch true {
-	case left.Type() == "INT" && right.Type() == "INT":
+	case left.Type() == object.INT && right.Type() == object.INT:
 		leftInt := left.(*object.IntegerObject)
 		rightInt := right.(*object.IntegerObject)
 
 		return e.evaluateIntegerInfixExpression(infixExpr.Operator, leftInt, rightInt)
-	case left.Type() == "BOOLEAN" && right.Type() == "BOOLEAN":
+	case left.Type() == object.BOOLEAN && right.Type() == object.BOOLEAN:
 		leftBool := left.(*object.BooleanObject)
 		rightBool := right.(*object.BooleanObject)
 

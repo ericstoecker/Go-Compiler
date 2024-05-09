@@ -6,6 +6,14 @@ import (
 	"strconv"
 )
 
+const (
+	INT        = "INT"
+	FUNCTION   = "FUNCTION"
+	RETURN_OBJ = "RETURN_OBJ"
+	BOOLEAN    = "BOOLEAN"
+	ARRAY      = "ARRAY"
+)
+
 type ObjectType string
 
 type Object interface {
@@ -17,7 +25,7 @@ type IntegerObject struct {
 	Value int64
 }
 
-func (intObj *IntegerObject) Type() ObjectType { return "INT" }
+func (intObj *IntegerObject) Type() ObjectType { return INT }
 func (intObj *IntegerObject) String() string   { return strconv.FormatInt(intObj.Value, 10) }
 
 type FunctionObject struct {
@@ -25,21 +33,21 @@ type FunctionObject struct {
 	Body       *ast.BlockStatement
 }
 
-func (funcObj *FunctionObject) Type() ObjectType { return "FUNCTION" }
+func (funcObj *FunctionObject) Type() ObjectType { return FUNCTION }
 func (funcObj *FunctionObject) String() string   { return "" }
 
 type ReturnObject struct {
 	ReturnValue Object
 }
 
-func (returnObj *ReturnObject) Type() ObjectType { return "RETURN_OBJ" }
+func (returnObj *ReturnObject) Type() ObjectType { return RETURN_OBJ }
 func (returnObj *ReturnObject) String() string   { return "" }
 
 type BooleanObject struct {
 	Value bool
 }
 
-func (boolObj *BooleanObject) Type() ObjectType { return "BOOLEAN" }
+func (boolObj *BooleanObject) Type() ObjectType { return BOOLEAN }
 func (boolObj *BooleanObject) String() string   { return strconv.FormatBool(boolObj.Value) }
 
 type Array struct {
