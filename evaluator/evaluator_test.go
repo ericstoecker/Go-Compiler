@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"compiler/lexer"
+	"compiler/object"
 	"compiler/parser"
 	"testing"
 )
@@ -80,7 +81,7 @@ func TestIntegerExpression(t *testing.T) {
 
 		output := evaluator.Evaluate(program)
 
-		intResult, ok := output.(*IntegerObject)
+		intResult, ok := output.(*object.IntegerObject)
 		if !ok {
 			t.Fatalf("Expected IntegerObject. Got %T", output)
 		}
@@ -147,7 +148,7 @@ func TestBooleanExpression(t *testing.T) {
 
 		output := evaluator.Evaluate(program)
 
-		intResult, ok := output.(*BooleanObject)
+		intResult, ok := output.(*object.BooleanObject)
 		if !ok {
 			t.Fatalf("Expected BooleanObject. Got %T", output)
 		}

@@ -2,8 +2,8 @@ package evaluator
 
 import (
 	"compiler/ast"
+	"compiler/object"
 	"compiler/token"
-	"strconv"
 )
 
 type Evaluator struct {
@@ -15,8 +15,8 @@ func New() *Evaluator {
 	return &Evaluator{environment: environment}
 }
 
-func (eval *Evaluator) Evaluate(program *ast.Program) Object {
-	var result Object
+func (eval *Evaluator) Evaluate(program *ast.Program) object.Object {
+	var result object.Object
 
 	for _, stmt := range program.Statements {
 		result = eval.evaluateStatement(stmt, eval.environment)
@@ -25,7 +25,7 @@ func (eval *Evaluator) Evaluate(program *ast.Program) Object {
 	return result
 }
 
-func (eval *Evaluator) evaluateStatement(stmt ast.Statement, env *Environment) Object {
+func (eval *Evaluator) evaluateStatement(stmt ast.Statement, env *Environment) object.Object {
 	switch v := stmt.(type) {
 	case *ast.ExpressionStatement:
 		return eval.evaluateExpression(v.Expression, env)
@@ -34,22 +34,22 @@ func (eval *Evaluator) evaluateStatement(stmt ast.Statement, env *Environment) O
 		eval.environment.put(v.Name.Value, value)
 		return nil
 	case *ast.ReturnStatement:
-		return &ReturnObject{ReturnValue: eval.evaluateExpression(v.ReturnValue, env)}
+		return &object.ReturnObject{ReturnValue: eval.evaluateExpression(v.ReturnValue, env)}
 	default:
 		return nil
 	}
 }
 
-func (eval *Evaluator) evaluateExpression(expression ast.Expression, env *Environment) Object {
+func (eval *Evaluator) evaluateExpression(expression ast.Expression, env *Environment) object.Object {
 	switch v := expression.(type) {
 	case *ast.PrefixExpression:
 		return eval.evaluatePrefixExpression(v, env)
 	case *ast.InfixExpression:
 		return eval.evaluateInfixExpression(v, env)
 	case *ast.IntegerExpression:
-		return &IntegerObject{Value: v.Value}
+		return &object.IntegerObject{Value: v.Value}
 	case *ast.BooleanExpression:
-		return &BooleanObject{Value: v.Value}
+		return &object.BooleanObject{Value: v.Value}
 	case *ast.Identifier:
 		return env.get(v.Value)
 	case *ast.FunctionLiteral:
@@ -57,9 +57,9 @@ func (eval *Evaluator) evaluateExpression(expression ast.Expression, env *Enviro
 		for _, param := range v.Parameters {
 			params = append(params, param.Value)
 		}
-		return &FunctionObject{Parameters: params, Body: v.Body}
+		return &object.FunctionObject{Parameters: params, Body: v.Body}
 	case *ast.CallExpression:
-		functionObj, ok := env.get(v.TokenLiteral()).(*FunctionObject)
+		functionObj, ok := env.get(v.TokenLiteral()).(*object.FunctionObject)
 		if !ok {
 			return nil
 		}
@@ -76,13 +76,13 @@ func (eval *Evaluator) evaluateExpression(expression ast.Expression, env *Enviro
 	}
 }
 
-func (eval *Evaluator) evaluateBlockStatement(blockStmt *ast.BlockStatement, env *Environment) Object {
-	var result Object
+func (eval *Evaluator) evaluateBlockStatement(blockStmt *ast.BlockStatement, env *Environment) object.Object {
+	var result object.Object
 
 	for _, stmt := range blockStmt.Statements {
 		result = eval.evaluateStatement(stmt, env)
 
-		returnStmt, ok := result.(*ReturnObject)
+		returnStmt, ok := result.(*object.ReturnObject)
 		if ok {
 			return returnStmt.ReturnValue
 		}
@@ -91,41 +91,41 @@ func (eval *Evaluator) evaluateBlockStatement(blockStmt *ast.BlockStatement, env
 	return result
 }
 
-func (eval *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression, env *Environment) Object {
+func (eval *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression, env *Environment) object.Object {
 	expr := eval.evaluateExpression(prefixExpr.Right, env)
 	switch prefixExpr.Operator {
 	case token.MINUS:
-		intExpr, ok := expr.(*IntegerObject)
+		intExpr, ok := expr.(*object.IntegerObject)
 		if !ok {
 			return nil
 		}
 
-		return &IntegerObject{Value: -intExpr.Value}
+		return &object.IntegerObject{Value: -intExpr.Value}
 	case token.BANG:
-		boolExpr, ok := expr.(*BooleanObject)
+		boolExpr, ok := expr.(*object.BooleanObject)
 		if !ok {
 			return nil
 		}
 
-		return &BooleanObject{Value: !boolExpr.Value}
+		return &object.BooleanObject{Value: !boolExpr.Value}
 	default:
 		return nil
 	}
 }
 
-func (e *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression, env *Environment) Object {
+func (e *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression, env *Environment) object.Object {
 	left := e.evaluateExpression(infixExpr.Left, env)
 	right := e.evaluateExpression(infixExpr.Right, env)
 
 	switch true {
 	case left.Type() == "INT" && right.Type() == "INT":
-		leftInt := left.(*IntegerObject)
-		rightInt := right.(*IntegerObject)
+		leftInt := left.(*object.IntegerObject)
+		rightInt := right.(*object.IntegerObject)
 
 		return e.evaluateIntegerInfixExpression(infixExpr.Operator, leftInt, rightInt)
 	case left.Type() == "BOOLEAN" && right.Type() == "BOOLEAN":
-		leftBool := left.(*BooleanObject)
-		rightBool := right.(*BooleanObject)
+		leftBool := left.(*object.BooleanObject)
+		rightBool := right.(*object.BooleanObject)
 
 		return e.evaluateBooleanInfixExpression(infixExpr.Operator, leftBool, rightBool)
 	default:
@@ -133,90 +133,54 @@ func (e *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression, env 
 	}
 }
 
-func (e *Evaluator) evaluateIntegerInfixExpression(operator token.TokenType, left *IntegerObject, right *IntegerObject) Object {
+func (e *Evaluator) evaluateIntegerInfixExpression(operator token.TokenType, left *object.IntegerObject, right *object.IntegerObject) object.Object {
 	switch operator {
 	case token.PLUS:
-		return &IntegerObject{Value: left.Value + right.Value}
+		return &object.IntegerObject{Value: left.Value + right.Value}
 	case token.MINUS:
-		return &IntegerObject{Value: left.Value - right.Value}
+		return &object.IntegerObject{Value: left.Value - right.Value}
 	case token.ASTERIK:
-		return &IntegerObject{Value: left.Value * right.Value}
+		return &object.IntegerObject{Value: left.Value * right.Value}
 	case token.EQUALS:
-		return &BooleanObject{Value: left.Value == right.Value}
+		return &object.BooleanObject{Value: left.Value == right.Value}
 	case token.NOT_EQUALS:
-		return &BooleanObject{Value: left.Value != right.Value}
+		return &object.BooleanObject{Value: left.Value != right.Value}
 	case token.GT:
-		return &BooleanObject{Value: left.Value > right.Value}
+		return &object.BooleanObject{Value: left.Value > right.Value}
 	case token.LT:
-		return &BooleanObject{Value: left.Value < right.Value}
+		return &object.BooleanObject{Value: left.Value < right.Value}
 	case token.GREATER_EQUAL:
-		return &BooleanObject{Value: left.Value >= right.Value}
+		return &object.BooleanObject{Value: left.Value >= right.Value}
 	case token.LESS_EQUAL:
-		return &BooleanObject{Value: left.Value <= right.Value}
+		return &object.BooleanObject{Value: left.Value <= right.Value}
 	default:
 		return nil
 	}
 }
 
-func (e *Evaluator) evaluateBooleanInfixExpression(operator token.TokenType, left *BooleanObject, right *BooleanObject) Object {
+func (e *Evaluator) evaluateBooleanInfixExpression(operator token.TokenType, left *object.BooleanObject, right *object.BooleanObject) object.Object {
 	switch operator {
 	case token.EQUALS:
-		return &BooleanObject{Value: left.Value == right.Value}
+		return &object.BooleanObject{Value: left.Value == right.Value}
 	case token.NOT_EQUALS:
-		return &BooleanObject{Value: left.Value != right.Value}
+		return &object.BooleanObject{Value: left.Value != right.Value}
 	default:
 		return nil
 	}
 }
 
-func (e *Evaluator) evaluateEquals(infixExpr *ast.InfixExpression, env *Environment) Object {
+func (e *Evaluator) evaluateEquals(infixExpr *ast.InfixExpression, env *Environment) object.Object {
 	left := e.evaluateExpression(infixExpr.Left, env)
 	right := e.evaluateExpression(infixExpr.Right, env)
 
-	intLeft, ok := left.(*BooleanObject)
+	intLeft, ok := left.(*object.BooleanObject)
 	if !ok {
 		return nil
 	}
 
-	intRight, ok := right.(*BooleanObject)
+	intRight, ok := right.(*object.BooleanObject)
 	if !ok {
 		return nil
 	}
-	return &BooleanObject{Value: intLeft.Value == intRight.Value}
+	return &object.BooleanObject{Value: intLeft.Value == intRight.Value}
 }
-
-type ObjectType string
-
-type Object interface {
-	Type() ObjectType
-	String() string
-}
-
-type IntegerObject struct {
-	Value int64
-}
-
-func (intObj *IntegerObject) Type() ObjectType { return "INT" }
-func (intObj *IntegerObject) String() string   { return strconv.FormatInt(intObj.Value, 10) }
-
-type FunctionObject struct {
-	Parameters []string
-	Body       *ast.BlockStatement
-}
-
-func (funcObj *FunctionObject) Type() ObjectType { return "FUNCTION" }
-func (funcObj *FunctionObject) String() string   { return "" }
-
-type ReturnObject struct {
-	ReturnValue Object
-}
-
-func (returnObj *ReturnObject) Type() ObjectType { return "RETURN_OBJ" }
-func (returnObj *ReturnObject) String() string   { return "" }
-
-type BooleanObject struct {
-	Value bool
-}
-
-func (boolObj *BooleanObject) Type() ObjectType { return "BOOLEAN" }
-func (boolObj *BooleanObject) String() string   { return strconv.FormatBool(boolObj.Value) }

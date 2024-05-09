@@ -1,19 +1,21 @@
 package evaluator
 
+import "compiler/object"
+
 type Environment struct {
-	currentEnvironment  map[string]Object
+	currentEnvironment  map[string]object.Object
 	extendedEnvironment *Environment
 }
 
 func NewEnvironment() *Environment {
-	return &Environment{currentEnvironment: make(map[string]Object)}
+	return &Environment{currentEnvironment: make(map[string]object.Object)}
 }
 
 func FromEnvironment(env *Environment) *Environment {
-	return &Environment{extendedEnvironment: env, currentEnvironment: make(map[string]Object)}
+	return &Environment{extendedEnvironment: env, currentEnvironment: make(map[string]object.Object)}
 }
 
-func (env *Environment) get(key string) Object {
+func (env *Environment) get(key string) object.Object {
 	value, ok := env.currentEnvironment[key]
 	if !ok && env.extendedEnvironment != nil {
 		value = env.extendedEnvironment.get(key)
@@ -21,6 +23,6 @@ func (env *Environment) get(key string) Object {
 	return value
 }
 
-func (env *Environment) put(key string, value Object) {
+func (env *Environment) put(key string, value object.Object) {
 	env.currentEnvironment[key] = value
 }
