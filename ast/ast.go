@@ -305,3 +305,23 @@ func (arr *ArrayExpression) String() string {
 
 	return out.String()
 }
+
+type IndexExpression struct {
+	Token token.Token
+	Index *IntegerExpression
+}
+
+func (ind *IndexExpression) TokenLiteral() string {
+	return ind.Token.Literal
+}
+func (ind *IndexExpression) expressionNode() {}
+func (ind *IndexExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ind.TokenLiteral())
+	out.WriteString("(")
+	out.WriteString(ind.Index.String())
+	out.WriteString(")")
+
+	return out.String()
+}

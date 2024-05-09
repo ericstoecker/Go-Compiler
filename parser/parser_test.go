@@ -485,6 +485,26 @@ func TestArrayExpression(t *testing.T) {
 	}
 }
 
+func TestIndexExpression(t *testing.T) {
+	input := `
+    arr[3]
+    `
+
+	program := constructProgram(input, t)
+	stmts := program.Statements
+	expectProgramLength(t, stmts, 1)
+
+	exprStmt, ok := stmts[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatement. Got %T", stmts[0])
+	}
+
+	_, ok = exprStmt.Expression.(*ast.IndexExpression)
+	if !ok {
+		t.Fatalf("Expected IndexExpression. Got %T", exprStmt.Expression)
+	}
+}
+
 func constructProgram(input string, t *testing.T) *ast.Program {
 	l := lexer.New(input)
 	p := New(l)

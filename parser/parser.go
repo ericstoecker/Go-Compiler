@@ -153,6 +153,11 @@ func (p *Parser) parseIdentifier() ast.Expression {
 	if p.peekTokenIs(token.LPAREN) {
 		return p.parseCallExpression()
 	}
+
+	if p.peekTokenIs(token.LBRACKET) {
+		return p.parseIndexExpression()
+	}
+
 	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 }
 
@@ -290,6 +295,29 @@ func (p *Parser) parseCallExpression() ast.Expression {
 	call.Arguments = arguments
 
 	return call
+}
+
+func (p *Parser) parseIndexExpression() ast.Expression {
+	indExpr := &ast.IndexExpression{Token: p.currentToken}
+
+	if !p.expectPeek(token.LBRACKET) {
+		return nil
+	}
+	p.nextToken()
+
+	index := p.parseExpression(LOWEST)
+	intExpr, ok := index.(*ast.IntegerExpression)
+	if !ok {
+		msg := fmt.Sprintf("Expected IntegerExpression. Got %T", index)
+		p.Errors = append(p.Errors, msg)
+	}
+	indExpr.Index = intExpr
+
+	if !p.expectPeek(token.RBRACKET) {
+		return nil
+	}
+
+	return indExpr
 }
 
 func (p *Parser) parseParameters() []*ast.Identifier {
