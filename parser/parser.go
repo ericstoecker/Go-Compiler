@@ -59,6 +59,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFunctions[token.BANG] = p.parsePrefixExpression
 	p.prefixParseFunctions[token.IDENT] = p.parseIdentifier
 	p.prefixParseFunctions[token.INT] = p.parseInteger
+	p.prefixParseFunctions[token.STRING] = p.parseString
 	p.prefixParseFunctions[token.TRUE] = p.parseBoolean
 	p.prefixParseFunctions[token.FALSE] = p.parseBoolean
 	p.prefixParseFunctions[token.IF] = p.parseIfExpression
@@ -168,6 +169,10 @@ func (p *Parser) parseInteger() ast.Expression {
 		p.Errors = append(p.Errors, msg)
 	}
 	return &ast.IntegerExpression{Token: p.currentToken, Value: value}
+}
+
+func (p *Parser) parseString() ast.Expression {
+	return &ast.StringExpression{Token: p.currentToken, Value: p.currentToken.Literal}
 }
 
 func (p *Parser) parseBoolean() ast.Expression {

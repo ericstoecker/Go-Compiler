@@ -51,6 +51,8 @@ func (eval *Evaluator) evaluateExpression(expression ast.Expression, env *Enviro
 		return &object.IntegerObject{Value: v.Value}
 	case *ast.BooleanExpression:
 		return &object.BooleanObject{Value: v.Value}
+	case *ast.StringExpression:
+		return &object.String{Value: v.Value}
 	case *ast.Identifier:
 		return env.get(v.Value)
 	case *ast.FunctionLiteral:

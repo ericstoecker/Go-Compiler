@@ -22,6 +22,7 @@ func TestNextToken(t *testing.T) {
     !
     return
     []
+    "test"
     `
 
 	tests := []struct {
@@ -72,6 +73,7 @@ func TestNextToken(t *testing.T) {
 		{token.RETURN, "return"},
 		{token.LBRACKET, "["},
 		{token.RBRACKET, "]"},
+		{token.STRING, "test"},
 		{token.EOF, ""},
 	}
 

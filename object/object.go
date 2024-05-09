@@ -12,6 +12,7 @@ const (
 	RETURN_OBJ = "RETURN_OBJ"
 	BOOLEAN    = "BOOLEAN"
 	ARRAY      = "ARRAY"
+	STRING     = "STRING"
 )
 
 type ObjectType string
@@ -65,4 +66,15 @@ func (arr *Array) String() string {
 	out.WriteString(")")
 
 	return out.String()
+}
+
+type String struct {
+	Value string
+}
+
+func (str *String) Type() ObjectType {
+	return STRING
+}
+func (str *String) String() string {
+	return str.Value
 }

@@ -185,6 +185,39 @@ func TestBooleanExpression(t *testing.T) {
 	}
 }
 
+func TestStringEvaluation(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			`"test"`,
+			"test",
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := parser.New(l)
+
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+		evaluator := New()
+
+		output := evaluator.Evaluate(program)
+
+		stringObj, ok := output.(*object.String)
+		if !ok {
+			t.Fatalf("Expected StringObject. Got %T", output)
+		}
+
+		if stringObj.Value != tt.expected {
+			t.Fatalf("Expected %s. Got %s", tt.expected, stringObj.Value)
+		}
+	}
+
+}
+
 func checkParserErrors(t *testing.T, p *parser.Parser) {
 	errors := p.Errors
 	if len(errors) == 0 {

@@ -138,6 +138,19 @@ func (boolExpression *BooleanExpression) String() string {
 	return boolExpression.TokenLiteral()
 }
 
+type StringExpression struct {
+	Token token.Token
+	Value string
+}
+
+func (str *StringExpression) TokenLiteral() string {
+	return str.Token.Literal
+}
+func (str *StringExpression) expressionNode() {}
+func (str *StringExpression) String() string {
+	return str.TokenLiteral()
+}
+
 type PrefixExpression struct {
 	Token    token.Token
 	Operator token.TokenType
