@@ -70,6 +70,12 @@ func TestIntegerExpression(t *testing.T) {
 		       `,
 			10,
 		},
+		{
+			`let arr = [1,2,3]
+            arr[0]
+            `,
+			1,
+		},
 	}
 
 	for _, tt := range tests {

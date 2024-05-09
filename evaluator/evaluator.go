@@ -4,6 +4,7 @@ import (
 	"compiler/ast"
 	"compiler/object"
 	"compiler/token"
+	"fmt"
 )
 
 type Evaluator struct {
@@ -92,6 +93,24 @@ func (eval *Evaluator) evaluateExpression(expression ast.Expression, env *Enviro
 		}
 
 		// TODO return null object
+		return nil
+	case *ast.ArrayExpression:
+		elements := make([]object.Object, len(v.Elements))
+		for i, e := range v.Elements {
+			elements[i] = eval.evaluateExpression(e, env)
+		}
+		return &object.Array{Elements: elements}
+	case *ast.IndexExpression:
+		arrObj, ok := env.get(v.TokenLiteral()).(*object.Array)
+		if !ok {
+			fmt.Print("NOT ARRAY")
+			return nil
+		}
+
+		index := v.Index.Value
+		if 0 <= index && int(index) <= len(arrObj.Elements) {
+			return arrObj.Elements[v.Index.Value]
+		}
 		return nil
 	default:
 		return nil

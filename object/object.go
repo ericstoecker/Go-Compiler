@@ -1,6 +1,7 @@
 package object
 
 import (
+	"bytes"
 	"compiler/ast"
 	"strconv"
 )
@@ -40,3 +41,20 @@ type BooleanObject struct {
 
 func (boolObj *BooleanObject) Type() ObjectType { return "BOOLEAN" }
 func (boolObj *BooleanObject) String() string   { return strconv.FormatBool(boolObj.Value) }
+
+type Array struct {
+	Elements []Object
+}
+
+func (arr *Array) Type() ObjectType { return "ARRAY" }
+func (arr *Array) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("[")
+	for _, e := range arr.Elements {
+		out.WriteString(e.String())
+	}
+	out.WriteString(")")
+
+	return out.String()
+}
