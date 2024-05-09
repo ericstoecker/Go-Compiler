@@ -21,6 +21,7 @@ func TestNextToken(t *testing.T) {
     >=
     !
     return
+    []
     `
 
 	tests := []struct {
@@ -69,6 +70,8 @@ func TestNextToken(t *testing.T) {
 		{token.GREATER_EQUAL, ">="},
 		{token.BANG, "!"},
 		{token.RETURN, "return"},
+		{token.LBRACKET, "["},
+		{token.RBRACKET, "]"},
 		{token.EOF, ""},
 	}
 

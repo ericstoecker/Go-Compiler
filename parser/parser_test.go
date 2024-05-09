@@ -446,6 +446,45 @@ func TestFunctionCall(t *testing.T) {
 	}
 }
 
+func TestArrayExpression(t *testing.T) {
+	input := `
+    [2, 3]
+    `
+
+	program := constructProgram(input, t)
+
+	statements := program.Statements
+	expectProgramLength(t, statements, 1)
+
+	exprStatement, ok := statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatement. Got %T", statements[0])
+	}
+
+	arrayExpr, ok := exprStatement.Expression.(*ast.ArrayExpression)
+	if !ok {
+		t.Fatalf("Expected ArrayExpression. Got %T", exprStatement.Expression)
+	}
+
+	firstElem, ok := arrayExpr.Elements[0].(*ast.IntegerExpression)
+	if !ok {
+		t.Fatalf("Expected first element to be IntegerExpression. Got %T", arrayExpr.Elements[0])
+	}
+
+	if firstElem.Value != 2 {
+		t.Fatalf("Expected first element to have value 2. Got %d", firstElem.Value)
+	}
+
+	secondElem, ok := arrayExpr.Elements[1].(*ast.IntegerExpression)
+	if !ok {
+		t.Fatalf("Expected second element to be IntegerExpression. Got %T", arrayExpr.Elements[1])
+	}
+
+	if secondElem.Value != 3 {
+		t.Fatalf("Expected second element to have value 3. Got %d", secondElem.Value)
+	}
+}
+
 func constructProgram(input string, t *testing.T) *ast.Program {
 	l := lexer.New(input)
 	p := New(l)

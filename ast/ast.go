@@ -281,3 +281,27 @@ func (call *CallExpression) String() string {
 
 	return out.String()
 }
+
+type ArrayExpression struct {
+	Token    token.Token
+	Elements []Expression
+}
+
+func (arr *ArrayExpression) TokenLiteral() string {
+	return arr.Token.Literal
+}
+func (arr *ArrayExpression) expressionNode() {}
+func (arr *ArrayExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("[")
+
+	for i, e := range arr.Elements {
+		if i != 0 {
+			out.WriteString(", ")
+		}
+		out.WriteString(e.String())
+	}
+
+	return out.String()
+}

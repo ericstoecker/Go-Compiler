@@ -64,6 +64,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.prefixParseFunctions[token.IF] = p.parseIfExpression
 	p.prefixParseFunctions[token.FUNCTION] = p.parseFunctionLiteral
 	p.prefixParseFunctions[token.LPAREN] = p.parseParen
+	p.prefixParseFunctions[token.LBRACKET] = p.parseArray
 
 	p.infixParseFunctions = make(map[token.TokenType]InfixParseFn)
 	p.infixParseFunctions[token.EQUALS] = p.parseInfixExpression
@@ -306,6 +307,25 @@ func (p *Parser) parseParameters() []*ast.Identifier {
 	}
 
 	return params
+}
+
+func (p *Parser) parseArray() ast.Expression {
+	elems := make([]ast.Expression, 0)
+	for p.peekToken.Type != token.RBRACKET {
+		p.nextToken()
+		e := p.parseExpression(LOWEST)
+		if e != nil {
+			elems = append(elems, e)
+		}
+
+		if p.peekTokenIs(token.COMMA) {
+			p.nextToken()
+		}
+	}
+
+	p.nextToken()
+
+	return &ast.ArrayExpression{Elements: elems}
 }
 
 func (p *Parser) parseBlockStatement() *ast.BlockStatement {
