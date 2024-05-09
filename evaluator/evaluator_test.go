@@ -88,7 +88,7 @@ func TestIntegerExpression(t *testing.T) {
 
 		output := evaluator.Evaluate(program)
 
-		intResult, ok := output.(*object.IntegerObject)
+		intResult, ok := output.(*object.Integer)
 		if !ok {
 			t.Fatalf("Expected IntegerObject. Got %T", output)
 		}
@@ -186,7 +186,7 @@ func TestBooleanExpression(t *testing.T) {
 
 		output := evaluator.Evaluate(program)
 
-		intResult, ok := output.(*object.BooleanObject)
+		intResult, ok := output.(*object.Boolean)
 		if !ok {
 			t.Fatalf("Expected BooleanObject. Got %T", output)
 		}

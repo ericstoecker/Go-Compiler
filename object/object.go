@@ -22,34 +22,34 @@ type Object interface {
 	String() string
 }
 
-type IntegerObject struct {
+type Integer struct {
 	Value int64
 }
 
-func (intObj *IntegerObject) Type() ObjectType { return INT }
-func (intObj *IntegerObject) String() string   { return strconv.FormatInt(intObj.Value, 10) }
+func (intObj *Integer) Type() ObjectType { return INT }
+func (intObj *Integer) String() string   { return strconv.FormatInt(intObj.Value, 10) }
 
-type FunctionObject struct {
+type Function struct {
 	Parameters []string
 	Body       *ast.BlockStatement
 }
 
-func (funcObj *FunctionObject) Type() ObjectType { return FUNCTION }
-func (funcObj *FunctionObject) String() string   { return "" }
+func (funcObj *Function) Type() ObjectType { return FUNCTION }
+func (funcObj *Function) String() string   { return "" }
 
-type ReturnObject struct {
+type Return struct {
 	ReturnValue Object
 }
 
-func (returnObj *ReturnObject) Type() ObjectType { return RETURN_OBJ }
-func (returnObj *ReturnObject) String() string   { return "" }
+func (returnObj *Return) Type() ObjectType { return RETURN_OBJ }
+func (returnObj *Return) String() string   { return "" }
 
-type BooleanObject struct {
+type Boolean struct {
 	Value bool
 }
 
-func (boolObj *BooleanObject) Type() ObjectType { return BOOLEAN }
-func (boolObj *BooleanObject) String() string   { return strconv.FormatBool(boolObj.Value) }
+func (boolObj *Boolean) Type() ObjectType { return BOOLEAN }
+func (boolObj *Boolean) String() string   { return strconv.FormatBool(boolObj.Value) }
 
 type Array struct {
 	Elements []Object
