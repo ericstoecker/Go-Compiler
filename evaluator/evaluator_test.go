@@ -77,6 +77,7 @@ func TestIntegerExpression(t *testing.T) {
 		p := parser.New(l)
 
 		program := p.ParseProgram()
+		checkParserErrors(t, p)
 		evaluator := New()
 
 		output := evaluator.Evaluate(program)
@@ -112,6 +113,18 @@ func TestBooleanExpression(t *testing.T) {
 		{
 			"10 + 2 == 12",
 			true,
+		},
+		{
+			"true && false",
+			false,
+		},
+		{
+			"false || true",
+			true,
+		},
+		{
+			"false || false",
+			false,
 		},
 		{
 			"true != false",
@@ -150,6 +163,7 @@ func TestBooleanExpression(t *testing.T) {
 		p := parser.New(l)
 
 		program := p.ParseProgram()
+		checkParserErrors(t, p)
 		evaluator := New()
 
 		output := evaluator.Evaluate(program)
@@ -163,4 +177,17 @@ func TestBooleanExpression(t *testing.T) {
 			t.Fatalf("Expected %t. Got %t", tt.expected, intResult.Value)
 		}
 	}
+}
+
+func checkParserErrors(t *testing.T, p *parser.Parser) {
+	errors := p.Errors
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("parser had %d errors", len(errors))
+	for _, msg := range errors {
+		t.Errorf("parser error: %q", msg)
+	}
+	t.FailNow()
 }

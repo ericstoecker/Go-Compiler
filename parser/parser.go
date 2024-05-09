@@ -12,6 +12,7 @@ const (
 	_ int = iota
 	LOWEST
 	EQUALS
+	AND
 	LESSGREATER
 	SUM
 	PRODUCT
@@ -43,6 +44,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.precedences[token.NOT_EQUALS] = EQUALS
 	p.precedences[token.GREATER_EQUAL] = EQUALS
 	p.precedences[token.LESS_EQUAL] = EQUALS
+	p.precedences[token.AND] = AND
+	p.precedences[token.OR] = AND
 	p.precedences[token.GT] = LESSGREATER
 	p.precedences[token.LT] = LESSGREATER
 	p.precedences[token.PLUS] = SUM
@@ -73,6 +76,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.infixParseFunctions[token.MINUS] = p.parseInfixExpression
 	p.infixParseFunctions[token.ASTERIK] = p.parseInfixExpression
 	p.infixParseFunctions[token.SLASH] = p.parseInfixExpression
+	p.infixParseFunctions[token.AND] = p.parseInfixExpression
+	p.infixParseFunctions[token.OR] = p.parseInfixExpression
 
 	p.nextToken()
 	p.nextToken()

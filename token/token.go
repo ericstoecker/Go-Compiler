@@ -38,6 +38,8 @@ const (
 	NOT_EQUALS    = "!="
 	LESS_EQUAL    = "<="
 	GREATER_EQUAL = ">="
+	AND           = "&&"
+	OR            = "||"
 
 	IF   = "if"
 	ELSE = "else"

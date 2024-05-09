@@ -32,9 +32,9 @@ func (l *Lexer) NextToken() token.Token {
 
 	switch l.ch {
 	case '=':
-		tok = l.readTwoCharToken(tok, token.EQUALS, token.ASSIGN)
+		tok = l.readTwoCharToken(tok, '=', token.EQUALS, token.ASSIGN)
 	case '!':
-		tok = l.readTwoCharToken(tok, token.NOT_EQUALS, token.BANG)
+		tok = l.readTwoCharToken(tok, '=', token.NOT_EQUALS, token.BANG)
 	case ';':
 		tok = newToken(token.SEMICOLON, l.ch)
 	case ',':
@@ -56,9 +56,13 @@ func (l *Lexer) NextToken() token.Token {
 	case '*':
 		tok = newToken(token.ASTERIK, l.ch)
 	case '<':
-		tok = l.readTwoCharToken(tok, token.LESS_EQUAL, token.LT)
+		tok = l.readTwoCharToken(tok, '=', token.LESS_EQUAL, token.LT)
 	case '>':
-		tok = l.readTwoCharToken(tok, token.GREATER_EQUAL, token.GT)
+		tok = l.readTwoCharToken(tok, '=', token.GREATER_EQUAL, token.GT)
+	case '&':
+		tok = l.readTwoCharToken(tok, '&', token.AND, token.ILLEGAL)
+	case '|':
+		tok = l.readTwoCharToken(tok, '|', token.OR, token.ILLEGAL)
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
@@ -108,9 +112,9 @@ func (l *Lexer) readNumber() string {
 	return l.input[position:l.position]
 }
 
-func (l *Lexer) readTwoCharToken(tok token.Token, nextType token.TokenType, alternative token.TokenType) token.Token {
+func (l *Lexer) readTwoCharToken(tok token.Token, expectedNext byte, nextType token.TokenType, alternative token.TokenType) token.Token {
 	nextChar := l.peek()
-	if nextChar == '=' {
+	if nextChar == expectedNext {
 		tok.Type = nextType
 		ch := l.ch
 		l.readChar()

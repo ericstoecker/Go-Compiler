@@ -186,6 +186,10 @@ func (e *Evaluator) evaluateBooleanInfixExpression(operator token.TokenType, lef
 		return &object.BooleanObject{Value: left.Value == right.Value}
 	case token.NOT_EQUALS:
 		return &object.BooleanObject{Value: left.Value != right.Value}
+	case token.AND:
+		return &object.BooleanObject{Value: left.Value && right.Value}
+	case token.OR:
+		return &object.BooleanObject{Value: left.Value || right.Value}
 	default:
 		return nil
 	}
