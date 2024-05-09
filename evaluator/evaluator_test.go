@@ -162,6 +162,18 @@ func TestBooleanExpression(t *testing.T) {
             `,
 			true,
 		},
+		{
+			`"ab" == "ab"`,
+			true,
+		},
+		{
+			`"ab" == "ba"`,
+			false,
+		},
+		{
+			`"ab" != "ba"`,
+			true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -193,6 +205,10 @@ func TestStringEvaluation(t *testing.T) {
 		{
 			`"test"`,
 			"test",
+		},
+		{
+			`"str" + "ing"`,
+			"string",
 		},
 	}
 

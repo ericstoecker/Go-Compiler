@@ -171,6 +171,11 @@ func (e *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression, env 
 		rightBool := right.(*object.BooleanObject)
 
 		return e.evaluateBooleanInfixExpression(infixExpr.Operator, leftBool, rightBool)
+	case left.Type() == object.STRING && right.Type() == object.STRING:
+		leftStr := left.(*object.String)
+		rightStr := right.(*object.String)
+
+		return evaluateStringInfixExpression(infixExpr.Operator, leftStr, rightStr)
 	default:
 		return nil
 	}
@@ -216,18 +221,15 @@ func (e *Evaluator) evaluateBooleanInfixExpression(operator token.TokenType, lef
 	}
 }
 
-func (e *Evaluator) evaluateEquals(infixExpr *ast.InfixExpression, env *Environment) object.Object {
-	left := e.evaluateExpression(infixExpr.Left, env)
-	right := e.evaluateExpression(infixExpr.Right, env)
-
-	intLeft, ok := left.(*object.BooleanObject)
-	if !ok {
+func evaluateStringInfixExpression(operator token.TokenType, left *object.String, right *object.String) object.Object {
+	switch operator {
+	case token.EQUALS:
+		return &object.BooleanObject{Value: left.Value == right.Value}
+	case token.NOT_EQUALS:
+		return &object.BooleanObject{Value: left.Value != right.Value}
+	case token.PLUS:
+		return &object.String{Value: left.Value + right.Value}
+	default:
 		return nil
 	}
-
-	intRight, ok := right.(*object.BooleanObject)
-	if !ok {
-		return nil
-	}
-	return &object.BooleanObject{Value: intLeft.Value == intRight.Value}
 }
