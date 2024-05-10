@@ -210,6 +210,13 @@ func TestStringEvaluation(t *testing.T) {
 			`"str" + "ing"`,
 			"string",
 		},
+		{
+			`let x = ["a"]
+            let y = push(x, "b")
+            y[1]
+            `,
+			"b",
+		},
 	}
 
 	for _, tt := range tests {

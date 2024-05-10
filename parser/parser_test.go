@@ -417,7 +417,7 @@ func TestFunctionDefinition(t *testing.T) {
 
 func TestFunctionCall(t *testing.T) {
 	input := `
-	func(2 + 2)
+	func(2 + 2, 4)
 	`
 
 	program := constructProgram(input, t)
@@ -436,13 +436,18 @@ func TestFunctionCall(t *testing.T) {
 	}
 
 	arguments := callExpr.Arguments
-	if len(arguments) != 1 {
-		t.Fatalf("Expected 1 argument. Got %d", len(arguments))
+	if len(arguments) != 2 {
+		t.Fatalf("Expected 2 argument. Got %d", len(arguments))
 	}
 
 	firstParam := arguments[0]
 	if firstParam == nil {
 		t.Fatalf("Expected first argument to be defined. Got nil")
+	}
+
+	secondParam := arguments[1]
+	if secondParam == nil {
+		t.Fatalf("Expected second argument to be defined. Got nil")
 	}
 }
 

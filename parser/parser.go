@@ -295,6 +295,10 @@ func (p *Parser) parseCallExpression() ast.Expression {
 		if argument != nil {
 			arguments = append(arguments, argument)
 		}
+
+		if p.peekTokenIs(token.COMMA) {
+			p.nextToken()
+		}
 		p.nextToken()
 	}
 	call.Arguments = arguments
