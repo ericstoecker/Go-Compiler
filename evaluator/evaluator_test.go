@@ -241,6 +241,38 @@ func TestStringEvaluation(t *testing.T) {
 
 }
 
+func TestErrorHandling(t *testing.T) {
+	tests := []struct {
+		input string
+		error string
+	}{
+		{
+			`true - 10`,
+			"Operation not supported BOOLEAN - INT",
+		},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := parser.New(l)
+
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+		evaluator := New()
+
+		output := evaluator.Evaluate(program)
+
+		err, ok := output.(*object.Error)
+		if !ok {
+			t.Fatalf("Expected ErrorObject. Got %T", output)
+		}
+
+		if err.Message != tt.error {
+			t.Fatalf("Expected error message to be: %s. Got %s", tt.error, err.Message)
+		}
+	}
+}
+
 func checkParserErrors(t *testing.T, p *parser.Parser) {
 	errors := p.Errors
 	if len(errors) == 0 {

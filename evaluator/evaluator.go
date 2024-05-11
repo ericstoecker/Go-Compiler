@@ -30,6 +30,9 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 	return e.evaluate(node, e.environment)
 }
 
+// refactorings todo:
+// single true/false and null
+
 func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 	switch v := node.(type) {
 	case *ast.ExpressionStatement:
@@ -185,7 +188,7 @@ func (e *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression, env 
 
 		return evaluateStringInfixExpression(infixExpr.Operator, leftStr, rightStr)
 	default:
-		return nil
+		return newError("Operation not supported %s %s %s", left.Type(), infixExpr.Operator, right.Type())
 	}
 }
 
@@ -256,4 +259,8 @@ func evaluateStringInfixExpression(operator token.TokenType, left *object.String
 	default:
 		return nil
 	}
+}
+
+func newError(format string, a ...interface{}) *object.Error {
+	return &object.Error{Message: fmt.Sprintf(format, a...)}
 }

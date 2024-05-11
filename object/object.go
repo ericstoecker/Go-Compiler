@@ -13,6 +13,7 @@ const (
 	BOOLEAN    = "BOOLEAN"
 	ARRAY      = "ARRAY"
 	STRING     = "STRING"
+	ERROR      = "ERROR"
 )
 
 type ObjectType string
@@ -77,4 +78,15 @@ func (str *String) Type() ObjectType {
 }
 func (str *String) String() string {
 	return str.Value
+}
+
+type Error struct {
+	Message string
+}
+
+func (err *Error) Type() ObjectType {
+	return ERROR
+}
+func (err *Error) String() string {
+	return err.Message
 }
