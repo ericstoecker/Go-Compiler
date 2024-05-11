@@ -250,6 +250,12 @@ func TestErrorHandling(t *testing.T) {
 			`true - 10`,
 			"Operation not supported BOOLEAN - INT",
 		},
+		{
+			`10 - true
+            20
+            `,
+			"Operation not supported INT - BOOLEAN",
+		},
 	}
 
 	for _, tt := range tests {

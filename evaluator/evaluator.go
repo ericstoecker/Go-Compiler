@@ -32,6 +32,7 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 
 // refactorings todo:
 // single true/false and null
+// extract block stmt and program stmt evaluation into own function
 
 func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 	switch v := node.(type) {
@@ -47,6 +48,11 @@ func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 		var result object.Object
 		for _, stmt := range v.Statements {
 			result = e.evaluate(stmt, env)
+
+			switch r := result.(type) {
+			case *object.Error:
+				return r
+			}
 		}
 		return result
 	case *ast.PrefixExpression:
