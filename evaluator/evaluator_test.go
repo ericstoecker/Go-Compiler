@@ -256,6 +256,14 @@ func TestErrorHandling(t *testing.T) {
             `,
 			"Operation not supported INT - BOOLEAN",
 		},
+		{
+			`a(10)`,
+			"undefined: a",
+		},
+		{
+			`if (300) { }`,
+			"non-boolean condition in if-expression",
+		},
 	}
 
 	for _, tt := range tests {

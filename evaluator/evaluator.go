@@ -81,7 +81,7 @@ func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 
 		functionObj, ok := env.get(v.TokenLiteral()).(*object.Function)
 		if !ok {
-			return nil
+			return newError("undefined: %s", v.TokenLiteral())
 		}
 
 		newEnv := FromEnvironment(env)
@@ -102,7 +102,7 @@ func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 
 		booleanEvalResult, ok := evaluatedCondition.(*object.Boolean)
 		if !ok {
-			return nil
+			return newError("non-boolean condition in if-expression")
 		}
 
 		if booleanEvalResult.Value {
