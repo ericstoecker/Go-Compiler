@@ -63,6 +63,23 @@ func constructBuiltins() map[string]object.Object {
 			}
 		},
 	}
+	builtins["isEmpty"] = &object.Builtin{
+		Name: "isEmpty",
+		Fn: func(args ...object.Object) object.Object {
+			if numArg := len(args); numArg != 1 {
+				return newError("wrong number of arguments: expected 1. Got %d", numArg)
+			}
+
+			switch arg := args[0].(type) {
+			case *object.Array:
+				return newBool(len(arg.Elements) == 0)
+			case *object.String:
+				return newBool(len(arg.Value) == 0)
+			default:
+				return newError("Operation not supported: isEmpty(%s)", arg.Type())
+			}
+		},
+	}
 
 	return builtins
 }

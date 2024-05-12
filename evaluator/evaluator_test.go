@@ -76,6 +76,10 @@ func TestIntegerExpression(t *testing.T) {
             `,
 			1,
 		},
+		{
+			`len("abc")`,
+			3,
+		},
 	}
 
 	for _, tt := range tests {
@@ -172,6 +176,10 @@ func TestBooleanExpression(t *testing.T) {
 		},
 		{
 			`"ab" != "ba"`,
+			true,
+		},
+		{
+			`isEmpty([])`,
 			true,
 		},
 	}
