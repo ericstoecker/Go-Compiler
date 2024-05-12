@@ -264,6 +264,24 @@ func TestErrorHandling(t *testing.T) {
 			`if (300) { }`,
 			"non-boolean condition in if-expression",
 		},
+		{
+			`-false`,
+			"Operation not supported: -false (type missmatch, expected INT. Got BOOLEAN)",
+		},
+		{
+			`!30`,
+			"Operation not supported: !30 (type missmatch, expected BOOLEAN. Got INT)",
+		},
+		{
+			`let l = 10
+            l[10]`,
+			"not an array: l",
+		},
+		{
+			`let l = [0, 1]
+            l[2]`,
+			"index 2 out of bounds for array of length 2",
+		},
 	}
 
 	for _, tt := range tests {

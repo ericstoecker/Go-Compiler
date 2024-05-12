@@ -122,15 +122,14 @@ func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 	case *ast.IndexExpression:
 		arrObj, ok := env.get(v.TokenLiteral()).(*object.Array)
 		if !ok {
-			fmt.Print("NOT ARRAY")
-			return nil
+			return newError("not an array: %s", v.TokenLiteral())
 		}
 
 		index := v.Index.Value
-		if 0 <= index && int(index) <= len(arrObj.Elements) {
+		if 0 <= index && int(index) < len(arrObj.Elements) {
 			return arrObj.Elements[v.Index.Value]
 		}
-		return nil
+		return newError("index %d out of bounds for array of length %d", index, len(arrObj.Elements))
 	default:
 		return nil
 	}
@@ -157,14 +156,14 @@ func (e *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression, e
 	case token.MINUS:
 		intExpr, ok := expr.(*object.Integer)
 		if !ok {
-			return nil
+			return newError("Operation not supported: -%s (type missmatch, expected INT. Got %s)", expr.String(), expr.Type())
 		}
 
 		return &object.Integer{Value: -intExpr.Value}
 	case token.BANG:
 		boolExpr, ok := expr.(*object.Boolean)
 		if !ok {
-			return nil
+			return newError("Operation not supported: !%s (type missmatch, expected BOOLEAN. Got %s)", expr.String(), expr.Type())
 		}
 
 		return &object.Boolean{Value: !boolExpr.Value}
