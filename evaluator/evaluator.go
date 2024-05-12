@@ -131,7 +131,7 @@ func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 		}
 		return newError("index %d out of bounds for array of length %d", index, len(arrObj.Elements))
 	default:
-		return nil
+		return newError("Node of type %T unknown", v)
 	}
 }
 
@@ -168,7 +168,7 @@ func (e *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression, e
 
 		return &object.Boolean{Value: !boolExpr.Value}
 	default:
-		return nil
+		return newError("Prefix unknown: %s", prefixExpr.Operator)
 	}
 }
 
@@ -234,7 +234,7 @@ func evaluateIntegerInfixExpression(operator token.TokenType, left *object.Integ
 	case token.LESS_EQUAL:
 		return &object.Boolean{Value: left.Value <= right.Value}
 	default:
-		return nil
+		return newError("Infix operator unknown: %s", operator)
 	}
 }
 
@@ -249,7 +249,7 @@ func evaluateBooleanInfixExpression(operator token.TokenType, left *object.Boole
 	case token.OR:
 		return &object.Boolean{Value: left.Value || right.Value}
 	default:
-		return nil
+		return newError("Infix operator unknown: %s", operator)
 	}
 }
 
@@ -262,7 +262,7 @@ func evaluateStringInfixExpression(operator token.TokenType, left *object.String
 	case token.PLUS:
 		return &object.String{Value: left.Value + right.Value}
 	default:
-		return nil
+		return newError("Infix operator unknown: %s", operator)
 	}
 }
 
