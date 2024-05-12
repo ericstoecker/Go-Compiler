@@ -282,6 +282,11 @@ func TestErrorHandling(t *testing.T) {
             l[2]`,
 			"index 2 out of bounds for array of length 2",
 		},
+		{
+			`let x = true
+            push(x, false)`,
+			"Operation not supported: push(x, false) (type missmatch, expected ARRAY. Got BOOLEAN)",
+		},
 	}
 
 	for _, tt := range tests {

@@ -205,7 +205,7 @@ func (e *Evaluator) evaluatePush(call *ast.CallExpression, env *Environment) obj
 	firstArg := e.evaluate(call.Arguments[0], env)
 	arrArg, ok := firstArg.(*object.Array)
 	if !ok {
-		return nil
+		return newError("Operation not supported: %s (type missmatch, expected ARRAY. Got %s)", call.String(), firstArg.Type())
 	}
 
 	secondArg := e.evaluate(call.Arguments[1], env)

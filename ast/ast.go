@@ -287,7 +287,10 @@ func (call *CallExpression) String() string {
 
 	out.WriteString(call.TokenLiteral())
 	out.WriteString("(")
-	for _, arg := range call.Arguments {
+	for i, arg := range call.Arguments {
+		if i != 0 {
+			out.WriteString(", ")
+		}
 		out.WriteString(arg.String())
 	}
 	out.WriteString(")")
