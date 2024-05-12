@@ -15,6 +15,7 @@ const (
 	STRING     = "STRING"
 	ERROR      = "ERROR"
 	NULL       = "NULL"
+	BUILTIN    = "BUILTIN"
 )
 
 type ObjectType string
@@ -100,4 +101,16 @@ func (null *Null) Type() ObjectType {
 }
 func (null *Null) String() string {
 	return "NULL"
+}
+
+type Builtin struct {
+	Name string
+	Fn   func(args ...Object) Object
+}
+
+func (builtin *Builtin) Type() ObjectType {
+	return BUILTIN
+}
+func (builtin *Builtin) String() string {
+	return ""
 }

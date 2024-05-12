@@ -285,7 +285,7 @@ func TestErrorHandling(t *testing.T) {
 		{
 			`let x = true
             push(x, false)`,
-			"Operation not supported: push(x, false) (type missmatch, expected ARRAY. Got BOOLEAN)",
+			"Operation not supported: push(BOOLEAN, BOOLEAN) (type missmatch, expected ARRAY. Got BOOLEAN)",
 		},
 		{
 			`push(1, 2, 3)`,

@@ -11,6 +11,10 @@ func NewEnvironment() *Environment {
 	return &Environment{currentEnvironment: make(map[string]object.Object)}
 }
 
+func FromMap(source map[string]object.Object) *Environment {
+	return &Environment{currentEnvironment: source}
+}
+
 func FromEnvironment(env *Environment) *Environment {
 	return &Environment{extendedEnvironment: env, currentEnvironment: make(map[string]object.Object)}
 }

@@ -19,23 +19,57 @@ type Evaluator struct {
 }
 
 func New() *Evaluator {
-	environment := NewEnvironment()
+	environment := FromMap(constructBuiltins())
 
 	e := &Evaluator{environment: environment}
 
-	builtins := make(map[string]Builtin)
-	builtins["push"] = e.evaluatePush
-	e.builtins = builtins
-
 	return e
+}
+
+func constructBuiltins() map[string]object.Object {
+	builtins := make(map[string]object.Object)
+	builtins["push"] = &object.Builtin{
+		Name: "push",
+		Fn: func(args ...object.Object) object.Object {
+			if numArg := len(args); numArg != 2 {
+				return newError("wrong number of arguments: expected 2. Got %d", numArg)
+			}
+
+			arrArg, ok := args[0].(*object.Array)
+			if !ok {
+				return newError(
+					"Operation not supported: push(%s, %s) (type missmatch, expected ARRAY. Got %s)",
+					args[0].Type(), args[1].Type(), args[0].Type(),
+				)
+			}
+
+			return &object.Array{Elements: append(arrArg.Elements, args[1])}
+		},
+	}
+	builtins["len"] = &object.Builtin{
+		Name: "len",
+		Fn: func(args ...object.Object) object.Object {
+			if numArg := len(args); numArg != 1 {
+				return newError("wrong number of arguments: expected 1. Got %d", numArg)
+			}
+
+			switch arg := args[0].(type) {
+			case *object.Array:
+				return &object.Integer{Value: int64(len(arg.Elements))}
+			case *object.String:
+				return &object.Integer{Value: int64(len(arg.Value))}
+			default:
+				return newError("Operation not supported: len(%s)", arg.Type())
+			}
+		},
+	}
+
+	return builtins
 }
 
 func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 	return e.evaluate(node, e.environment)
 }
-
-// refactorings todo:
-// extract block stmt and program stmt evaluation into own function
 
 func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 	switch v := node.(type) {
@@ -77,14 +111,23 @@ func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 		}
 		return &object.Function{Parameters: params, Body: v.Body}
 	case *ast.CallExpression:
-		builtin := e.builtins[v.TokenLiteral()]
-		if builtin != nil {
-			return builtin(v, env)
+		variable := env.get(v.TokenLiteral())
+		if variable == nil {
+			return newError("undefined: %s", v.TokenLiteral())
 		}
 
-		function, ok := env.get(v.TokenLiteral()).(*object.Function)
+		builtin, ok := variable.(*object.Builtin)
+		if ok {
+			args := make([]object.Object, len(v.Arguments))
+			for i, arg := range v.Arguments {
+				args[i] = e.evaluate(arg, env)
+			}
+			return builtin.Fn(args...)
+		}
+
+		function, ok := variable.(*object.Function)
 		if !ok {
-			return newError("undefined: %s", v.TokenLiteral())
+			return newError("")
 		}
 
 		if numArg, numParam := len(v.Arguments), len(function.Parameters); numArg != numParam {
