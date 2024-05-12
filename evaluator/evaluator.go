@@ -41,7 +41,7 @@ func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 	case *ast.LetStatement:
 		value := e.evaluate(v.Value, env)
 		env.put(v.Name.Value, value)
-		return nil
+		return NULL
 	case *ast.ReturnStatement:
 		return &object.Return{ReturnValue: e.evaluate(v.ReturnValue, env)}
 	case *ast.Program:
@@ -115,8 +115,7 @@ func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 			return e.evaluateBlockStatement(v.Alternative, env)
 		}
 
-		// TODO return null object
-		return nil
+		return NULL
 	case *ast.ArrayExpression:
 		elements := make([]object.Object, len(v.Elements))
 		for i, el := range v.Elements {
@@ -273,3 +272,5 @@ func evaluateStringInfixExpression(operator token.TokenType, left *object.String
 func newError(format string, a ...interface{}) *object.Error {
 	return &object.Error{Message: fmt.Sprintf(format, a...)}
 }
+
+var NULL = &object.Null{}

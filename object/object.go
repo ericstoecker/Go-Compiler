@@ -14,6 +14,7 @@ const (
 	ARRAY      = "ARRAY"
 	STRING     = "STRING"
 	ERROR      = "ERROR"
+	NULL       = "NULL"
 )
 
 type ObjectType string
@@ -36,14 +37,14 @@ type Function struct {
 }
 
 func (funcObj *Function) Type() ObjectType { return FUNCTION }
-func (funcObj *Function) String() string   { return "" }
+func (funcObj *Function) String() string   { return "NULL" }
 
 type Return struct {
 	ReturnValue Object
 }
 
 func (returnObj *Return) Type() ObjectType { return RETURN_OBJ }
-func (returnObj *Return) String() string   { return "" }
+func (returnObj *Return) String() string   { return "NULL" }
 
 type Boolean struct {
 	Value bool
@@ -89,4 +90,14 @@ func (err *Error) Type() ObjectType {
 }
 func (err *Error) String() string {
 	return err.Message
+}
+
+type Null struct {
+}
+
+func (null *Null) Type() ObjectType {
+	return NULL
+}
+func (null *Null) String() string {
+	return "NULL"
 }
