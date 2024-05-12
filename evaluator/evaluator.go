@@ -9,6 +9,10 @@ import (
 
 type Builtin func(*ast.CallExpression, *Environment) object.Object
 
+var NULL = &object.Null{}
+var TRUE = &object.Boolean{Value: true}
+var FALSE = &object.Boolean{Value: false}
+
 type Evaluator struct {
 	environment *Environment
 	builtins    map[string]Builtin
@@ -31,7 +35,6 @@ func (e *Evaluator) Evaluate(node ast.Node) object.Object {
 }
 
 // refactorings todo:
-// single true/false and null
 // extract block stmt and program stmt evaluation into own function
 
 func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
@@ -62,7 +65,7 @@ func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 	case *ast.IntegerExpression:
 		return &object.Integer{Value: v.Value}
 	case *ast.BooleanExpression:
-		return &object.Boolean{Value: v.Value}
+		return newBool(v.Value)
 	case *ast.StringExpression:
 		return &object.String{Value: v.Value}
 	case *ast.Identifier:
@@ -169,7 +172,7 @@ func (e *Evaluator) evaluatePrefixExpression(prefixExpr *ast.PrefixExpression, e
 			return newError("Operation not supported: !%s (type missmatch, expected BOOLEAN. Got %s)", expr.String(), expr.Type())
 		}
 
-		return &object.Boolean{Value: !boolExpr.Value}
+		return newBool(!boolExpr.Value)
 	default:
 		return newError("Prefix unknown: %s", prefixExpr.Operator)
 	}
@@ -225,17 +228,17 @@ func evaluateIntegerInfixExpression(operator token.TokenType, left *object.Integ
 	case token.ASTERIK:
 		return &object.Integer{Value: left.Value * right.Value}
 	case token.EQUALS:
-		return &object.Boolean{Value: left.Value == right.Value}
+		return newBool(left.Value == right.Value)
 	case token.NOT_EQUALS:
-		return &object.Boolean{Value: left.Value != right.Value}
+		return newBool(left.Value != right.Value)
 	case token.GT:
-		return &object.Boolean{Value: left.Value > right.Value}
+		return newBool(left.Value > right.Value)
 	case token.LT:
-		return &object.Boolean{Value: left.Value < right.Value}
+		return newBool(left.Value < right.Value)
 	case token.GREATER_EQUAL:
-		return &object.Boolean{Value: left.Value >= right.Value}
+		return newBool(left.Value >= right.Value)
 	case token.LESS_EQUAL:
-		return &object.Boolean{Value: left.Value <= right.Value}
+		return newBool(left.Value <= right.Value)
 	default:
 		return newError("Infix operator unknown: %s", operator)
 	}
@@ -244,13 +247,13 @@ func evaluateIntegerInfixExpression(operator token.TokenType, left *object.Integ
 func evaluateBooleanInfixExpression(operator token.TokenType, left *object.Boolean, right *object.Boolean) object.Object {
 	switch operator {
 	case token.EQUALS:
-		return &object.Boolean{Value: left.Value == right.Value}
+		return newBool(left.Value == right.Value)
 	case token.NOT_EQUALS:
-		return &object.Boolean{Value: left.Value != right.Value}
+		return newBool(left.Value != right.Value)
 	case token.AND:
-		return &object.Boolean{Value: left.Value && right.Value}
+		return newBool(left.Value && right.Value)
 	case token.OR:
-		return &object.Boolean{Value: left.Value || right.Value}
+		return newBool(left.Value || right.Value)
 	default:
 		return newError("Infix operator unknown: %s", operator)
 	}
@@ -259,9 +262,9 @@ func evaluateBooleanInfixExpression(operator token.TokenType, left *object.Boole
 func evaluateStringInfixExpression(operator token.TokenType, left *object.String, right *object.String) object.Object {
 	switch operator {
 	case token.EQUALS:
-		return &object.Boolean{Value: left.Value == right.Value}
+		return newBool(left.Value == right.Value)
 	case token.NOT_EQUALS:
-		return &object.Boolean{Value: left.Value != right.Value}
+		return newBool(left.Value != right.Value)
 	case token.PLUS:
 		return &object.String{Value: left.Value + right.Value}
 	default:
@@ -273,4 +276,9 @@ func newError(format string, a ...interface{}) *object.Error {
 	return &object.Error{Message: fmt.Sprintf(format, a...)}
 }
 
-var NULL = &object.Null{}
+func newBool(value bool) *object.Boolean {
+	if value {
+		return TRUE
+	}
+	return FALSE
+}
