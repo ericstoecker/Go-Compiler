@@ -287,6 +287,15 @@ func TestErrorHandling(t *testing.T) {
             push(x, false)`,
 			"Operation not supported: push(x, false) (type missmatch, expected ARRAY. Got BOOLEAN)",
 		},
+		{
+			`push(1, 2, 3)`,
+			"wrong number of arguments: expected 2. Got 3",
+		},
+		{
+			`let f = fn(a,b,c) { return a + b + c }
+            f(1,2)`,
+			"wrong number of arguments: expected 3. Got 2",
+		},
 	}
 
 	for _, tt := range tests {

@@ -79,18 +79,22 @@ func (e *Evaluator) evaluate(node ast.Node, env *Environment) object.Object {
 			return builtin(v, env)
 		}
 
-		functionObj, ok := env.get(v.TokenLiteral()).(*object.Function)
+		function, ok := env.get(v.TokenLiteral()).(*object.Function)
 		if !ok {
 			return newError("undefined: %s", v.TokenLiteral())
 		}
 
+		if numArg, numParam := len(v.Arguments), len(function.Parameters); numArg != numParam {
+			return newError("wrong number of arguments: expected %d. Got %d", numParam, numArg)
+		}
+
 		newEnv := FromEnvironment(env)
 
-		for i, param := range functionObj.Parameters {
+		for i, param := range function.Parameters {
 			newEnv.put(param, e.evaluate(v.Arguments[i], env))
 		}
 
-		result := e.evaluateBlockStatement(functionObj.Body, newEnv)
+		result := e.evaluateBlockStatement(function.Body, newEnv)
 
 		returnStmt, ok := result.(*object.Return)
 		if ok {
@@ -198,8 +202,8 @@ func (e *Evaluator) evaluateInfixExpression(infixExpr *ast.InfixExpression, env 
 }
 
 func (e *Evaluator) evaluatePush(call *ast.CallExpression, env *Environment) object.Object {
-	if len(call.Arguments) != 2 {
-		return nil
+	if numArg := len(call.Arguments); numArg != 2 {
+		return newError("wrong number of arguments: expected 2. Got %d", numArg)
 	}
 
 	firstArg := e.evaluate(call.Arguments[0], env)
