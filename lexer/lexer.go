@@ -117,7 +117,7 @@ func (l *Lexer) readIdentifier() string {
 func (l *Lexer) readString() string {
 	l.readChar()
 	position := l.position
-	for l.ch != '"' {
+	for l.ch != '"' && l.ch != 0 {
 		l.readChar()
 	}
 	result := l.input[position:l.position]
