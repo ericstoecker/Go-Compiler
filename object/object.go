@@ -12,6 +12,7 @@ const (
 	RETURN_OBJ = "RETURN_OBJ"
 	BOOLEAN    = "BOOLEAN"
 	ARRAY      = "ARRAY"
+	MAP        = "MAP"
 	STRING     = "STRING"
 	ERROR      = "ERROR"
 	NULL       = "NULL"
@@ -58,7 +59,7 @@ type Array struct {
 	Elements []Object
 }
 
-func (arr *Array) Type() ObjectType { return "ARRAY" }
+func (arr *Array) Type() ObjectType { return ARRAY }
 func (arr *Array) String() string {
 	var out bytes.Buffer
 
@@ -69,6 +70,15 @@ func (arr *Array) String() string {
 	out.WriteString(")")
 
 	return out.String()
+}
+
+type Map struct {
+	Entries map[string]Object
+}
+
+func (mapObj *Map) Type() ObjectType { return MAP }
+func (mapObj *Map) String() string {
+	return "map"
 }
 
 type String struct {

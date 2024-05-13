@@ -185,20 +185,49 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 			elements[i] = evaluate(el, env)
 		}
 		return &object.Array{Elements: elements}
-	case *ast.IndexExpression:
-		arrObj, ok := env.get(v.TokenLiteral()).(*object.Array)
-		if !ok {
-			return newError("not an array: %s", v.TokenLiteral())
-		}
+	case *ast.MapExpression:
+		entries := make(map[string]object.Object, len(v.Entries))
+		for key, value := range v.Entries {
+			keyObject := evaluate(key, env)
+			valueObject := evaluate(value, env)
 
-		index := v.Index.Value
-		if 0 <= index && int(index) < len(arrObj.Elements) {
-			return arrObj.Elements[v.Index.Value]
+			entries[keyObject.String()] = valueObject
 		}
-		return newError("index %d out of bounds for array of length %d", index, len(arrObj.Elements))
+		return &object.Map{Entries: entries}
+	case *ast.IndexExpression:
+		left := evaluate(v.Left, env)
+		index := evaluate(v.Index, env)
+		switch true {
+		case left.Type() == object.ARRAY && index.Type() == object.INT:
+			arr := left.(*object.Array)
+			indexInt := index.(*object.Integer)
+			return evaluateArrayIndexExpression(arr, indexInt)
+		case left.Type() == object.MAP:
+			mapObj := left.(*object.Map)
+			return evaluateMapIndexExpression(mapObj, index)
+		default:
+			return newError("Operation not supported: %s (must be either ARRAY or MAP)", v.String())
+		}
 	default:
 		return newError("Node of type %T unknown", v)
 	}
+}
+
+func evaluateArrayIndexExpression(left *object.Array, index *object.Integer) object.Object {
+	if 0 > index.Value || index.Value >= int64(len(left.Elements)) {
+		return newError("index %d out of bounds for array of length %d", index.Value, len(left.Elements))
+	}
+	return left.Elements[index.Value]
+}
+
+func evaluateMapIndexExpression(left *object.Map, index object.Object) object.Object {
+	key := index.String()
+
+	value, ok := left.Entries[key]
+	if !ok {
+		return NULL
+	}
+	return value
 }
 
 func evaluateBlockStatement(blockStmt *ast.BlockStatement, env *Environment) object.Object {

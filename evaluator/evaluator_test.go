@@ -220,9 +220,14 @@ func TestStringEvaluation(t *testing.T) {
 		},
 		{
 			`let x = ["a"]
-            let y = push(x, "b")
-            y[1]
-            `,
+		    let y = push(x, "b")
+		    y[1]
+		    `,
+			"b",
+		},
+		{
+			`let hashmap = { "a": "b" }
+		    hashmap["a"]`,
 			"b",
 		},
 	}
@@ -260,8 +265,8 @@ func TestErrorHandling(t *testing.T) {
 		},
 		{
 			`10 - true
-            20
-            `,
+		    20
+		    `,
 			"Operation not supported INT - BOOLEAN",
 		},
 		{
@@ -283,16 +288,16 @@ func TestErrorHandling(t *testing.T) {
 		{
 			`let l = 10
             l[10]`,
-			"not an array: l",
+			"Operation not supported: l[10] (must be either ARRAY or MAP)",
 		},
 		{
 			`let l = [0, 1]
-            l[2]`,
+		    l[2]`,
 			"index 2 out of bounds for array of length 2",
 		},
 		{
 			`let x = true
-            push(x, false)`,
+		    push(x, false)`,
 			"Operation not supported: push(BOOLEAN, BOOLEAN) (type missmatch, expected ARRAY. Got BOOLEAN)",
 		},
 		{
@@ -301,7 +306,7 @@ func TestErrorHandling(t *testing.T) {
 		},
 		{
 			`let f = fn(a,b,c) { return a + b + c }
-            f(1,2)`,
+		    f(1,2)`,
 			"wrong number of arguments: expected 3. Got 2",
 		},
 	}
