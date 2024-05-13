@@ -341,3 +341,28 @@ func (ind *IndexExpression) String() string {
 
 	return out.String()
 }
+
+type MapExpression struct {
+	Token   token.Token
+	Entries map[Expression]Expression
+}
+
+func (mapExpr *MapExpression) TokenLiteral() string {
+	return mapExpr.Token.Literal
+}
+func (mapExpr *MapExpression) expressionNode() {}
+func (mapExpr *MapExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(mapExpr.TokenLiteral())
+	out.WriteString("{ ")
+	for key, value := range mapExpr.Entries {
+		out.WriteString(key.String())
+		out.WriteString(": ")
+		out.WriteString(value.String())
+		out.WriteString(" ")
+	}
+	out.WriteString("}")
+
+	return out.String()
+}

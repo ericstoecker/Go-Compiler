@@ -510,6 +510,50 @@ func TestIndexExpression(t *testing.T) {
 	}
 }
 
+func TestHashMap(t *testing.T) {
+	input := `
+    { "a": 10 }
+    `
+	program := constructProgram(input, t)
+	stmts := program.Statements
+	expectProgramLength(t, stmts, 1)
+
+	exprStmt, ok := stmts[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Expected ExpressionStatement. Got %T", stmts[0])
+	}
+
+	mapExpr, ok := exprStmt.Expression.(*ast.MapExpression)
+	if !ok {
+		t.Fatalf("Expected MapExpression. Got %T", exprStmt.Expression)
+	}
+
+	entries := mapExpr.Entries
+	if numEntries := len(entries); numEntries != 1 {
+		t.Fatalf("Expected 1 entry. Got %d", numEntries)
+	}
+
+	for key, value := range entries {
+		stringExpr, ok := key.(*ast.StringExpression)
+		if !ok {
+			t.Fatalf("Expected StringExpression as map key. Got %T", key)
+		}
+
+		if stringExpr.Value != "a" {
+			t.Fatalf("Expected 'a' as map key. Got %s", stringExpr.Value)
+		}
+
+		intExpr, ok := value.(*ast.IntegerExpression)
+		if !ok {
+			t.Fatalf("Expected IntegerExpression as map value. Got %T", value)
+		}
+
+		if intExpr.Value != 10 {
+			t.Fatalf("Expected '10' as map value. Got %d", intExpr.Value)
+		}
+	}
+}
+
 func constructProgram(input string, t *testing.T) *ast.Program {
 	l := lexer.New(input)
 	p := New(l)
