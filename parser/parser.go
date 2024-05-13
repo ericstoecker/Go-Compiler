@@ -18,6 +18,7 @@ const (
 	PRODUCT
 	PREFIX
 	CALL
+	INDEX
 )
 
 type PrefixParseFn func() ast.Expression
@@ -53,6 +54,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.precedences[token.ASTERIK] = PRODUCT
 	p.precedences[token.SLASH] = PRODUCT
 	p.precedences[token.LPAREN] = CALL
+	p.precedences[token.LBRACKET] = INDEX
 
 	p.prefixParseFunctions = make(map[token.TokenType]PrefixParseFn)
 	p.prefixParseFunctions[token.MINUS] = p.parsePrefixExpression
@@ -81,6 +83,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.infixParseFunctions[token.SLASH] = p.parseInfixExpression
 	p.infixParseFunctions[token.AND] = p.parseInfixExpression
 	p.infixParseFunctions[token.OR] = p.parseInfixExpression
+	p.infixParseFunctions[token.LBRACKET] = p.parseIndexExpression
 
 	p.nextToken()
 	p.nextToken()
@@ -154,10 +157,6 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 func (p *Parser) parseIdentifier() ast.Expression {
 	if p.peekTokenIs(token.LPAREN) {
 		return p.parseCallExpression()
-	}
-
-	if p.peekTokenIs(token.LBRACKET) {
-		return p.parseIndexExpression()
 	}
 
 	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
@@ -307,21 +306,12 @@ func (p *Parser) parseCallExpression() ast.Expression {
 	return call
 }
 
-func (p *Parser) parseIndexExpression() ast.Expression {
-	indExpr := &ast.IndexExpression{Token: p.currentToken}
+func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
+	indExpr := &ast.IndexExpression{Token: p.currentToken, Left: left}
 
-	if !p.expectPeek(token.LBRACKET) {
-		return nil
-	}
 	p.nextToken()
 
-	index := p.parseExpression(LOWEST)
-	intExpr, ok := index.(*ast.IntegerExpression)
-	if !ok {
-		msg := fmt.Sprintf("Expected IntegerExpression. Got %T", index)
-		p.Errors = append(p.Errors, msg)
-	}
-	indExpr.Index = intExpr
+	indExpr.Index = p.parseExpression(LOWEST)
 
 	if !p.expectPeek(token.RBRACKET) {
 		return nil

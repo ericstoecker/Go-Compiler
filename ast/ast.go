@@ -324,7 +324,8 @@ func (arr *ArrayExpression) String() string {
 
 type IndexExpression struct {
 	Token token.Token
-	Index *IntegerExpression
+	Left  Expression
+	Index Expression
 }
 
 func (ind *IndexExpression) TokenLiteral() string {
@@ -334,10 +335,10 @@ func (ind *IndexExpression) expressionNode() {}
 func (ind *IndexExpression) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(ind.TokenLiteral())
-	out.WriteString("(")
+	out.WriteString(ind.Left.String())
+	out.WriteString("[")
 	out.WriteString(ind.Index.String())
-	out.WriteString(")")
+	out.WriteString("]")
 
 	return out.String()
 }

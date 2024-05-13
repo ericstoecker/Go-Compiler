@@ -492,7 +492,7 @@ func TestArrayExpression(t *testing.T) {
 
 func TestIndexExpression(t *testing.T) {
 	input := `
-    arr[3]
+    a(2)[1]
     `
 
 	program := constructProgram(input, t)
@@ -504,9 +504,19 @@ func TestIndexExpression(t *testing.T) {
 		t.Fatalf("Expected ExpressionStatement. Got %T", stmts[0])
 	}
 
-	_, ok = exprStmt.Expression.(*ast.IndexExpression)
+	indExpr, ok := exprStmt.Expression.(*ast.IndexExpression)
 	if !ok {
 		t.Fatalf("Expected IndexExpression. Got %T", exprStmt.Expression)
+	}
+
+	_, ok = indExpr.Left.(*ast.CallExpression)
+	if !ok {
+		t.Fatalf("Expected CallExpression as IndexExpression.Left. Got %T", indExpr.Left)
+	}
+
+	_, ok = indExpr.Index.(*ast.IntegerExpression)
+	if !ok {
+		t.Fatalf("Expected IntegerExpression as IndexExpression.Index. Got %T", indExpr.Index)
 	}
 }
 
