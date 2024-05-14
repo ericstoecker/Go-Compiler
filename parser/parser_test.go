@@ -435,6 +435,15 @@ func TestFunctionCall(t *testing.T) {
 		t.Fatalf("Expected CallExpression. Got %T", exprStatement.Expression)
 	}
 
+	left, ok := callExpr.Left.(*ast.Identifier)
+	if !ok {
+		t.Fatalf("Expected Identifier as CallExpression.Left. Got %T", callExpr.Left)
+	}
+
+	if left.Value != "func" {
+		t.Fatalf("Expected Identifier.Value to be 'func'. Got %s", left.Value)
+	}
+
 	arguments := callExpr.Arguments
 	if len(arguments) != 2 {
 		t.Fatalf("Expected 2 argument. Got %d", len(arguments))

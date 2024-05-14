@@ -327,7 +327,7 @@ func TestErrorHandling(t *testing.T) {
 		}
 
 		if err.Message != tt.error {
-			t.Fatalf("Expected error message to be: %s. Got %s", tt.error, err.Message)
+			t.Fatalf("Expected error message to be: '%s'. Got '%s'", tt.error, err.Message)
 		}
 	}
 }

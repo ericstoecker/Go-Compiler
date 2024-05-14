@@ -120,7 +120,11 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 	case *ast.StringExpression:
 		return &object.String{Value: v.Value}
 	case *ast.Identifier:
-		return env.get(v.Value)
+		variable := env.get(v.Value)
+		if variable == nil {
+			return newError("undefined: %s", v.TokenLiteral())
+		}
+		return variable
 	case *ast.FunctionLiteral:
 		params := make([]string, 0)
 		for _, param := range v.Parameters {
@@ -128,12 +132,12 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 		}
 		return &object.Function{Parameters: params, Body: v.Body}
 	case *ast.CallExpression:
-		variable := env.get(v.TokenLiteral())
-		if variable == nil {
-			return newError("undefined: %s", v.TokenLiteral())
+		left := evaluate(v.Left, env)
+		if left.Type() == object.ERROR {
+			return left
 		}
 
-		builtin, ok := variable.(*object.Builtin)
+		builtin, ok := left.(*object.Builtin)
 		if ok {
 			args := make([]object.Object, len(v.Arguments))
 			for i, arg := range v.Arguments {
@@ -142,9 +146,9 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 			return builtin.Fn(args...)
 		}
 
-		function, ok := variable.(*object.Function)
+		function, ok := left.(*object.Function)
 		if !ok {
-			return newError("")
+			return newError("not a function. Got %s", left.Type())
 		}
 
 		if numArg, numParam := len(v.Arguments), len(function.Parameters); numArg != numParam {

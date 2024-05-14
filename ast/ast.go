@@ -275,6 +275,7 @@ func (fn *FunctionLiteral) String() string {
 
 type CallExpression struct {
 	Token     token.Token
+	Left      Expression
 	Arguments []Expression
 }
 
@@ -285,7 +286,7 @@ func (call *CallExpression) expressionNode() {}
 func (call *CallExpression) String() string {
 	var out bytes.Buffer
 
-	out.WriteString(call.TokenLiteral())
+	out.WriteString(call.Left.String())
 	out.WriteString("(")
 	for i, arg := range call.Arguments {
 		if i != 0 {

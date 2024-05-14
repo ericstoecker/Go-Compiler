@@ -84,6 +84,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.infixParseFunctions[token.AND] = p.parseInfixExpression
 	p.infixParseFunctions[token.OR] = p.parseInfixExpression
 	p.infixParseFunctions[token.LBRACKET] = p.parseIndexExpression
+	p.infixParseFunctions[token.LPAREN] = p.parseCallExpression
 
 	p.nextToken()
 	p.nextToken()
@@ -155,10 +156,6 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
-	if p.peekTokenIs(token.LPAREN) {
-		return p.parseCallExpression()
-	}
-
 	return &ast.Identifier{Token: p.currentToken, Value: p.currentToken.Literal}
 }
 
@@ -281,12 +278,9 @@ func (p *Parser) parseParen() ast.Expression {
 	return expr
 }
 
-func (p *Parser) parseCallExpression() ast.Expression {
-	call := &ast.CallExpression{Token: p.currentToken}
+func (p *Parser) parseCallExpression(left ast.Expression) ast.Expression {
+	call := &ast.CallExpression{Token: p.currentToken, Left: left}
 
-	if !p.expectPeek(token.LPAREN) {
-		return nil
-	}
 	p.nextToken()
 
 	arguments := make([]ast.Expression, 0)
