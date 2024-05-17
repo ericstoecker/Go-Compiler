@@ -141,6 +141,15 @@ func TestBooleanExpression(t *testing.T) {
 			true,
 		},
 		{
+			"true && true",
+			true,
+		},
+		{
+			`let x = true
+            x && true`,
+			true,
+		},
+		{
 			"10 != 10",
 			false,
 		},

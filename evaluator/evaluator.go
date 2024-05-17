@@ -340,13 +340,13 @@ func evaluateIntegerInfixExpression(operator token.TokenType, left *object.Integ
 func evaluateBooleanInfixExpression(operator token.TokenType, left *object.Boolean, right *object.Boolean) object.Object {
 	switch operator {
 	case token.EQUALS:
-		return newBool(left.Value == right.Value)
+		return newBool(left == right)
 	case token.NOT_EQUALS:
-		return newBool(left.Value != right.Value)
+		return newBool(left != right)
 	case token.AND:
-		return newBool(left.Value && right.Value)
+		return newBool(left == TRUE && right == TRUE)
 	case token.OR:
-		return newBool(left.Value || right.Value)
+		return newBool(left == TRUE || right == TRUE)
 	default:
 		return newError("Infix operator unknown: %s", operator)
 	}
