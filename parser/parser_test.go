@@ -149,7 +149,6 @@ func TestIntegerLiteralExpression(t *testing.T) {
 	}
 }
 
-// extend this
 func TestPrefixExpressions(t *testing.T) {
 	input := `
     -5;
@@ -368,7 +367,7 @@ func TestFunctionDefinition(t *testing.T) {
         return arg + anotherArg;
     }
     `
-	program := constructProgram(input, t)
+	program := parseProgram(input, t)
 
 	statements := program.Statements
 	expectProgramLength(t, statements, 1)
@@ -420,7 +419,7 @@ func TestFunctionCall(t *testing.T) {
 	func(2 + 2, 4)
 	`
 
-	program := constructProgram(input, t)
+	program := parseProgram(input, t)
 
 	statements := program.Statements
 	expectProgramLength(t, statements, 1)
@@ -465,7 +464,7 @@ func TestArrayExpression(t *testing.T) {
     [2, 3]
     `
 
-	program := constructProgram(input, t)
+	program := parseProgram(input, t)
 
 	statements := program.Statements
 	expectProgramLength(t, statements, 1)
@@ -504,7 +503,7 @@ func TestIndexExpression(t *testing.T) {
     a(2)[1]
     `
 
-	program := constructProgram(input, t)
+	program := parseProgram(input, t)
 	stmts := program.Statements
 	expectProgramLength(t, stmts, 1)
 
@@ -533,7 +532,7 @@ func TestHashMap(t *testing.T) {
 	input := `
     { "a": 10 }
     `
-	program := constructProgram(input, t)
+	program := parseProgram(input, t)
 	stmts := program.Statements
 	expectProgramLength(t, stmts, 1)
 
@@ -573,7 +572,7 @@ func TestHashMap(t *testing.T) {
 	}
 }
 
-func constructProgram(input string, t *testing.T) *ast.Program {
+func parseProgram(input string, t *testing.T) *ast.Program {
 	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()

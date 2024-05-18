@@ -7,12 +7,14 @@ import (
 	"testing"
 )
 
+type evaluatorTest struct {
+	input    string
+	expected interface{}
+}
+
 func TestIntegerExpression(t *testing.T) {
 
-	tests := []struct {
-		input    string
-		expected int64
-	}{
+	tests := []evaluatorTest{
 		{
 			"10",
 			10,
@@ -82,32 +84,11 @@ func TestIntegerExpression(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		l := lexer.New(tt.input)
-		p := parser.New(l)
-
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
-		evaluator := New()
-
-		output := evaluator.Evaluate(program)
-
-		intResult, ok := output.(*object.Integer)
-		if !ok {
-			t.Fatalf("Expected IntegerObject. Got %T", output)
-		}
-
-		if intResult.Value != tt.expected {
-			t.Fatalf("Expected %d. Got %d", tt.expected, intResult.Value)
-		}
-	}
+	runEvaluatorTests(t, tests)
 }
 
 func TestBooleanExpression(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected bool
-	}{
+	tests := []evaluatorTest{
 		{
 			"true",
 			true,
@@ -193,32 +174,11 @@ func TestBooleanExpression(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		l := lexer.New(tt.input)
-		p := parser.New(l)
-
-		program := p.ParseProgram()
-		checkParserErrors(t, p)
-		evaluator := New()
-
-		output := evaluator.Evaluate(program)
-
-		intResult, ok := output.(*object.Boolean)
-		if !ok {
-			t.Fatalf("Expected BooleanObject. Got %T", output)
-		}
-
-		if intResult.Value != tt.expected {
-			t.Fatalf("Expected %t. Got %t", tt.expected, intResult.Value)
-		}
-	}
+	runEvaluatorTests(t, tests)
 }
 
 func TestStringEvaluation(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected string
-	}{
+	tests := []evaluatorTest{
 		{
 			`"test"`,
 			"test",
@@ -241,6 +201,13 @@ func TestStringEvaluation(t *testing.T) {
 		},
 	}
 
+	runEvaluatorTests(t, tests)
+
+}
+
+func runEvaluatorTests(t *testing.T, tests []evaluatorTest) {
+	t.Helper()
+
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := parser.New(l)
@@ -251,16 +218,36 @@ func TestStringEvaluation(t *testing.T) {
 
 		output := evaluator.Evaluate(program)
 
-		stringObj, ok := output.(*object.String)
-		if !ok {
-			t.Fatalf("Expected StringObject. Got %T", output)
-		}
+		switch expected := tt.expected.(type) {
+		case string:
+			stringObj, ok := output.(*object.String)
+			if !ok {
+				t.Fatalf("Expected StringObject. Got %T", output)
+			}
 
-		if stringObj.Value != tt.expected {
-			t.Fatalf("Expected %s. Got %s", tt.expected, stringObj.Value)
+			if stringObj.Value != tt.expected {
+				t.Fatalf("Expected %s. Got %s", tt.expected, stringObj.Value)
+			}
+		case bool:
+			boolResult, ok := output.(*object.Boolean)
+			if !ok {
+				t.Fatalf("Expected BooleanObject. Got %T", output)
+			}
+
+			if boolResult.Value != tt.expected {
+				t.Fatalf("Expected %t. Got %t", tt.expected, boolResult.Value)
+			}
+		case int:
+			intResult, ok := output.(*object.Integer)
+			if !ok {
+				t.Fatalf("Expected IntegerObject. Got %T", output)
+			}
+
+			if intResult.Value != int64(expected) {
+				t.Fatalf("Expected %d. Got %d", tt.expected, intResult.Value)
+			}
 		}
 	}
-
 }
 
 func TestErrorHandling(t *testing.T) {
