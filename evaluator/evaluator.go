@@ -36,18 +36,25 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 		return evaluate(v.Expression, env)
 	case *ast.LetStatement:
 		value := evaluate(v.Value, env)
+		if isError(value) {
+			return value
+		}
+
 		env.put(v.Name.Value, value)
 		return NULL
 	case *ast.ReturnStatement:
-		return &object.Return{ReturnValue: evaluate(v.ReturnValue, env)}
+		value := evaluate(v.ReturnValue, env)
+		if isError(value) {
+			return value
+		}
+
+		return &object.Return{ReturnValue: value}
 	case *ast.Program:
 		var result object.Object
 		for _, stmt := range v.Statements {
 			result = evaluate(stmt, env)
-
-			switch r := result.(type) {
-			case *object.Error:
-				return r
+			if isError(result) {
+				return result
 			}
 		}
 		return result
@@ -75,7 +82,7 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 		return &object.Function{Parameters: params, Body: v.Body}
 	case *ast.CallExpression:
 		left := evaluate(v.Left, env)
-		if left.Type() == object.ERROR {
+		if isError(left) {
 			return left
 		}
 
@@ -83,7 +90,11 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 		if ok {
 			args := make([]object.Object, len(v.Arguments))
 			for i, arg := range v.Arguments {
-				args[i] = evaluate(arg, env)
+				currentArg := evaluate(arg, env)
+				if isError(currentArg) {
+					return currentArg
+				}
+				args[i] = currentArg
 			}
 			return builtin.Fn(args...)
 		}
@@ -100,7 +111,12 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 		newEnv := FromEnvironment(env)
 
 		for i, param := range function.Parameters {
-			newEnv.put(param, evaluate(v.Arguments[i], env))
+			currentParam := evaluate(v.Arguments[i], env)
+			if isError(currentParam) {
+				return currentParam
+			}
+
+			newEnv.put(param, currentParam)
 		}
 
 		result := evaluateBlockStatement(function.Body, newEnv)
@@ -112,6 +128,9 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 		return result
 	case *ast.IfExpression:
 		evaluatedCondition := evaluate(v.Condition, env)
+		if isError(evaluatedCondition) {
+			return evaluatedCondition
+		}
 
 		booleanEvalResult, ok := evaluatedCondition.(*object.Boolean)
 		if !ok {
@@ -127,22 +146,41 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 		return NULL
 	case *ast.ArrayLiteral:
 		elements := make([]object.Object, len(v.Elements))
-		for i, el := range v.Elements {
-			elements[i] = evaluate(el, env)
+		for i, element := range v.Elements {
+			evaluatedElement := evaluate(element, env)
+			if isError(evaluatedElement) {
+				return evaluatedElement
+			}
+			elements[i] = evaluatedElement
 		}
 		return &object.Array{Elements: elements}
 	case *ast.MapLiteral:
 		entries := make(map[string]object.Object, len(v.Entries))
 		for key, value := range v.Entries {
 			keyObject := evaluate(key, env)
+			if isError(keyObject) {
+				return keyObject
+			}
+
 			valueObject := evaluate(value, env)
+			if isError(valueObject) {
+				return valueObject
+			}
 
 			entries[keyObject.String()] = valueObject
 		}
 		return &object.Map{Entries: entries}
 	case *ast.IndexExpression:
 		left := evaluate(v.Left, env)
+		if isError(left) {
+			return left
+		}
+
 		index := evaluate(v.Index, env)
+		if isError(index) {
+			return index
+		}
+
 		switch true {
 		case left.Type() == object.ARRAY && index.Type() == object.INT:
 			arr := left.(*object.Array)
@@ -181,6 +219,9 @@ func evaluateBlockStatement(blockStmt *ast.BlockStatement, env *Environment) obj
 
 	for _, stmt := range blockStmt.Statements {
 		result = evaluate(stmt, env)
+		if isError(result) {
+			return result
+		}
 
 		returnStmt, ok := result.(*object.Return)
 		if ok {
@@ -193,6 +234,10 @@ func evaluateBlockStatement(blockStmt *ast.BlockStatement, env *Environment) obj
 
 func evaluatePrefixExpression(prefixExpr *ast.PrefixExpression, env *Environment) object.Object {
 	expr := evaluate(prefixExpr.Right, env)
+	if isError(expr) {
+		return expr
+	}
+
 	switch prefixExpr.Operator {
 	case token.MINUS:
 		intExpr, ok := expr.(*object.Integer)
@@ -215,7 +260,14 @@ func evaluatePrefixExpression(prefixExpr *ast.PrefixExpression, env *Environment
 
 func evaluateInfixExpression(infixExpr *ast.InfixExpression, env *Environment) object.Object {
 	left := evaluate(infixExpr.Left, env)
+	if isError(left) {
+		return left
+	}
+
 	right := evaluate(infixExpr.Right, env)
+	if isError(right) {
+		return right
+	}
 
 	switch true {
 	case left.Type() == object.INT && right.Type() == object.INT:
@@ -236,22 +288,6 @@ func evaluateInfixExpression(infixExpr *ast.InfixExpression, env *Environment) o
 	default:
 		return newError("Operation not supported %s %s %s", left.Type(), infixExpr.Operator, right.Type())
 	}
-}
-
-func (e *Evaluator) evaluatePush(call *ast.CallExpression, env *Environment) object.Object {
-	if numArg := len(call.Arguments); numArg != 2 {
-		return newError("wrong number of arguments: expected 2. Got %d", numArg)
-	}
-
-	firstArg := evaluate(call.Arguments[0], env)
-	arrArg, ok := firstArg.(*object.Array)
-	if !ok {
-		return newError("Operation not supported: %s (type missmatch, expected ARRAY. Got %s)", call.String(), firstArg.Type())
-	}
-
-	secondArg := evaluate(call.Arguments[1], env)
-
-	return &object.Array{Elements: append(arrArg.Elements, secondArg)}
 }
 
 func evaluateIntegerInfixExpression(operator token.TokenType, left *object.Integer, right *object.Integer) object.Object {
@@ -316,4 +352,13 @@ func newBool(value bool) *object.Boolean {
 		return TRUE
 	}
 	return FALSE
+}
+
+func isError(obj object.Object) bool {
+	switch obj.(type) {
+	case *object.Error:
+		return true
+	default:
+		return false
+	}
 }
