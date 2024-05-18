@@ -288,16 +288,16 @@ func TestErrorHandling(t *testing.T) {
 		},
 		{
 			`-false`,
-			"Operation not supported: -false (type missmatch, expected INT. Got BOOLEAN)",
+			"Operation not supported: -BOOLEAN",
 		},
 		{
 			`!30`,
-			"Operation not supported: !30 (type missmatch, expected BOOLEAN. Got INT)",
+			"Operation not supported: !INT",
 		},
 		{
 			`let l = 10
             l[10]`,
-			"Operation not supported: l[10] (must be either ARRAY or MAP)",
+			"type missmatch: cannot index INT",
 		},
 		{
 			`let l = [0, 1]
@@ -307,7 +307,7 @@ func TestErrorHandling(t *testing.T) {
 		{
 			`let x = true
 		    push(x, false)`,
-			"Operation not supported: push(BOOLEAN, BOOLEAN) (type missmatch, expected ARRAY. Got BOOLEAN)",
+			"type missmatch: first argument of push must be ARRAY. Got BOOLEAN",
 		},
 		{
 			`push(1, 2, 3)`,

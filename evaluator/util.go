@@ -13,10 +13,7 @@ func constructBuiltins() map[string]object.Object {
 
 			arrArg, ok := args[0].(*object.Array)
 			if !ok {
-				return newError(
-					"Operation not supported: push(%s, %s) (type missmatch, expected ARRAY. Got %s)",
-					args[0].Type(), args[1].Type(), args[0].Type(),
-				)
+				return newError("type missmatch: first argument of push must be %s. Got %s", object.ARRAY, args[0].Type())
 			}
 
 			return &object.Array{Elements: append(arrArg.Elements, args[1])}
@@ -35,7 +32,7 @@ func constructBuiltins() map[string]object.Object {
 			case *object.String:
 				return &object.Integer{Value: int64(len(arg.Value))}
 			default:
-				return newError("Operation not supported: len(%s)", arg.Type())
+				return newError("type missmatch: len(%s) not supported", arg.Type())
 			}
 		},
 	}
@@ -54,7 +51,7 @@ func constructBuiltins() map[string]object.Object {
 			case *object.Map:
 				return newBool(len(arg.Entries) == 0)
 			default:
-				return newError("Operation not supported: isEmpty(%s)", arg.Type())
+				return newError("type missmatch: isEmpty(%s) not supported", arg.Type())
 			}
 		},
 	}

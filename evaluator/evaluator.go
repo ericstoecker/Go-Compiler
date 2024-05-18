@@ -15,7 +15,6 @@ var FALSE = &object.Boolean{Value: false}
 
 type Evaluator struct {
 	environment *Environment
-	builtins    map[string]Builtin
 }
 
 func New() *Evaluator {
@@ -194,7 +193,7 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 			mapObj := left.(*object.Map)
 			return evaluateMapIndexExpression(mapObj, index)
 		default:
-			return newError("Operation not supported: %s (must be either ARRAY or MAP)", v.String())
+			return newError("type missmatch: cannot index %s", left.Type())
 		}
 	default:
 		return newError("Node of type %T unknown", v)
@@ -251,14 +250,14 @@ func evaluatePrefixExpression(prefixExpr *ast.PrefixExpression, env *Environment
 	case token.MINUS:
 		intExpr, ok := expr.(*object.Integer)
 		if !ok {
-			return newError("Operation not supported: -%s (type missmatch, expected INT. Got %s)", expr.String(), expr.Type())
+			return newError("Operation not supported: -%s", expr.Type())
 		}
 
 		return &object.Integer{Value: -intExpr.Value}
 	case token.BANG:
 		boolExpr, ok := expr.(*object.Boolean)
 		if !ok {
-			return newError("Operation not supported: !%s (type missmatch, expected BOOLEAN. Got %s)", expr.String(), expr.Type())
+			return newError("Operation not supported: !%s", expr.Type())
 		}
 
 		return newBool(!boolExpr.Value)
