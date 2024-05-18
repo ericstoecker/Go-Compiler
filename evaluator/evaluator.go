@@ -161,13 +161,17 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 			if isError(keyObject) {
 				return keyObject
 			}
+			hashableKey, ok := keyObject.(object.Hashable)
+			if !ok {
+				return newError("not a valid hash key: %s", keyObject.Type())
+			}
 
 			valueObject := evaluate(value, env)
 			if isError(valueObject) {
 				return valueObject
 			}
 
-			entries[keyObject.String()] = valueObject
+			entries[hashableKey.Hash()] = valueObject
 		}
 		return &object.Map{Entries: entries}
 	case *ast.IndexExpression:
@@ -205,7 +209,12 @@ func evaluateArrayIndexExpression(left *object.Array, index *object.Integer) obj
 }
 
 func evaluateMapIndexExpression(left *object.Map, index object.Object) object.Object {
-	key := index.String()
+	hashableIndex, ok := index.(object.Hashable)
+	if !ok {
+		return newError("not a valid hash key: %s", index.Type())
+	}
+
+	key := hashableIndex.Hash()
 
 	value, ok := left.Entries[key]
 	if !ok {
