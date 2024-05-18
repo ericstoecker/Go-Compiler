@@ -135,7 +135,7 @@ func TestIntegerLiteralExpression(t *testing.T) {
 		t.Fatalf("Expected ExpressionStatement. Got %T", statements[0])
 	}
 
-	integer, ok := stmt.Expression.(*ast.IntegerExpression)
+	integer, ok := stmt.Expression.(*ast.IntegerLiteral)
 	if !ok {
 		t.Fatalf("Expected IntegerExpression. Got %T", stmt.Expression)
 	}
@@ -178,7 +178,7 @@ func TestPrefixExpressions(t *testing.T) {
 		t.Fatalf("Exprected token.MINUS as operator. Got %s", operator)
 	}
 
-	rightExpr, ok := prefixExpr.Right.(*ast.IntegerExpression)
+	rightExpr, ok := prefixExpr.Right.(*ast.IntegerLiteral)
 	if !ok {
 		t.Fatalf("Expected IntegerExpression. Got %T", prefixExpr.Right)
 	}
@@ -287,7 +287,7 @@ func TestIfExpression(t *testing.T) {
 		t.Fatalf("Expected IfExpression. Got %T", stmt)
 	}
 
-	_, ok = ifExpr.Condition.(*ast.BooleanExpression)
+	_, ok = ifExpr.Condition.(*ast.BooleanLiteral)
 	if !ok {
 		t.Fatalf("Expected BooleanExpression. Got %T", ifExpr.Condition)
 	}
@@ -334,7 +334,7 @@ func TestIfElseExpression(t *testing.T) {
 		t.Fatalf("Expected IfExpression. Got %T", stmt)
 	}
 
-	_, ok = ifExpr.Condition.(*ast.BooleanExpression)
+	_, ok = ifExpr.Condition.(*ast.BooleanLiteral)
 	if !ok {
 		t.Fatalf("Expected BooleanExpression. Got %T", ifExpr.Condition)
 	}
@@ -356,7 +356,7 @@ func TestIfElseExpression(t *testing.T) {
 		t.Fatalf("Expected ExpressionStatement in alternative. Got %T", alternativeBlock)
 	}
 
-	_, ok = alternative.Expression.(*ast.IntegerExpression)
+	_, ok = alternative.Expression.(*ast.IntegerLiteral)
 	if !ok {
 		t.Fatalf("Expected IntegerExpression in alternative. Got %T", alternative.Expression)
 	}
@@ -475,12 +475,12 @@ func TestArrayExpression(t *testing.T) {
 		t.Fatalf("Expected ExpressionStatement. Got %T", statements[0])
 	}
 
-	arrayExpr, ok := exprStatement.Expression.(*ast.ArrayExpression)
+	arrayExpr, ok := exprStatement.Expression.(*ast.ArrayLiteral)
 	if !ok {
 		t.Fatalf("Expected ArrayExpression. Got %T", exprStatement.Expression)
 	}
 
-	firstElem, ok := arrayExpr.Elements[0].(*ast.IntegerExpression)
+	firstElem, ok := arrayExpr.Elements[0].(*ast.IntegerLiteral)
 	if !ok {
 		t.Fatalf("Expected first element to be IntegerExpression. Got %T", arrayExpr.Elements[0])
 	}
@@ -489,7 +489,7 @@ func TestArrayExpression(t *testing.T) {
 		t.Fatalf("Expected first element to have value 2. Got %d", firstElem.Value)
 	}
 
-	secondElem, ok := arrayExpr.Elements[1].(*ast.IntegerExpression)
+	secondElem, ok := arrayExpr.Elements[1].(*ast.IntegerLiteral)
 	if !ok {
 		t.Fatalf("Expected second element to be IntegerExpression. Got %T", arrayExpr.Elements[1])
 	}
@@ -523,7 +523,7 @@ func TestIndexExpression(t *testing.T) {
 		t.Fatalf("Expected CallExpression as IndexExpression.Left. Got %T", indExpr.Left)
 	}
 
-	_, ok = indExpr.Index.(*ast.IntegerExpression)
+	_, ok = indExpr.Index.(*ast.IntegerLiteral)
 	if !ok {
 		t.Fatalf("Expected IntegerExpression as IndexExpression.Index. Got %T", indExpr.Index)
 	}
@@ -542,7 +542,7 @@ func TestHashMap(t *testing.T) {
 		t.Fatalf("Expected ExpressionStatement. Got %T", stmts[0])
 	}
 
-	mapExpr, ok := exprStmt.Expression.(*ast.MapExpression)
+	mapExpr, ok := exprStmt.Expression.(*ast.MapLiteral)
 	if !ok {
 		t.Fatalf("Expected MapExpression. Got %T", exprStmt.Expression)
 	}
@@ -553,7 +553,7 @@ func TestHashMap(t *testing.T) {
 	}
 
 	for key, value := range entries {
-		stringExpr, ok := key.(*ast.StringExpression)
+		stringExpr, ok := key.(*ast.StringLiteral)
 		if !ok {
 			t.Fatalf("Expected StringExpression as map key. Got %T", key)
 		}
@@ -562,7 +562,7 @@ func TestHashMap(t *testing.T) {
 			t.Fatalf("Expected 'a' as map key. Got %s", stringExpr.Value)
 		}
 
-		intExpr, ok := value.(*ast.IntegerExpression)
+		intExpr, ok := value.(*ast.IntegerLiteral)
 		if !ok {
 			t.Fatalf("Expected IntegerExpression as map value. Got %T", value)
 		}
@@ -624,7 +624,7 @@ func testLetStatement(t *testing.T, s ast.Statement, name string, value int64) b
 		t.Errorf("Expected lst.Name.TokenLiteral() to be %s. Got '%s'", name, lst.Name.TokenLiteral())
 	}
 
-	intExpr, ok := lst.Value.(*ast.IntegerExpression)
+	intExpr, ok := lst.Value.(*ast.IntegerLiteral)
 	if !ok {
 		t.Errorf("Expected lst.Value to be an IntegerExpression. Got %T", lst.Value)
 	}

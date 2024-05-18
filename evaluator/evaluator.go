@@ -55,11 +55,11 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 		return evaluatePrefixExpression(v, env)
 	case *ast.InfixExpression:
 		return evaluateInfixExpression(v, env)
-	case *ast.IntegerExpression:
+	case *ast.IntegerLiteral:
 		return &object.Integer{Value: v.Value}
-	case *ast.BooleanExpression:
+	case *ast.BooleanLiteral:
 		return newBool(v.Value)
-	case *ast.StringExpression:
+	case *ast.StringLiteral:
 		return &object.String{Value: v.Value}
 	case *ast.Identifier:
 		variable := env.get(v.Value)
@@ -125,13 +125,13 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 		}
 
 		return NULL
-	case *ast.ArrayExpression:
+	case *ast.ArrayLiteral:
 		elements := make([]object.Object, len(v.Elements))
 		for i, el := range v.Elements {
 			elements[i] = evaluate(el, env)
 		}
 		return &object.Array{Elements: elements}
-	case *ast.MapExpression:
+	case *ast.MapLiteral:
 		entries := make(map[string]object.Object, len(v.Entries))
 		for key, value := range v.Entries {
 			keyObject := evaluate(key, env)

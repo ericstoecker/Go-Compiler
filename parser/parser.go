@@ -165,11 +165,11 @@ func (p *Parser) parseInteger() ast.Expression {
 		msg := fmt.Sprintf("Error when trying to parse %s to int", p.currentToken.Literal)
 		p.Errors = append(p.Errors, msg)
 	}
-	return &ast.IntegerExpression{Token: p.currentToken, Value: value}
+	return &ast.IntegerLiteral{Token: p.currentToken, Value: value}
 }
 
 func (p *Parser) parseString() ast.Expression {
-	return &ast.StringExpression{Token: p.currentToken, Value: p.currentToken.Literal}
+	return &ast.StringLiteral{Token: p.currentToken, Value: p.currentToken.Literal}
 }
 
 func (p *Parser) parseBoolean() ast.Expression {
@@ -178,7 +178,7 @@ func (p *Parser) parseBoolean() ast.Expression {
 		msg := fmt.Sprintf("Error when trying to parse %s to bool", p.currentToken.Literal)
 		p.Errors = append(p.Errors, msg)
 	}
-	return &ast.BooleanExpression{Token: p.currentToken, Value: value}
+	return &ast.BooleanLiteral{Token: p.currentToken, Value: value}
 }
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
@@ -347,11 +347,11 @@ func (p *Parser) parseArray() ast.Expression {
 
 	p.nextToken()
 
-	return &ast.ArrayExpression{Elements: elems}
+	return &ast.ArrayLiteral{Elements: elems}
 }
 
 func (p *Parser) parseMap() ast.Expression {
-	mapExpr := &ast.MapExpression{Token: p.currentToken}
+	mapExpr := &ast.MapLiteral{Token: p.currentToken}
 
 	entries := make(map[ast.Expression]ast.Expression)
 	for p.peekToken.Type != token.RBRACE {

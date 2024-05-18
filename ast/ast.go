@@ -112,42 +112,42 @@ func (expressionStmt *ExpressionStatement) String() string {
 	return ""
 }
 
-type IntegerExpression struct {
+type IntegerLiteral struct {
 	Token token.Token
 	Value int64
 }
 
-func (intExpression *IntegerExpression) TokenLiteral() string {
+func (intExpression *IntegerLiteral) TokenLiteral() string {
 	return intExpression.Token.Literal
 }
-func (intExpression *IntegerExpression) expressionNode() {}
-func (intExpression *IntegerExpression) String() string {
+func (intExpression *IntegerLiteral) expressionNode() {}
+func (intExpression *IntegerLiteral) String() string {
 	return intExpression.TokenLiteral()
 }
 
-type BooleanExpression struct {
+type BooleanLiteral struct {
 	Token token.Token
 	Value bool
 }
 
-func (boolExpression *BooleanExpression) TokenLiteral() string {
+func (boolExpression *BooleanLiteral) TokenLiteral() string {
 	return boolExpression.Token.Literal
 }
-func (boolExpression *BooleanExpression) expressionNode() {}
-func (boolExpression *BooleanExpression) String() string {
+func (boolExpression *BooleanLiteral) expressionNode() {}
+func (boolExpression *BooleanLiteral) String() string {
 	return boolExpression.TokenLiteral()
 }
 
-type StringExpression struct {
+type StringLiteral struct {
 	Token token.Token
 	Value string
 }
 
-func (str *StringExpression) TokenLiteral() string {
+func (str *StringLiteral) TokenLiteral() string {
 	return str.Token.Literal
 }
-func (str *StringExpression) expressionNode() {}
-func (str *StringExpression) String() string {
+func (str *StringLiteral) expressionNode() {}
+func (str *StringLiteral) String() string {
 	return str.TokenLiteral()
 }
 
@@ -299,16 +299,16 @@ func (call *CallExpression) String() string {
 	return out.String()
 }
 
-type ArrayExpression struct {
+type ArrayLiteral struct {
 	Token    token.Token
 	Elements []Expression
 }
 
-func (arr *ArrayExpression) TokenLiteral() string {
+func (arr *ArrayLiteral) TokenLiteral() string {
 	return arr.Token.Literal
 }
-func (arr *ArrayExpression) expressionNode() {}
-func (arr *ArrayExpression) String() string {
+func (arr *ArrayLiteral) expressionNode() {}
+func (arr *ArrayLiteral) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("[")
@@ -344,16 +344,16 @@ func (ind *IndexExpression) String() string {
 	return out.String()
 }
 
-type MapExpression struct {
+type MapLiteral struct {
 	Token   token.Token
 	Entries map[Expression]Expression
 }
 
-func (mapExpr *MapExpression) TokenLiteral() string {
+func (mapExpr *MapLiteral) TokenLiteral() string {
 	return mapExpr.Token.Literal
 }
-func (mapExpr *MapExpression) expressionNode() {}
-func (mapExpr *MapExpression) String() string {
+func (mapExpr *MapLiteral) expressionNode() {}
+func (mapExpr *MapLiteral) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(mapExpr.TokenLiteral())
