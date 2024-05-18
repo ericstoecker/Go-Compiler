@@ -51,6 +51,8 @@ func constructBuiltins() map[string]object.Object {
 				return newBool(len(arg.Elements) == 0)
 			case *object.String:
 				return newBool(len(arg.Value) == 0)
+			case *object.Map:
+				return newBool(len(arg.Entries) == 0)
 			default:
 				return newError("Operation not supported: isEmpty(%s)", arg.Type())
 			}
