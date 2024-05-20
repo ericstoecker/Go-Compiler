@@ -16,10 +16,27 @@ type compilerTestCase struct {
 	expectedInstructions []code.Instructions
 }
 
-func parse(input string) *ast.Program {
+func parse(t *testing.T, input string) *ast.Program {
 	l := lexer.New(input)
 	p := parser.New(l)
-	return p.ParseProgram()
+	program := p.ParseProgram()
+
+	checkParserErrors(t, p)
+
+	return program
+}
+
+func checkParserErrors(t *testing.T, p *parser.Parser) {
+	errors := p.Errors
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("parser had %d errors", len(errors))
+	for _, msg := range errors {
+		t.Errorf("parser error: %q", msg)
+	}
+	t.FailNow()
 }
 
 func TestIntegerArithmetic(t *testing.T) {
@@ -159,11 +176,36 @@ func TestComparisons(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+func TestStringExpressions(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			input:             `"string"`,
+			expectedConstants: []interface{}{"string"},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:             `"str" + "ing"`,
+			expectedConstants: []interface{}{"str", "ing"},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpAdd),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 
 	for _, tt := range tests {
-		program := parse(tt.input)
+		program := parse(t, tt.input)
 
 		compiler := New()
 		err := compiler.Compile(program)

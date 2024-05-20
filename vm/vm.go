@@ -58,7 +58,10 @@ func (vm *VM) Run() error {
 				return err
 			}
 		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
-			vm.executeBinaryOperation(op)
+			err := vm.executeBinaryOperation(op)
+			if err != nil {
+				return err
+			}
 		case code.OpEqual, code.OpNotEqual, code.OpGreater, code.OpGreaterEqual:
 			err := vm.executeComparisonOperation(op)
 			if err != nil {
@@ -72,7 +75,7 @@ func (vm *VM) Run() error {
 	return nil
 }
 
-func (vm *VM) executeBinaryOperation(op code.Opcode) {
+func (vm *VM) executeBinaryOperation(op code.Opcode) error {
 	right := vm.pop()
 	left := vm.pop()
 
@@ -83,11 +86,17 @@ func (vm *VM) executeBinaryOperation(op code.Opcode) {
 	case rightType == object.INT && leftType == object.INT:
 		leftValue := left.(*object.Integer).Value
 		rightValue := right.(*object.Integer).Value
-		vm.executeBinaryIntegerOperation(op, leftValue, rightValue)
+		return vm.executeBinaryIntegerOperation(op, leftValue, rightValue)
+	case rightType == object.STRING && leftType == object.STRING:
+		leftValue := left.(*object.String).Value
+		rightValue := right.(*object.String).Value
+		return vm.executeBinaryStringOperation(op, leftValue, rightValue)
 	}
+
+	return nil
 }
 
-func (vm *VM) executeBinaryIntegerOperation(op code.Opcode, left int64, right int64) {
+func (vm *VM) executeBinaryIntegerOperation(op code.Opcode, left int64, right int64) error {
 	result := &object.Integer{}
 
 	switch op {
@@ -99,9 +108,23 @@ func (vm *VM) executeBinaryIntegerOperation(op code.Opcode, left int64, right in
 		result.Value = left * right
 	case code.OpDiv:
 		result.Value = left / right
+	default:
+		return fmt.Errorf("operator %d not known for type INT", op)
 	}
 
 	vm.push(result)
+	return nil
+}
+
+func (vm *VM) executeBinaryStringOperation(op code.Opcode, left string, right string) error {
+	switch op {
+	case code.OpAdd:
+		vm.push(&object.String{Value: left + right})
+	default:
+		return fmt.Errorf("operator %d not known for type STRING", op)
+	}
+
+	return nil
 }
 
 func (vm *VM) executeComparisonOperation(op code.Opcode) error {
