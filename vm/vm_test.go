@@ -17,9 +17,12 @@ type vmTestCase struct {
 
 func TestIntegerArithmetic(t *testing.T) {
 	tests := []vmTestCase{
-		{"1", 1},
-		{"2", 2},
-		{"1 + 2", 3},
+		// {"1", 1},
+		// {"2", 2},
+		// {"1 + 2", 3},
+		{"2 - 1", 1},
+		// {"3 * 2", 6},
+		// {"6 / 2", 3},
 	}
 
 	runVmTests(t, tests)

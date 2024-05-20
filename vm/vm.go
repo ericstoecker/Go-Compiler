@@ -45,13 +45,37 @@ func (vm *VM) Run() error {
 				return err
 			}
 		case code.OpAdd:
-			left := vm.pop()
 			right := vm.pop()
+			left := vm.pop()
 
-			leftInt := left.(*object.Integer)
 			rightInt := right.(*object.Integer)
+			leftInt := left.(*object.Integer)
 
 			vm.push(&object.Integer{Value: leftInt.Value + rightInt.Value})
+		case code.OpSub:
+			right := vm.pop()
+			left := vm.pop()
+
+			rightInt := right.(*object.Integer)
+			leftInt := left.(*object.Integer)
+
+			vm.push(&object.Integer{Value: leftInt.Value - rightInt.Value})
+		case code.OpMul:
+			right := vm.pop()
+			left := vm.pop()
+
+			rightInt := right.(*object.Integer)
+			leftInt := left.(*object.Integer)
+
+			vm.push(&object.Integer{Value: leftInt.Value * rightInt.Value})
+		case code.OpDiv:
+			right := vm.pop()
+			left := vm.pop()
+
+			rightInt := right.(*object.Integer)
+			leftInt := left.(*object.Integer)
+
+			vm.push(&object.Integer{Value: leftInt.Value / rightInt.Value})
 		case code.OpPop:
 			vm.pop()
 		}
