@@ -49,7 +49,10 @@ func TestBooleanExpressions(t *testing.T) {
 		{"3 >= 3", true},
 		{"3 > 3", false},
 		{"3 > 2", true},
-		// TODO ADD STRING EQUALS AND NOT EQUALS
+		{`"ab" == "ba"`, false},
+		{`"ab" == "ab"`, true},
+		{`"ab" != "ab"`, false},
+		{`"ab" != "cc"`, true},
 	}
 
 	runVmTests(t, tests)

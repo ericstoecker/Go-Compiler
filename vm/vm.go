@@ -143,6 +143,10 @@ func (vm *VM) executeComparisonOperation(op code.Opcode) error {
 		leftValue := left.(*object.Boolean)
 		rightValue := right.(*object.Boolean)
 		return vm.executeBooleanComparison(op, leftValue, rightValue)
+	case rightType == object.STRING && leftType == object.STRING:
+		leftValue := left.(*object.String).Value
+		rightValue := right.(*object.String).Value
+		return vm.executeStringComparison(op, leftValue, rightValue)
 	default:
 		return fmt.Errorf("operator %d not known for type %s, %s", op, leftType, rightType)
 	}
@@ -173,6 +177,19 @@ func (vm *VM) executeBooleanComparison(op code.Opcode, left *object.Boolean, rig
 		vm.push(booleanObjectFromBool(left != right))
 	default:
 		return fmt.Errorf("operator %d not known for type BOOLEAN", op)
+	}
+
+	return nil
+}
+
+func (vm *VM) executeStringComparison(op code.Opcode, left string, right string) error {
+	switch op {
+	case code.OpEqual:
+		vm.push(booleanObjectFromBool(left == right))
+	case code.OpNotEqual:
+		vm.push(booleanObjectFromBool(left != right))
+	default:
+		return fmt.Errorf("operator %d not known for type STRING", op)
 	}
 
 	return nil
