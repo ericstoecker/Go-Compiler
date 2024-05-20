@@ -44,44 +44,46 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
-		case code.OpAdd:
-			right := vm.pop()
-			left := vm.pop()
-
-			rightInt := right.(*object.Integer)
-			leftInt := left.(*object.Integer)
-
-			vm.push(&object.Integer{Value: leftInt.Value + rightInt.Value})
-		case code.OpSub:
-			right := vm.pop()
-			left := vm.pop()
-
-			rightInt := right.(*object.Integer)
-			leftInt := left.(*object.Integer)
-
-			vm.push(&object.Integer{Value: leftInt.Value - rightInt.Value})
-		case code.OpMul:
-			right := vm.pop()
-			left := vm.pop()
-
-			rightInt := right.(*object.Integer)
-			leftInt := left.(*object.Integer)
-
-			vm.push(&object.Integer{Value: leftInt.Value * rightInt.Value})
-		case code.OpDiv:
-			right := vm.pop()
-			left := vm.pop()
-
-			rightInt := right.(*object.Integer)
-			leftInt := left.(*object.Integer)
-
-			vm.push(&object.Integer{Value: leftInt.Value / rightInt.Value})
+		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
+			vm.executeBinaryOperation(op)
 		case code.OpPop:
 			vm.pop()
 		}
 	}
 
 	return nil
+}
+
+func (vm *VM) executeBinaryOperation(op code.Opcode) {
+	right := vm.pop()
+	left := vm.pop()
+
+	rightType := right.Type()
+	leftType := left.Type()
+
+	switch {
+	case rightType == object.INT && leftType == object.INT:
+		leftValue := left.(*object.Integer).Value
+		rightValue := right.(*object.Integer).Value
+		vm.executeBinaryIntegerOperation(op, leftValue, rightValue)
+	}
+}
+
+func (vm *VM) executeBinaryIntegerOperation(op code.Opcode, left int64, right int64) {
+	result := &object.Integer{}
+
+	switch op {
+	case code.OpAdd:
+		result.Value = left + right
+	case code.OpSub:
+		result.Value = left - right
+	case code.OpMul:
+		result.Value = left * right
+	case code.OpDiv:
+		result.Value = left / right
+	}
+
+	vm.push(result)
 }
 
 func (vm *VM) push(o object.Object) error {
