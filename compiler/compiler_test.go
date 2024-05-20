@@ -265,7 +265,22 @@ func testConstants(
 				return fmt.Errorf("constant %d - testIntegerObject failed: %s",
 					i, err)
 			}
+		case bool:
+			err := testBooleanObject(constant, actual[i])
+			if err != nil {
+				return fmt.Errorf("constant %d - testBooleanObject failed: %s",
+					i, err)
+			}
+		case string:
+			err := testStringObject(constant, actual[i])
+			if err != nil {
+				return fmt.Errorf("constant %d - testStringObject failed: %s",
+					i, err)
+			}
+		default:
+			return fmt.Errorf("no test for type %T available", constant)
 		}
+
 	}
 
 	return nil
@@ -280,6 +295,36 @@ func testIntegerObject(expected int64, actual object.Object) error {
 
 	if result.Value != expected {
 		return fmt.Errorf("object has wrong value. got=%d, want=%d",
+			result.Value, expected)
+	}
+
+	return nil
+}
+
+func testBooleanObject(expected bool, actual object.Object) error {
+	result, ok := actual.(*object.Boolean)
+	if !ok {
+		return fmt.Errorf("object is not Boolean. got=%T (%+v)",
+			actual, actual)
+	}
+
+	if result.Value != expected {
+		return fmt.Errorf("object has wrong value. got=%t, want=%t",
+			result.Value, expected)
+	}
+
+	return nil
+}
+
+func testStringObject(expected string, actual object.Object) error {
+	result, ok := actual.(*object.String)
+	if !ok {
+		return fmt.Errorf("object is not String. got=%T (%+v)",
+			actual, actual)
+	}
+
+	if result.Value != expected {
+		return fmt.Errorf("object has wrong value. got=%s, want=%s",
 			result.Value, expected)
 	}
 
