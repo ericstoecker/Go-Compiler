@@ -67,6 +67,11 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpMinus, code.OpBang:
+			err := vm.executePrefixOperation(op)
+			if err != nil {
+				return err
+			}
 		case code.OpPop:
 			vm.pop()
 		}
@@ -190,6 +195,31 @@ func (vm *VM) executeStringComparison(op code.Opcode, left string, right string)
 		vm.push(booleanObjectFromBool(left != right))
 	default:
 		return fmt.Errorf("operator %d not known for type STRING", op)
+	}
+
+	return nil
+}
+
+func (vm *VM) executePrefixOperation(op code.Opcode) error {
+	right := vm.pop()
+
+	switch op {
+	case code.OpBang:
+		if right.Type() != object.BOOLEAN {
+			return fmt.Errorf("operator %d not known for type %s", op, right.Type())
+		}
+
+		rightValue := right.(*object.Boolean).Value
+		vm.push(booleanObjectFromBool(!rightValue))
+	case code.OpMinus:
+		if right.Type() != object.INT {
+			return fmt.Errorf("operator %d not known for type %s", op, right.Type())
+		}
+
+		rightValue := right.(*object.Integer).Value
+		vm.push(&object.Integer{Value: -rightValue})
+	default:
+		return fmt.Errorf("operator %d not known as prefix operator", op)
 	}
 
 	return nil

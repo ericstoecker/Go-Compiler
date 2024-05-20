@@ -23,6 +23,7 @@ func TestIntegerArithmetic(t *testing.T) {
 		{"2 - 1", 1},
 		{"3 * 2", 6},
 		{"6 / 2", 3},
+		{"-5", -5},
 	}
 
 	runVmTests(t, tests)
@@ -53,6 +54,8 @@ func TestBooleanExpressions(t *testing.T) {
 		{`"ab" == "ab"`, true},
 		{`"ab" != "ab"`, false},
 		{`"ab" != "cc"`, true},
+		{"!true", false},
+		{"!false", true},
 	}
 
 	runVmTests(t, tests)
