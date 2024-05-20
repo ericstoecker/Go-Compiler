@@ -441,8 +441,6 @@ func (p *Parser) expectPeek(expected token.TokenType) bool {
 	return false
 }
 
-// func (p *Parser) Error() string {}
-
 func (p *Parser) peekTokenIs(expected token.TokenType) bool {
 	return p.peekToken.Type == expected
 }
