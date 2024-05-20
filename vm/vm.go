@@ -9,6 +9,9 @@ import (
 
 const StackSize = 2048
 
+var TRUE = &object.Boolean{Value: true}
+var FALSE = &object.Boolean{Value: false}
+
 type VM struct {
 	constants    []object.Object
 	instructions code.Instructions
@@ -41,6 +44,16 @@ func (vm *VM) Run() error {
 			ip += 2
 
 			err := vm.push(vm.constants[constIndex])
+			if err != nil {
+				return err
+			}
+		case code.OpTrue:
+			err := vm.push(TRUE)
+			if err != nil {
+				return err
+			}
+		case code.OpFalse:
+			err := vm.push(FALSE)
 			if err != nil {
 				return err
 			}
