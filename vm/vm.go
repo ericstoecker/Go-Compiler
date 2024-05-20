@@ -59,6 +59,11 @@ func (vm *VM) Run() error {
 			}
 		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
 			vm.executeBinaryOperation(op)
+		case code.OpEqual, code.OpNotEqual, code.OpGreater, code.OpGreaterEqual:
+			err := vm.executeComparisonOperation(op)
+			if err != nil {
+				return err
+			}
 		case code.OpPop:
 			vm.pop()
 		}
@@ -97,6 +102,64 @@ func (vm *VM) executeBinaryIntegerOperation(op code.Opcode, left int64, right in
 	}
 
 	vm.push(result)
+}
+
+func (vm *VM) executeComparisonOperation(op code.Opcode) error {
+	right := vm.pop()
+	left := vm.pop()
+
+	rightType := right.Type()
+	leftType := left.Type()
+
+	switch {
+	case rightType == object.INT && leftType == object.INT:
+		leftValue := left.(*object.Integer).Value
+		rightValue := right.(*object.Integer).Value
+		return vm.executeIntegerComparison(op, leftValue, rightValue)
+	case rightType == object.BOOLEAN && leftType == object.BOOLEAN:
+		leftValue := left.(*object.Boolean)
+		rightValue := right.(*object.Boolean)
+		return vm.executeBooleanComparison(op, leftValue, rightValue)
+	default:
+		return fmt.Errorf("operator %d not known for type %s, %s", op, leftType, rightType)
+	}
+}
+
+func (vm *VM) executeIntegerComparison(op code.Opcode, left int64, right int64) error {
+	switch op {
+	case code.OpEqual:
+		vm.push(booleanObjectFromBool(left == right))
+	case code.OpNotEqual:
+		vm.push(booleanObjectFromBool(left != right))
+	case code.OpGreater:
+		vm.push(booleanObjectFromBool(left > right))
+	case code.OpGreaterEqual:
+		vm.push(booleanObjectFromBool(left >= right))
+	default:
+		return fmt.Errorf("operator %d not known for type INT", op)
+	}
+
+	return nil
+}
+
+func (vm *VM) executeBooleanComparison(op code.Opcode, left *object.Boolean, right *object.Boolean) error {
+	switch op {
+	case code.OpEqual:
+		vm.push(booleanObjectFromBool(left == right))
+	case code.OpNotEqual:
+		vm.push(booleanObjectFromBool(left != right))
+	default:
+		return fmt.Errorf("operator %d not known for type BOOLEAN", op)
+	}
+
+	return nil
+}
+
+func booleanObjectFromBool(value bool) *object.Boolean {
+	if value {
+		return TRUE
+	}
+	return FALSE
 }
 
 func (vm *VM) push(o object.Object) error {

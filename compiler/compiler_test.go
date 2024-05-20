@@ -92,6 +92,73 @@ func TestBooleans(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+func TestComparisons(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			input:             "true == true",
+			expectedConstants: []interface{}{},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpTrue),
+				code.Make(code.OpTrue),
+				code.Make(code.OpEqual),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:             "true != true",
+			expectedConstants: []interface{}{},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpTrue),
+				code.Make(code.OpTrue),
+				code.Make(code.OpNotEqual),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:             "10 >= 5",
+			expectedConstants: []interface{}{10, 5},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpGreaterEqual),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:             "10 > 5",
+			expectedConstants: []interface{}{10, 5},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpGreater),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:             "10 <= 5",
+			expectedConstants: []interface{}{5, 10},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpGreaterEqual),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:             "10 < 5",
+			expectedConstants: []interface{}{5, 10},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpGreater),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 

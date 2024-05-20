@@ -28,10 +28,27 @@ func TestIntegerArithmetic(t *testing.T) {
 	runVmTests(t, tests)
 }
 
-func TestBooleans(t *testing.T) {
+func TestBooleanExpressions(t *testing.T) {
 	tests := []vmTestCase{
 		{"true", true},
 		{"false", false},
+		{"true == false", false},
+		{"true == true", true},
+		{"true != true", false},
+		{"true != false", true},
+		{"10 == 5", false},
+		{"10 == 10", true},
+		{"6 != 6", false},
+		{"6 != 5", true},
+		{"10 <= 3", false},
+		{"10 <= 11", true},
+		{"10 <= 10", true},
+		{"10 < 10", false},
+		{"10 < 15", true},
+		{"3 >= 4", false},
+		{"3 >= 3", true},
+		{"3 > 3", false},
+		{"3 > 2", true},
 	}
 
 	runVmTests(t, tests)
