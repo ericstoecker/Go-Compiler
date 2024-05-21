@@ -59,8 +59,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.removeLastInstruction()
 		}
 
+		opJumpPosition := c.emit(code.OpJump, 0)
+		c.replaceInstruction(opJumpNotTruePosition, code.Make(code.OpJumpNotTrue, len(c.instructions)))
+
 		if node.Alternative != nil {
-			opJumpPosition := c.emit(code.OpJump, 0)
 			err = c.Compile(node.Alternative)
 			if err != nil {
 				return err
@@ -70,10 +72,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 				c.removeLastInstruction()
 			}
 
-			c.replaceInstruction(opJumpPosition, code.Make(code.OpJump, len(c.instructions)))
+		} else {
+			c.emit(code.OpNull)
 		}
 
-		c.replaceInstruction(opJumpNotTruePosition, code.Make(code.OpJumpNotTrue, len(c.instructions)))
+		c.replaceInstruction(opJumpPosition, code.Make(code.OpJump, len(c.instructions)))
 	case *ast.BlockStatement:
 		for _, s := range node.Statements {
 			err := c.Compile(s)

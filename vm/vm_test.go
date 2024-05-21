@@ -70,6 +70,18 @@ func TestStringExpressions(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestIfElseExpression(t *testing.T) {
+	tests := []vmTestCase{
+		{`if (false) { 10 } 20`, 20},
+		{`if (true) { 10 }`, 10},
+		{`if (true) { 10 } else { 20 }`, 10},
+		{`if (false) { 10 } else { 20 }`, 20},
+		{`if (false) { 10 }`, NULL},
+	}
+
+	runVmTests(t, tests)
+}
+
 func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 
@@ -120,6 +132,11 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 		if err != nil {
 			t.Errorf("testStringObject failed: %s", err)
 		}
+	case *object.Null:
+		err := testNullObject(actual)
+		if err != nil {
+			t.Errorf("testNullObject failed: %s", err)
+		}
 	default:
 		t.Errorf("tests for type %T not supported", expected)
 	}
@@ -165,6 +182,16 @@ func testStringObject(expected string, actual object.Object) error {
 	if result.Value != expected {
 		return fmt.Errorf("object has wrong value. got=%s, want=%s",
 			result.Value, expected)
+	}
+
+	return nil
+}
+
+func testNullObject(actual object.Object) error {
+	_, ok := actual.(*object.Null)
+	if !ok {
+		return fmt.Errorf("object is not Null. got=%T (%v)",
+			actual, actual)
 	}
 
 	return nil

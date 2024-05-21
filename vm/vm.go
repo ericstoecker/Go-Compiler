@@ -11,6 +11,7 @@ const StackSize = 2048
 
 var TRUE = &object.Boolean{Value: true}
 var FALSE = &object.Boolean{Value: false}
+var NULL = &object.Null{}
 
 type VM struct {
 	constants    []object.Object
@@ -57,6 +58,11 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpNull:
+			err := vm.push(NULL)
+			if err != nil {
+				return err
+			}
 		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
 			err := vm.executeBinaryOperation(op)
 			if err != nil {
@@ -72,6 +78,22 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpJumpNotTrue:
+			condition := vm.pop()
+			booleanCondition, ok := condition.(*object.Boolean)
+			if !ok {
+				return fmt.Errorf("not able to execute OpJumpNotTrue if non boolean object on top of stack")
+			}
+
+			if !booleanCondition.Value {
+				jumpPosition := code.ReadUint16(vm.instructions[ip+1:])
+				ip = int(jumpPosition - 1)
+			} else {
+				ip += 2
+			}
+		case code.OpJump:
+			jumpPosition := code.ReadUint16(vm.instructions[ip+1:])
+			ip = int(jumpPosition - 1)
 		case code.OpPop:
 			vm.pop()
 		}

@@ -233,8 +233,10 @@ func TestIfElseExpression(t *testing.T) {
 			expectedConstants: []interface{}{20, 10},
 			expectedInstructions: []code.Instructions{
 				code.Make(code.OpTrue),
-				code.Make(code.OpJumpNotTrue, 7),
+				code.Make(code.OpJumpNotTrue, 10),
 				code.Make(code.OpConstant, 0),
+				code.Make(code.OpJump, 11),
+				code.Make(code.OpNull),
 				code.Make(code.OpPop),
 				code.Make(code.OpConstant, 1),
 				code.Make(code.OpPop),
@@ -245,7 +247,7 @@ func TestIfElseExpression(t *testing.T) {
 			expectedConstants: []interface{}{20, 10, 30},
 			expectedInstructions: []code.Instructions{
 				code.Make(code.OpTrue),
-				code.Make(code.OpJumpNotTrue, 13),
+				code.Make(code.OpJumpNotTrue, 10),
 				code.Make(code.OpConstant, 0),
 				code.Make(code.OpJump, 13),
 				code.Make(code.OpConstant, 1),
