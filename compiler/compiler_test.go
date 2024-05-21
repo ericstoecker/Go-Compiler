@@ -226,6 +226,39 @@ func TestPrefixExpressions(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+func TestIfElseExpression(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			input:             `if (true) { 20 }; 10`,
+			expectedConstants: []interface{}{20, 10},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpTrue),
+				code.Make(code.OpJumpNotTrue, 7),
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpPop),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:             `if (true) { 20 } else { 10 }; 30`,
+			expectedConstants: []interface{}{20, 10, 30},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpTrue),
+				code.Make(code.OpJumpNotTrue, 13),
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpJump, 13),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpPop),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 

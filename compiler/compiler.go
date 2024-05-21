@@ -10,6 +10,14 @@ import (
 type Compiler struct {
 	instructions code.Instructions
 	constants    []object.Object
+
+	lastInstruction     EmittedInstruction
+	previousInstruction EmittedInstruction
+}
+
+type EmittedInstruction struct {
+	code     code.Opcode
+	position int
 }
 
 func New() *Compiler {
@@ -34,6 +42,45 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 		c.emit(code.OpPop)
+	case *ast.IfExpression:
+		err := c.Compile(node.Condition)
+		if err != nil {
+			return err
+		}
+
+		opJumpNotTruePosition := c.emit(code.OpJumpNotTrue, 0)
+
+		err = c.Compile(node.Consequence)
+		if err != nil {
+			return err
+		}
+
+		if c.lastInstructionIs(code.OpPop) {
+			c.removeLastInstruction()
+		}
+
+		if node.Alternative != nil {
+			opJumpPosition := c.emit(code.OpJump, 0)
+			err = c.Compile(node.Alternative)
+			if err != nil {
+				return err
+			}
+
+			if c.lastInstructionIs(code.OpPop) {
+				c.removeLastInstruction()
+			}
+
+			c.replaceInstruction(opJumpPosition, code.Make(code.OpJump, len(c.instructions)))
+		}
+
+		c.replaceInstruction(opJumpNotTruePosition, code.Make(code.OpJumpNotTrue, len(c.instructions)))
+	case *ast.BlockStatement:
+		for _, s := range node.Statements {
+			err := c.Compile(s)
+			if err != nil {
+				return err
+			}
+		}
 	case *ast.PrefixExpression:
 		err := c.Compile(node.Right)
 		if err != nil {
@@ -112,7 +159,25 @@ func (c *Compiler) Compile(node ast.Node) error {
 func (c *Compiler) emit(op code.Opcode, operands ...int) int {
 	ins := code.Make(op, operands...)
 	pos := c.addInstruction(ins)
+
+	c.previousInstruction = c.lastInstruction
+	c.lastInstruction = EmittedInstruction{code: op, position: pos}
 	return pos
+}
+
+func (c *Compiler) removeLastInstruction() {
+	c.instructions = c.instructions[:c.lastInstruction.position]
+	c.lastInstruction = c.previousInstruction
+}
+
+func (c *Compiler) lastInstructionIs(op code.Opcode) bool {
+	return c.lastInstruction.code == op
+}
+
+func (c *Compiler) replaceInstruction(pos int, ins []byte) {
+	for i, instruction := range ins {
+		c.instructions[pos+i] = instruction
+	}
 }
 
 func (c *Compiler) addInstruction(ins []byte) int {

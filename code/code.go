@@ -64,6 +64,8 @@ const (
 	OpGreaterEqual
 	OpBang
 	OpMinus
+	OpJumpNotTrue
+	OpJump
 )
 
 type Definition struct {
@@ -86,6 +88,8 @@ var definitions = map[Opcode]*Definition{
 	OpGreaterEqual: {"OpGreaterEqual", []int{}},
 	OpBang:         {"OpBang", []int{}},
 	OpMinus:        {"OpMinus", []int{}},
+	OpJumpNotTrue:  {"OpJumpNotTrue", []int{2}},
+	OpJump:         {"OpJump", []int{2}},
 }
 
 func Lookup(op byte) (*Definition, error) {
