@@ -261,6 +261,35 @@ func TestIfElseExpression(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+func TestLetStatements(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			input:             `let x = 10; x`,
+			expectedConstants: []interface{}{10},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpGetGlobal, 0),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:             `let x = 10; let y = x; y`,
+			expectedConstants: []interface{}{10},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpGetGlobal, 0),
+				code.Make(code.OpSetGlobal, 1),
+				code.Make(code.OpGetGlobal, 1),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 

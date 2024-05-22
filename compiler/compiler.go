@@ -13,6 +13,8 @@ type Compiler struct {
 
 	lastInstruction     EmittedInstruction
 	previousInstruction EmittedInstruction
+
+	symbolTable *SymbolTable
 }
 
 type EmittedInstruction struct {
@@ -24,6 +26,8 @@ func New() *Compiler {
 	return &Compiler{
 		instructions: code.Instructions{},
 		constants:    []object.Object{},
+
+		symbolTable: NewSymbolTable(),
 	}
 }
 
@@ -42,6 +46,22 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 		c.emit(code.OpPop)
+	case *ast.LetStatement:
+		err := c.Compile(node.Value)
+		if err != nil {
+			return err
+		}
+
+		symbol := c.symbolTable.Define(node.Name.Value)
+
+		c.emit(code.OpSetGlobal, symbol.Index)
+	case *ast.Identifier:
+		symbol, ok := c.symbolTable.RetrieveSymbol(node.Value)
+		if !ok {
+			return fmt.Errorf("undefined: %s", node.Value)
+		}
+
+		c.emit(code.OpGetGlobal, symbol.Index)
 	case *ast.IfExpression:
 		err := c.Compile(node.Condition)
 		if err != nil {
