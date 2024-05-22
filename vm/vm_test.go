@@ -82,6 +82,16 @@ func TestIfElseExpression(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestLetStatements(t *testing.T) {
+	tests := []vmTestCase{
+		{`let x = 10; x`, 10},
+		{`let x = "test"; let y = x; y`, "test"},
+		{`let var = 20; if (true) { var + 1 }`, 21},
+	}
+
+	runVmTests(t, tests)
+}
+
 func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 

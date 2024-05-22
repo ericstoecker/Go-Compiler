@@ -8,6 +8,7 @@ import (
 )
 
 const StackSize = 2048
+const GlobalsSize = 6048
 
 var TRUE = &object.Boolean{Value: true}
 var FALSE = &object.Boolean{Value: false}
@@ -19,6 +20,8 @@ type VM struct {
 
 	stack []object.Object
 	sp    int
+
+	globals []object.Object
 }
 
 func New(bytecode *compiler.Bytecode) *VM {
@@ -28,6 +31,8 @@ func New(bytecode *compiler.Bytecode) *VM {
 
 		stack: make([]object.Object, StackSize),
 		sp:    0,
+
+		globals: make([]object.Object, GlobalsSize),
 	}
 }
 
@@ -94,6 +99,21 @@ func (vm *VM) Run() error {
 		case code.OpJump:
 			jumpPosition := code.ReadUint16(vm.instructions[ip+1:])
 			ip = int(jumpPosition - 1)
+		case code.OpSetGlobal:
+			globalsIndex := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+
+			vm.globals[globalsIndex] = vm.pop()
+		case code.OpGetGlobal:
+			globalsIndex := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+
+			obj := vm.globals[globalsIndex]
+			if obj == nil {
+				panic("calling global that does not exist")
+			}
+
+			vm.push(obj)
 		case code.OpPop:
 			vm.pop()
 		}
