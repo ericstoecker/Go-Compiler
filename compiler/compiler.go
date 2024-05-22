@@ -62,6 +62,16 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		c.emit(code.OpGetGlobal, symbol.Index)
+	case *ast.ArrayLiteral:
+		elements := node.Elements
+		for _, e := range elements {
+			err := c.Compile(e)
+			if err != nil {
+				return err
+			}
+		}
+
+		c.emit(code.OpArray, len(elements))
 	case *ast.IfExpression:
 		err := c.Compile(node.Condition)
 		if err != nil {

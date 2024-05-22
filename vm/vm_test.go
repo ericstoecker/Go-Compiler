@@ -82,6 +82,16 @@ func TestIfElseExpression(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestArrayExpressions(t *testing.T) {
+	tests := []vmTestCase{
+		{`[1, 2, 3]`, []int{1, 2, 3}},
+		{`[1 * 1, 4 - 2, 6 / 2]`, []int{1, 2, 3}},
+		{`let var = [1, 2, 3]; var`, []int{1, 2, 3}},
+	}
+
+	runVmTests(t, tests)
+}
+
 func TestLetStatements(t *testing.T) {
 	tests := []vmTestCase{
 		{`let x = 10; x`, 10},
@@ -147,6 +157,11 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 		if err != nil {
 			t.Errorf("testNullObject failed: %s", err)
 		}
+	case []int:
+		err := testArrayObject(expected, actual)
+		if err != nil {
+			t.Errorf("testArrayObject failed: %s", err)
+		}
 	default:
 		t.Errorf("tests for type %T not supported", expected)
 	}
@@ -202,6 +217,27 @@ func testNullObject(actual object.Object) error {
 	if !ok {
 		return fmt.Errorf("object is not Null. got=%T (%v)",
 			actual, actual)
+	}
+
+	return nil
+}
+
+func testArrayObject(expected []int, actual object.Object) error {
+	result, ok := actual.(*object.Array)
+	if !ok {
+		return fmt.Errorf("object is not Array. got=%T (%v)",
+			actual, actual)
+	}
+
+	for i, e := range result.Elements {
+		elem, ok := e.(*object.Integer)
+		if !ok {
+			return fmt.Errorf("element is not int at index %d. got=%T (%v)", i, elem, elem)
+		}
+
+		if int(elem.Value) != expected[i] {
+			return fmt.Errorf("element has wrong value at index %d. got=%d, want=%d", i, elem.Value, expected[i])
+		}
 	}
 
 	return nil

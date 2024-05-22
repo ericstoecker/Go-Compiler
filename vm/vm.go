@@ -117,6 +117,21 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpArray:
+			numElements := int(code.ReadUint16(vm.instructions[ip+1:]))
+			ip += 2
+
+			vm.sp = vm.sp - numElements
+
+			elements := make([]object.Object, numElements)
+			for i := 0; i < numElements; i++ {
+				elements[i] = vm.stack[vm.sp+i]
+			}
+
+			err := vm.push(&object.Array{Elements: elements})
+			if err != nil {
+				return err
+			}
 		case code.OpPop:
 			vm.pop()
 		}
