@@ -110,10 +110,13 @@ func (vm *VM) Run() error {
 
 			obj := vm.globals[globalsIndex]
 			if obj == nil {
-				panic("calling global that does not exist")
+				panic("trying to get global that does not exist")
 			}
 
-			vm.push(obj)
+			err := vm.push(obj)
+			if err != nil {
+				return err
+			}
 		case code.OpPop:
 			vm.pop()
 		}
