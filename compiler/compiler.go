@@ -72,6 +72,21 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		c.emit(code.OpArray, len(elements))
+	case *ast.MapLiteral:
+		entries := node.Entries
+		for key, value := range entries {
+			err := c.Compile(key)
+			if err != nil {
+				return err
+			}
+
+			err = c.Compile(value)
+			if err != nil {
+				return err
+			}
+		}
+
+		c.emit(code.OpMap, len(entries))
 	case *ast.IfExpression:
 		err := c.Compile(node.Condition)
 		if err != nil {
