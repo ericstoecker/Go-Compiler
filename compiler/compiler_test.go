@@ -340,6 +340,43 @@ func TestMapLiterals(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+func TestIndexExpressions(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			input:             `let a = [0, 1]; a[0]`,
+			expectedConstants: []interface{}{0, 1, 0},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpArray, 2),
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpGetGlobal, 0),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpIndex),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:             `let var = {"1": 2, "3": 4}; var["3"]`,
+			expectedConstants: []interface{}{"1", 2, "3", 4, "3"},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpConstant, 3),
+				code.Make(code.OpMap, 2),
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpGetGlobal, 0),
+				code.Make(code.OpConstant, 4),
+				code.Make(code.OpIndex),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 
