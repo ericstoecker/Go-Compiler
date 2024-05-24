@@ -132,6 +132,29 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpMap:
+			numEntries := int(code.ReadUint16(vm.instructions[ip+1:]))
+			ip += 2
+
+			vm.sp = vm.sp - numEntries*2
+
+			entries := make(map[string]object.Object, numEntries)
+			for i := 0; i < numEntries; i++ {
+				key := vm.stack[vm.sp+2*i]
+				value := vm.stack[vm.sp+2*i+1]
+
+				hashableKey, ok := key.(object.Hashable)
+				if !ok {
+					return fmt.Errorf("type missmatch: non-hashable object provided as hash key")
+				}
+
+				entries[hashableKey.Hash()] = value
+			}
+
+			err := vm.push(&object.Map{Entries: entries})
+			if err != nil {
+				return err
+			}
 		case code.OpPop:
 			vm.pop()
 		}
@@ -304,6 +327,10 @@ func (vm *VM) push(o object.Object) error {
 }
 
 func (vm *VM) pop() object.Object {
+	if vm.sp <= 0 {
+		panic("trying to pop from empty stack")
+	}
+
 	vm.sp--
 	return vm.stack[vm.sp]
 }

@@ -82,6 +82,16 @@ func TestIfElseExpression(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestLetStatements(t *testing.T) {
+	tests := []vmTestCase{
+		{`let x = 10; x`, 10},
+		{`let x = "test"; let y = x; y`, "test"},
+		{`let var = 20; if (true) { var + 1 }`, 21},
+	}
+
+	runVmTests(t, tests)
+}
+
 func TestArrayExpressions(t *testing.T) {
 	tests := []vmTestCase{
 		{`[1, 2, 3]`, []int{1, 2, 3}},
@@ -92,11 +102,9 @@ func TestArrayExpressions(t *testing.T) {
 	runVmTests(t, tests)
 }
 
-func TestLetStatements(t *testing.T) {
+func TestHashMapExpressions(t *testing.T) {
 	tests := []vmTestCase{
-		{`let x = 10; x`, 10},
-		{`let x = "test"; let y = x; y`, "test"},
-		{`let var = 20; if (true) { var + 1 }`, 21},
+		{`{ "a": 2, "b": 3 }`, map[string]int{"STRING: a": 2, "STRING: b": 3}},
 	}
 
 	runVmTests(t, tests)
@@ -161,6 +169,11 @@ func testExpectedObject(t *testing.T, expected interface{}, actual object.Object
 		err := testArrayObject(expected, actual)
 		if err != nil {
 			t.Errorf("testArrayObject failed: %s", err)
+		}
+	case map[string]int:
+		err := testMapObject(expected, actual)
+		if err != nil {
+			t.Errorf("testMapObject failed: %s", err)
 		}
 	default:
 		t.Errorf("tests for type %T not supported", expected)
@@ -237,6 +250,32 @@ func testArrayObject(expected []int, actual object.Object) error {
 
 		if int(elem.Value) != expected[i] {
 			return fmt.Errorf("element has wrong value at index %d. got=%d, want=%d", i, elem.Value, expected[i])
+		}
+	}
+
+	return nil
+}
+
+func testMapObject(expected map[string]int, actual object.Object) error {
+	result, ok := actual.(*object.Map)
+	if !ok {
+		return fmt.Errorf("object is not Map. got=%T (%v)",
+			actual, actual)
+	}
+
+	for key, value := range result.Entries {
+		expectedValue, ok := expected[key]
+		if !ok {
+			return fmt.Errorf("key does not exist. got=%s", key)
+		}
+
+		actualValue, ok := value.(*object.Integer)
+		if !ok {
+			return fmt.Errorf("value is not int for key %s. got=%T (%v)", key, value, value)
+		}
+
+		if int(actualValue.Value) != expectedValue {
+			return fmt.Errorf("entry has wrong value for key %s. got=%d, want=%d", key, actualValue.Value, expectedValue)
 		}
 	}
 
