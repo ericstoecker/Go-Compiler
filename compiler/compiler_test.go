@@ -324,14 +324,12 @@ func TestArrayLiterals(t *testing.T) {
 func TestMapLiterals(t *testing.T) {
 	tests := []compilerTestCase{
 		{
-			input:             `{ "a": 1, "b": 2 }`,
-			expectedConstants: []interface{}{"a", 1, "b", 2},
+			input:             `{ "a": 1 }`,
+			expectedConstants: []interface{}{"a", 1},
 			expectedInstructions: []code.Instructions{
 				code.Make(code.OpConstant, 0),
 				code.Make(code.OpConstant, 1),
-				code.Make(code.OpConstant, 2),
-				code.Make(code.OpConstant, 3),
-				code.Make(code.OpMap, 2),
+				code.Make(code.OpMap, 1),
 				code.Make(code.OpPop),
 			},
 		},
@@ -357,17 +355,30 @@ func TestIndexExpressions(t *testing.T) {
 			},
 		},
 		{
-			input:             `let var = {"1": 2, "3": 4}; var["3"]`,
-			expectedConstants: []interface{}{"1", 2, "3", 4, "3"},
+			input:             `let var = {"1": 2}; var["1"]`,
+			expectedConstants: []interface{}{"1", 2, "1"},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpMap, 1),
+				code.Make(code.OpSetGlobal, 0),
+				code.Make(code.OpGetGlobal, 0),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpIndex),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input:             `let x = [0, 1, 2]; x[0]`,
+			expectedConstants: []interface{}{0, 1, 2, 0},
 			expectedInstructions: []code.Instructions{
 				code.Make(code.OpConstant, 0),
 				code.Make(code.OpConstant, 1),
 				code.Make(code.OpConstant, 2),
-				code.Make(code.OpConstant, 3),
-				code.Make(code.OpMap, 2),
+				code.Make(code.OpArray, 3),
 				code.Make(code.OpSetGlobal, 0),
 				code.Make(code.OpGetGlobal, 0),
-				code.Make(code.OpConstant, 4),
+				code.Make(code.OpConstant, 3),
 				code.Make(code.OpIndex),
 				code.Make(code.OpPop),
 			},

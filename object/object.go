@@ -28,6 +28,7 @@ type Object interface {
 }
 
 type Hashable interface {
+	Object
 	Hash() string
 }
 

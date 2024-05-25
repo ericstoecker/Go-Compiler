@@ -110,6 +110,17 @@ func TestHashMapExpressions(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestIndexExpressions(t *testing.T) {
+	tests := []vmTestCase{
+		{`let x = [0, 1, 2]; x[0]`, 0},
+		{`let x = {"a": 20}; x["a"]`, 20},
+		{`let var = {"a"+"b": "test"}; var["ab"]`, "test"},
+		{`let x = {"a": 20}; x["b"]`, NULL},
+	}
+
+	runVmTests(t, tests)
+}
+
 func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 

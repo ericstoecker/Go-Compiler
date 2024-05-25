@@ -155,6 +155,46 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpIndex:
+			index := vm.pop()
+			left := vm.pop()
+
+			switch left.Type() {
+			case object.ARRAY:
+				arr := left.(*object.Array)
+
+				intIndex, ok := index.(*object.Integer)
+				if !ok {
+					return fmt.Errorf("type missmatch: cannot use %s as array index", index.Type())
+				}
+
+				indexValue := intIndex.Value
+				if indexValue < 0 || int(indexValue) >= len(arr.Elements) {
+					return fmt.Errorf("index %d out of range for array of length %d", indexValue, len(arr.Elements))
+				}
+
+				value := arr.Elements[indexValue]
+				err := vm.push(value)
+				if err != nil {
+					return err
+				}
+			case object.MAP:
+				mapObj := left.(*object.Map)
+
+				hashableIndex, ok := index.(object.Hashable)
+				if !ok {
+					return fmt.Errorf("type missmatch: cannot use %s as key for hashmap", hashableIndex.Type())
+				}
+
+				value := mapObj.Entries[hashableIndex.Hash()]
+				if value == nil {
+					value = NULL
+				}
+				err := vm.push(value)
+				if err != nil {
+					return err
+				}
+			}
 		case code.OpPop:
 			vm.pop()
 		}
