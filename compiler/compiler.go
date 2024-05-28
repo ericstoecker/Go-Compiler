@@ -8,13 +8,18 @@ import (
 )
 
 type Compiler struct {
+	scopes     []*CompilationScope
+	scopeIndex int
+
+	symbolTable *SymbolTable
+}
+
+type CompilationScope struct {
 	instructions code.Instructions
 	constants    []object.Object
 
 	lastInstruction     EmittedInstruction
 	previousInstruction EmittedInstruction
-
-	symbolTable *SymbolTable
 }
 
 type EmittedInstruction struct {
@@ -23,9 +28,14 @@ type EmittedInstruction struct {
 }
 
 func New() *Compiler {
-	return &Compiler{
+	mainScope := &CompilationScope{
 		instructions: code.Instructions{},
 		constants:    []object.Object{},
+	}
+
+	return &Compiler{
+		scopes:     []*CompilationScope{mainScope},
+		scopeIndex: 0,
 
 		symbolTable: NewSymbolTable(),
 	}
@@ -117,7 +127,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 		opJumpPosition := c.emit(code.OpJump, 0)
-		c.replaceInstruction(opJumpNotTruePosition, code.Make(code.OpJumpNotTrue, len(c.instructions)))
+		c.replaceInstruction(opJumpNotTruePosition, code.Make(code.OpJumpNotTrue, len(c.currentInstructions())))
 
 		if node.Alternative != nil {
 			err = c.Compile(node.Alternative)
@@ -133,7 +143,7 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(code.OpNull)
 		}
 
-		c.replaceInstruction(opJumpPosition, code.Make(code.OpJump, len(c.instructions)))
+		c.replaceInstruction(opJumpPosition, code.Make(code.OpJump, len(c.currentInstructions())))
 	case *ast.BlockStatement:
 		for _, s := range node.Statements {
 			err := c.Compile(s)
@@ -220,41 +230,45 @@ func (c *Compiler) emit(op code.Opcode, operands ...int) int {
 	ins := code.Make(op, operands...)
 	pos := c.addInstruction(ins)
 
-	c.previousInstruction = c.lastInstruction
-	c.lastInstruction = EmittedInstruction{code: op, position: pos}
+	c.scopes[c.scopeIndex].previousInstruction = c.scopes[c.scopeIndex].lastInstruction
+	c.scopes[c.scopeIndex].lastInstruction = EmittedInstruction{code: op, position: pos}
 	return pos
 }
 
 func (c *Compiler) removeLastInstruction() {
-	c.instructions = c.instructions[:c.lastInstruction.position]
-	c.lastInstruction = c.previousInstruction
+	c.scopes[c.scopeIndex].instructions = c.currentInstructions()[:c.scopes[c.scopeIndex].lastInstruction.position]
+	c.scopes[c.scopeIndex].lastInstruction = c.scopes[c.scopeIndex].previousInstruction
 }
 
 func (c *Compiler) lastInstructionIs(op code.Opcode) bool {
-	return c.lastInstruction.code == op
+	return c.scopes[c.scopeIndex].lastInstruction.code == op
 }
 
 func (c *Compiler) replaceInstruction(pos int, ins []byte) {
 	for i, instruction := range ins {
-		c.instructions[pos+i] = instruction
+		c.currentInstructions()[pos+i] = instruction
 	}
 }
 
 func (c *Compiler) addInstruction(ins []byte) int {
-	posNewInstruction := len(c.instructions)
-	c.instructions = append(c.instructions, ins...)
+	posNewInstruction := len(c.currentInstructions())
+	c.scopes[c.scopeIndex].instructions = append(c.currentInstructions(), ins...)
 	return posNewInstruction
 }
 
 func (c *Compiler) addConstant(obj object.Object) int {
-	c.constants = append(c.constants, obj)
-	return len(c.constants) - 1
+	c.scopes[c.scopeIndex].constants = append(c.scopes[c.scopeIndex].constants, obj)
+	return len(c.scopes[c.scopeIndex].constants) - 1
+}
+
+func (c *Compiler) currentInstructions() code.Instructions {
+	return c.scopes[c.scopeIndex].instructions
 }
 
 func (c *Compiler) Bytecode() *Bytecode {
 	return &Bytecode{
-		Instructions: c.instructions,
-		Constants:    c.constants,
+		Instructions: c.currentInstructions(),
+		Constants:    c.scopes[c.scopeIndex].constants,
 	}
 }
 

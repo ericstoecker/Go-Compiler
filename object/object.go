@@ -3,21 +3,23 @@ package object
 import (
 	"bytes"
 	"compiler/ast"
+	"compiler/code"
 	"fmt"
 	"strconv"
 )
 
 const (
-	INT        = "INT"
-	FUNCTION   = "FUNCTION"
-	RETURN_OBJ = "RETURN_OBJ"
-	BOOLEAN    = "BOOLEAN"
-	ARRAY      = "ARRAY"
-	MAP        = "MAP"
-	STRING     = "STRING"
-	ERROR      = "ERROR"
-	NULL       = "NULL"
-	BUILTIN    = "BUILTIN"
+	INT               = "INT"
+	FUNCTION          = "FUNCTION"
+	RETURN_OBJ        = "RETURN_OBJ"
+	BOOLEAN           = "BOOLEAN"
+	ARRAY             = "ARRAY"
+	MAP               = "MAP"
+	STRING            = "STRING"
+	ERROR             = "ERROR"
+	NULL              = "NULL"
+	BUILTIN           = "BUILTIN"
+	COMPILED_FUNCTION = "COMPILED_FUNCTION"
 )
 
 type ObjectType string
@@ -137,5 +139,16 @@ func (builtin *Builtin) Type() ObjectType {
 	return BUILTIN
 }
 func (builtin *Builtin) String() string {
+	return ""
+}
+
+type CompiledFunction struct {
+	Instructions code.Instructions
+}
+
+func (compiledFn *CompiledFunction) Type() ObjectType {
+	return COMPILED_FUNCTION
+}
+func (compiledFn *CompiledFunction) String() string {
 	return ""
 }

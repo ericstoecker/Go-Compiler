@@ -388,6 +388,25 @@ func TestIndexExpressions(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+// func TestFunctionLiterals(t *testing.T) {
+// 	tests := []compilerTestCase{
+// 		{
+// 			input: `fn() { 2; }`,
+// 			expectedConstants: []interface{}{
+// 				[]code.Instructions{
+// 					code.Make(code.OpConstant, 0),
+// 					code.Make(code.OpReturnValue),
+// 				}},
+// 			expectedInstructions: []code.Instructions{
+// 				code.Make(code.OpConstant),
+// 				code.Make(code.OpPop),
+// 			},
+// 		},
+// 	}
+//
+// 	runCompilerTests(t, tests)
+// }
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 
@@ -464,6 +483,12 @@ func testConstants(
 				return fmt.Errorf("constant %d - testStringObject failed: %s",
 					i, err)
 			}
+		case []code.Instructions:
+			err := testCompiledFunction(constant, actual[i])
+			if err != nil {
+				return fmt.Errorf("constant %d - testCompiledFunction failed: %s",
+					i, err)
+			}
 		default:
 			return fmt.Errorf("no test for type %T available", constant)
 		}
@@ -516,6 +541,16 @@ func testStringObject(expected string, actual object.Object) error {
 	}
 
 	return nil
+}
+
+func testCompiledFunction(expected []code.Instructions, actual object.Object) error {
+	fn, ok := actual.(*object.CompiledFunction)
+	if !ok {
+		return fmt.Errorf("object is not CompiledFunction. got=%T (%+v)",
+			actual, actual)
+	}
+
+	return testInstructions(expected, fn.Instructions)
 }
 
 func concatInstructions(s []code.Instructions) code.Instructions {
