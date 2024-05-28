@@ -165,6 +165,22 @@ func (c *Compiler) Compile(node ast.Node) error {
 		default:
 			return fmt.Errorf("unknown operator %s", node.Operator)
 		}
+	case *ast.FunctionLiteral:
+		c.enterScope()
+
+		c.Compile(node.Body)
+
+		c.removeLastInstruction()
+		c.emit(code.OpReturnValue)
+
+		// if !c.lastInstructionIs(code.OpReturnValue) {
+		// 	c.emit(code.OpReturn)
+		// }
+
+		functionInstructions := c.leaveScope()
+
+		compiledFn := &object.CompiledFunction{Instructions: functionInstructions}
+		c.emit(code.OpConstant, c.addConstant(compiledFn))
 	case *ast.InfixExpression:
 		switch node.Operator {
 		case "<=", "<":
@@ -263,6 +279,25 @@ func (c *Compiler) addConstant(obj object.Object) int {
 
 func (c *Compiler) currentInstructions() code.Instructions {
 	return c.scopes[c.scopeIndex].instructions
+}
+
+func (c *Compiler) enterScope() {
+	newScope := &CompilationScope{
+		instructions: code.Instructions{},
+		constants:    []object.Object{},
+	}
+
+	c.scopes = append(c.scopes, newScope)
+	c.scopeIndex++
+}
+
+func (c *Compiler) leaveScope() code.Instructions {
+	instructionsInCurrentScope := c.scopes[c.scopeIndex].instructions
+
+	c.scopes = c.scopes[:c.scopeIndex]
+	c.scopeIndex--
+
+	return instructionsInCurrentScope
 }
 
 func (c *Compiler) Bytecode() *Bytecode {

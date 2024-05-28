@@ -388,24 +388,24 @@ func TestIndexExpressions(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
-// func TestFunctionLiterals(t *testing.T) {
-// 	tests := []compilerTestCase{
-// 		{
-// 			input: `fn() { 2; }`,
-// 			expectedConstants: []interface{}{
-// 				[]code.Instructions{
-// 					code.Make(code.OpConstant, 0),
-// 					code.Make(code.OpReturnValue),
-// 				}},
-// 			expectedInstructions: []code.Instructions{
-// 				code.Make(code.OpConstant),
-// 				code.Make(code.OpPop),
-// 			},
-// 		},
-// 	}
-//
-// 	runCompilerTests(t, tests)
-// }
+func TestFunctionLiterals(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			input: `fn() { 2; }`,
+			expectedConstants: []interface{}{
+				[]code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpReturnValue),
+				}},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
 
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
