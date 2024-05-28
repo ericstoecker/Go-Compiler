@@ -445,6 +445,21 @@ func TestCallExpressions(t *testing.T) {
 				code.Make(code.OpPop),
 			},
 		},
+		{
+			input: `let x = fn() { 2; }; x()`,
+			expectedConstants: []interface{}{
+				[]code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpReturnValue),
+				}},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant),
+				code.Make(code.OpSetGlobal),
+				code.Make(code.OpGetGlobal),
+				code.Make(code.OpCall),
+				code.Make(code.OpPop),
+			},
+		},
 	}
 
 	runCompilerTests(t, tests)
