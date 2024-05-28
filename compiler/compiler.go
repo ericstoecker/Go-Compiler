@@ -171,9 +171,6 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 
-		if c.lastInstructionIs(code.OpPop) {
-			c.removeLastInstruction()
-		}
 		c.emit(code.OpReturnValue)
 	case *ast.FunctionLiteral:
 		c.enterScope()
@@ -196,6 +193,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		compiledFn := &object.CompiledFunction{Instructions: functionInstructions}
 		c.emit(code.OpConstant, c.addConstant(compiledFn))
+	case *ast.CallExpression:
+		err := c.Compile(node.Left)
+		if err != nil {
+			return err
+		}
+
+		c.emit(code.OpCall)
 	case *ast.InfixExpression:
 		switch node.Operator {
 		case "<=", "<":
