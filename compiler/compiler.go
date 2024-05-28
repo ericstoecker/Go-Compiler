@@ -8,6 +8,8 @@ import (
 )
 
 type Compiler struct {
+	constants []object.Object
+
 	scopes     []*CompilationScope
 	scopeIndex int
 
@@ -16,7 +18,6 @@ type Compiler struct {
 
 type CompilationScope struct {
 	instructions code.Instructions
-	constants    []object.Object
 
 	lastInstruction     EmittedInstruction
 	previousInstruction EmittedInstruction
@@ -30,7 +31,6 @@ type EmittedInstruction struct {
 func New() *Compiler {
 	mainScope := &CompilationScope{
 		instructions: code.Instructions{},
-		constants:    []object.Object{},
 	}
 
 	return &Compiler{
@@ -292,8 +292,8 @@ func (c *Compiler) addInstruction(ins []byte) int {
 }
 
 func (c *Compiler) addConstant(obj object.Object) int {
-	c.scopes[c.scopeIndex].constants = append(c.scopes[c.scopeIndex].constants, obj)
-	return len(c.scopes[c.scopeIndex].constants) - 1
+	c.constants = append(c.constants, obj)
+	return len(c.constants) - 1
 }
 
 func (c *Compiler) currentInstructions() code.Instructions {
@@ -303,7 +303,6 @@ func (c *Compiler) currentInstructions() code.Instructions {
 func (c *Compiler) enterScope() {
 	newScope := &CompilationScope{
 		instructions: code.Instructions{},
-		constants:    []object.Object{},
 	}
 
 	c.scopes = append(c.scopes, newScope)
@@ -322,7 +321,7 @@ func (c *Compiler) leaveScope() code.Instructions {
 func (c *Compiler) Bytecode() *Bytecode {
 	return &Bytecode{
 		Instructions: c.currentInstructions(),
-		Constants:    c.scopes[c.scopeIndex].constants,
+		Constants:    c.constants,
 	}
 }
 

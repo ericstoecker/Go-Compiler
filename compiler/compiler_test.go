@@ -393,12 +393,13 @@ func TestFunctionLiterals(t *testing.T) {
 		{
 			input: `fn() { 2; }`,
 			expectedConstants: []interface{}{
+				2,
 				[]code.Instructions{
 					code.Make(code.OpConstant, 0),
 					code.Make(code.OpReturnValue),
 				}},
 			expectedInstructions: []code.Instructions{
-				code.Make(code.OpConstant),
+				code.Make(code.OpConstant, 1),
 				code.Make(code.OpPop),
 			},
 		},
@@ -409,19 +410,20 @@ func TestFunctionLiterals(t *testing.T) {
 					code.Make(code.OpReturn),
 				}},
 			expectedInstructions: []code.Instructions{
-				code.Make(code.OpConstant),
+				code.Make(code.OpConstant, 0),
 				code.Make(code.OpPop),
 			},
 		},
 		{
 			input: `fn() { return 10; }`,
 			expectedConstants: []interface{}{
+				10,
 				[]code.Instructions{
-					code.Make(code.OpConstant),
+					code.Make(code.OpConstant, 0),
 					code.Make(code.OpReturnValue),
 				}},
 			expectedInstructions: []code.Instructions{
-				code.Make(code.OpConstant),
+				code.Make(code.OpConstant, 1),
 				code.Make(code.OpPop),
 			},
 		},
@@ -435,12 +437,13 @@ func TestCallExpressions(t *testing.T) {
 		{
 			input: `fn() { 2; }()`,
 			expectedConstants: []interface{}{
+				2,
 				[]code.Instructions{
 					code.Make(code.OpConstant, 0),
 					code.Make(code.OpReturnValue),
 				}},
 			expectedInstructions: []code.Instructions{
-				code.Make(code.OpConstant),
+				code.Make(code.OpConstant, 1),
 				code.Make(code.OpCall),
 				code.Make(code.OpPop),
 			},
@@ -448,12 +451,13 @@ func TestCallExpressions(t *testing.T) {
 		{
 			input: `let x = fn() { 2; }; x()`,
 			expectedConstants: []interface{}{
+				2,
 				[]code.Instructions{
 					code.Make(code.OpConstant, 0),
 					code.Make(code.OpReturnValue),
 				}},
 			expectedInstructions: []code.Instructions{
-				code.Make(code.OpConstant),
+				code.Make(code.OpConstant, 1),
 				code.Make(code.OpSetGlobal),
 				code.Make(code.OpGetGlobal),
 				code.Make(code.OpCall),
