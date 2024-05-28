@@ -402,6 +402,29 @@ func TestFunctionLiterals(t *testing.T) {
 				code.Make(code.OpPop),
 			},
 		},
+		{
+			input: `fn() { }`,
+			expectedConstants: []interface{}{
+				[]code.Instructions{
+					code.Make(code.OpReturn),
+				}},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			input: `fn() { return 10; }`,
+			expectedConstants: []interface{}{
+				[]code.Instructions{
+					code.Make(code.OpConstant),
+					code.Make(code.OpReturnValue),
+				}},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant),
+				code.Make(code.OpPop),
+			},
+		},
 	}
 
 	runCompilerTests(t, tests)

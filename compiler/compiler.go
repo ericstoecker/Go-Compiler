@@ -165,17 +165,32 @@ func (c *Compiler) Compile(node ast.Node) error {
 		default:
 			return fmt.Errorf("unknown operator %s", node.Operator)
 		}
+	case *ast.ReturnStatement:
+		err := c.Compile(node.ReturnValue)
+		if err != nil {
+			return err
+		}
+
+		if c.lastInstructionIs(code.OpPop) {
+			c.removeLastInstruction()
+		}
+		c.emit(code.OpReturnValue)
 	case *ast.FunctionLiteral:
 		c.enterScope()
 
-		c.Compile(node.Body)
+		err := c.Compile(node.Body)
+		if err != nil {
+			return err
+		}
 
-		c.removeLastInstruction()
-		c.emit(code.OpReturnValue)
+		if c.lastInstructionIs(code.OpPop) {
+			c.removeLastInstruction()
+			c.emit(code.OpReturnValue)
+		}
 
-		// if !c.lastInstructionIs(code.OpReturnValue) {
-		// 	c.emit(code.OpReturn)
-		// }
+		if !c.lastInstructionIs(code.OpReturnValue) {
+			c.emit(code.OpReturn)
+		}
 
 		functionInstructions := c.leaveScope()
 
