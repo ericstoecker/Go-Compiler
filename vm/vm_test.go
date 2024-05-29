@@ -121,6 +121,18 @@ func TestIndexExpressions(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestFunctions(t *testing.T) {
+	tests := []vmTestCase{
+		{`fn() { return 10 }()`, 10},
+		{`fn() {}()`, NULL},
+		{`let x = fn() { 10 + 5 }()`, 15},
+		{`let x = fn() { 10 + 5 }; let y = fn() { x() + 5 }(); y`, 20},
+		{`let x = fn() { 10 + 5 }; let y = fn() { x }; y()()`, 15},
+	}
+
+	runVmTests(t, tests)
+}
+
 func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 

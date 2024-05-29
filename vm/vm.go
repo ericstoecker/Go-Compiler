@@ -209,6 +209,25 @@ func (vm *VM) Run() error {
 					return err
 				}
 			}
+		case code.OpCall:
+			compiledFn := vm.pop()
+
+			fn, ok := compiledFn.(*object.CompiledFunction)
+			if !ok {
+				return fmt.Errorf("type missmatch: cannot call non function type %s", compiledFn.Type())
+			}
+
+			functionFrame := NewFrame(fn)
+			vm.pushFrame(functionFrame)
+		case code.OpReturnValue:
+			vm.popFrame()
+		case code.OpReturn:
+			vm.popFrame()
+
+			err := vm.push(NULL)
+			if err != nil {
+				return err
+			}
 		case code.OpPop:
 			vm.pop()
 		}
@@ -389,9 +408,14 @@ func (vm *VM) pop() object.Object {
 	return vm.stack[vm.sp]
 }
 
-func (vm *VM) pushFrame() {}
+func (vm *VM) pushFrame(frame *Frame) {
+	vm.frameIndex++
+	vm.frames[vm.frameIndex] = frame
+}
 
-func (vm *VM) popFrame() {}
+func (vm *VM) popFrame() {
+	vm.frameIndex--
+}
 
 func (vm *VM) currentFrame() *Frame {
 	return vm.frames[vm.frameIndex]
