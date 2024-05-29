@@ -52,13 +52,16 @@ func (vm *VM) LastPopped() object.Object {
 }
 
 func (vm *VM) Run() error {
-	for ip := 0; ip < len(vm.currentFrame().Instructions()); ip++ {
+	for vm.currentFrame().ip < len(vm.currentFrame().Instructions())-1 {
+		vm.currentFrame().ip++
+
+		ip := vm.currentFrame().ip
 		op := code.Opcode(vm.currentFrame().Instructions()[ip])
 
 		switch op {
 		case code.OpConstant:
 			constIndex := code.ReadUint16(vm.currentFrame().Instructions()[ip+1:])
-			ip += 2
+			vm.currentFrame().ip += 2
 
 			err := vm.push(vm.constants[constIndex])
 			if err != nil {
@@ -103,21 +106,21 @@ func (vm *VM) Run() error {
 
 			if !booleanCondition.Value {
 				jumpPosition := code.ReadUint16(vm.currentFrame().Instructions()[ip+1:])
-				ip = int(jumpPosition - 1)
+				vm.currentFrame().ip = int(jumpPosition - 1)
 			} else {
-				ip += 2
+				vm.currentFrame().ip += 2
 			}
 		case code.OpJump:
 			jumpPosition := code.ReadUint16(vm.currentFrame().Instructions()[ip+1:])
-			ip = int(jumpPosition - 1)
+			vm.currentFrame().ip = int(jumpPosition - 1)
 		case code.OpSetGlobal:
 			globalsIndex := code.ReadUint16(vm.currentFrame().Instructions()[ip+1:])
-			ip += 2
+			vm.currentFrame().ip += 2
 
 			vm.globals[globalsIndex] = vm.pop()
 		case code.OpGetGlobal:
 			globalsIndex := code.ReadUint16(vm.currentFrame().Instructions()[ip+1:])
-			ip += 2
+			vm.currentFrame().ip += 2
 
 			obj := vm.globals[globalsIndex]
 			if obj == nil {
@@ -130,7 +133,7 @@ func (vm *VM) Run() error {
 			}
 		case code.OpArray:
 			numElements := int(code.ReadUint16(vm.currentFrame().Instructions()[ip+1:]))
-			ip += 2
+			vm.currentFrame().ip += 2
 
 			vm.sp = vm.sp - numElements
 
@@ -145,7 +148,7 @@ func (vm *VM) Run() error {
 			}
 		case code.OpMap:
 			numEntries := int(code.ReadUint16(vm.currentFrame().Instructions()[ip+1:]))
-			ip += 2
+			vm.currentFrame().ip += 2
 
 			vm.sp = vm.sp - numEntries*2
 
