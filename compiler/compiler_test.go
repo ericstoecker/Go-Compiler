@@ -469,6 +469,29 @@ func TestCallExpressions(t *testing.T) {
 	runCompilerTests(t, tests)
 }
 
+func TestLocalBindings(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			input: `fn() { let x = 5; x }`,
+			expectedConstants: []interface{}{
+				5,
+				[]code.Instructions{
+					code.Make(code.OpConstant, 0),
+					code.Make(code.OpSetLocal, 0),
+					code.Make(code.OpGetLocal, 0),
+					code.Make(code.OpReturnValue),
+				},
+			},
+			expectedInstructions: []code.Instructions{
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
+	runCompilerTests(t, tests)
+}
+
 func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	t.Helper()
 

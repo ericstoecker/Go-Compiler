@@ -64,14 +64,22 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		symbol := c.symbolTable.Define(node.Name.Value)
 
-		c.emit(code.OpSetGlobal, symbol.Index)
+		if symbol.Scope == GlobalScope {
+			c.emit(code.OpSetGlobal, symbol.Index)
+		} else {
+			c.emit(code.OpSetLocal, symbol.Index)
+		}
 	case *ast.Identifier:
 		symbol, ok := c.symbolTable.RetrieveSymbol(node.Value)
 		if !ok {
 			return fmt.Errorf("undefined: %s", node.Value)
 		}
 
-		c.emit(code.OpGetGlobal, symbol.Index)
+		if symbol.Scope == GlobalScope {
+			c.emit(code.OpGetGlobal, symbol.Index)
+		} else {
+			c.emit(code.OpGetLocal, symbol.Index)
+		}
 	case *ast.ArrayLiteral:
 		elements := node.Elements
 		for _, e := range elements {
@@ -307,6 +315,8 @@ func (c *Compiler) enterScope() {
 
 	c.scopes = append(c.scopes, newScope)
 	c.scopeIndex++
+
+	c.symbolTable = FromSymbolTable(c.symbolTable)
 }
 
 func (c *Compiler) leaveScope() code.Instructions {
@@ -314,6 +324,8 @@ func (c *Compiler) leaveScope() code.Instructions {
 
 	c.scopes = c.scopes[:c.scopeIndex]
 	c.scopeIndex--
+
+	c.symbolTable = c.symbolTable.UnwrapSymbolTable()
 
 	return instructionsInCurrentScope
 }
