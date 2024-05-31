@@ -29,7 +29,7 @@ type VM struct {
 
 func New(bytecode *compiler.Bytecode) *VM {
 	mainFn := &object.CompiledFunction{Instructions: bytecode.Instructions}
-	mainFrame := NewFrame(mainFn)
+	mainFrame := NewFrame(mainFn, 0)
 
 	frames := make([]*Frame, FramesSize)
 	frames[0] = mainFrame
@@ -228,14 +228,17 @@ func (vm *VM) Run() error {
 				}
 			}
 		case code.OpCall:
-			compiledFn := vm.stack[vm.sp-1]
+			numArgs := code.ReadUint8(vm.currentFrame().Instructions()[ip+1:])
+			vm.currentFrame().ip++
+
+			compiledFn := vm.stack[vm.sp-1-int(numArgs)]
 
 			fn, ok := compiledFn.(*object.CompiledFunction)
 			if !ok {
 				return fmt.Errorf("type missmatch: cannot call non function type %s", compiledFn.Type())
 			}
 
-			functionFrame := NewFrame(fn)
+			functionFrame := NewFrame(fn, vm.sp-int(numArgs))
 			vm.pushFrame(functionFrame)
 
 			vm.sp += fn.NumLocals + 1
@@ -440,7 +443,6 @@ func (vm *VM) pop() object.Object {
 func (vm *VM) pushFrame(frame *Frame) {
 	vm.frameIndex++
 	vm.frames[vm.frameIndex] = frame
-	frame.basePointer = vm.sp
 }
 
 func (vm *VM) popFrame() {

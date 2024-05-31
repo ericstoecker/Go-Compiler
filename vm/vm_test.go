@@ -128,6 +128,17 @@ func TestFunctions(t *testing.T) {
 		{`let x = fn() { 10 + 5 }()`, 15},
 		{`let x = fn() { 10 + 5 }; let y = fn() { x() + 5 }(); y`, 20},
 		{`let x = fn() { 10 + 5 }; let y = fn() { x }; y()()`, 15},
+		{`fn(a) { a }(10)`, 10},
+		{
+			`
+            let sum = fn(a, b) {
+                let c = a + b;
+                c;
+            };
+            sum(1,2) + sum(-1, -2);
+            `,
+			0,
+		},
 	}
 
 	runVmTests(t, tests)
