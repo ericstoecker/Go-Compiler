@@ -131,6 +131,24 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpSetLocal:
+			localsIndex := code.ReadUint8(vm.currentFrame().Instructions()[ip+1:])
+			vm.currentFrame().ip += 1
+
+			vm.stack[vm.currentFrame().basePointer+int(localsIndex)] = vm.pop()
+		case code.OpGetLocal:
+			localsIndex := code.ReadUint8(vm.currentFrame().Instructions()[ip+1:])
+			vm.currentFrame().ip += 1
+
+			obj := vm.stack[vm.currentFrame().basePointer+int(localsIndex)]
+			if obj == nil {
+				panic("trying to get local that does not exist")
+			}
+
+			err := vm.push(obj)
+			if err != nil {
+				return err
+			}
 		case code.OpArray:
 			numElements := int(code.ReadUint16(vm.currentFrame().Instructions()[ip+1:]))
 			vm.currentFrame().ip += 2
@@ -210,7 +228,7 @@ func (vm *VM) Run() error {
 				}
 			}
 		case code.OpCall:
-			compiledFn := vm.pop()
+			compiledFn := vm.stack[vm.sp-1]
 
 			fn, ok := compiledFn.(*object.CompiledFunction)
 			if !ok {
@@ -219,10 +237,21 @@ func (vm *VM) Run() error {
 
 			functionFrame := NewFrame(fn)
 			vm.pushFrame(functionFrame)
+
+			vm.sp += fn.NumLocals + 1
 		case code.OpReturnValue:
+			returnValue := vm.pop()
+
 			vm.popFrame()
+			vm.pop()
+
+			err := vm.push(returnValue)
+			if err != nil {
+				return err
+			}
 		case code.OpReturn:
 			vm.popFrame()
+			vm.sp--
 
 			err := vm.push(NULL)
 			if err != nil {
@@ -411,9 +440,11 @@ func (vm *VM) pop() object.Object {
 func (vm *VM) pushFrame(frame *Frame) {
 	vm.frameIndex++
 	vm.frames[vm.frameIndex] = frame
+	frame.basePointer = vm.sp
 }
 
 func (vm *VM) popFrame() {
+	vm.sp = vm.currentFrame().basePointer
 	vm.frameIndex--
 }
 

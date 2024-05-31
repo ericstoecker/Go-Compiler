@@ -133,6 +133,34 @@ func TestFunctions(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestLocalVariables(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			`let x = fn() { let num = 10; num }
+		    let num = 5;
+		    x();`,
+			10,
+		},
+		{
+			`let x = fn() { let num = 10; num }
+		    let num = 5;
+		    x();
+		    num;`,
+			5,
+		},
+		{
+			`
+            let num = 5;
+            let numTwo = 1;
+            let x = fn() { let num = 10; num + numTwo }
+            x();`,
+			11,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
 func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 

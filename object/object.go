@@ -144,6 +144,8 @@ func (builtin *Builtin) String() string {
 
 type CompiledFunction struct {
 	Instructions code.Instructions
+
+	NumLocals int
 }
 
 func (compiledFn *CompiledFunction) Type() ObjectType {
