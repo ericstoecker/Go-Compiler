@@ -49,7 +49,7 @@ func (s *SymbolTable) Define(name string) *Symbol {
 
 func (s *SymbolTable) RetrieveSymbol(name string) (*Symbol, bool) {
 	symbol, ok := s.symbols[name]
-	if !ok {
+	if !ok && s.outer != nil {
 		return s.outer.RetrieveSymbol(name)
 	}
 	return symbol, ok
