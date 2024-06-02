@@ -33,11 +33,16 @@ func New() *Compiler {
 		instructions: code.Instructions{},
 	}
 
+	symbolTable := NewSymbolTable()
+	for i, builtin := range object.Builtins {
+		symbolTable.DefineBuiltin(i, builtin.Name)
+	}
+
 	return &Compiler{
 		scopes:     []*CompilationScope{mainScope},
 		scopeIndex: 0,
 
-		symbolTable: NewSymbolTable(),
+		symbolTable: symbolTable,
 	}
 }
 
@@ -75,10 +80,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return fmt.Errorf("undefined: %s", node.Value)
 		}
 
-		if symbol.Scope == GlobalScope {
+		switch symbol.Scope {
+		case GlobalScope:
 			c.emit(code.OpGetGlobal, symbol.Index)
-		} else {
+		case LocalScope:
 			c.emit(code.OpGetLocal, symbol.Index)
+		case BuiltinScope:
+			c.emit(code.OpGetBuiltin, symbol.Index)
 		}
 	case *ast.ArrayLiteral:
 		elements := node.Elements
