@@ -172,6 +172,29 @@ func TestLocalVariables(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestBuiltins(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			`push([], 1)`,
+			[]int{1},
+		},
+		{
+			`len([1, 5])`,
+			2,
+		},
+		{
+			`isEmpty([])`,
+			true,
+		},
+		{
+			`isEmpty([3])`,
+			false,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
 func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 

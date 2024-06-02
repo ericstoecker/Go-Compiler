@@ -149,6 +149,16 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpGetBuiltin:
+			builtinIndex := code.ReadUint8(vm.currentFrame().Instructions()[ip+1:])
+			vm.currentFrame().ip += 1
+
+			builtin := object.Builtins[builtinIndex]
+
+			err := vm.push(builtin)
+			if err != nil {
+				return err
+			}
 		case code.OpArray:
 			numElements := int(code.ReadUint16(vm.currentFrame().Instructions()[ip+1:]))
 			vm.currentFrame().ip += 2
@@ -228,20 +238,10 @@ func (vm *VM) Run() error {
 				}
 			}
 		case code.OpCall:
-			numArgs := code.ReadUint8(vm.currentFrame().Instructions()[ip+1:])
-			vm.currentFrame().ip++
-
-			compiledFn := vm.stack[vm.sp-1-int(numArgs)]
-
-			fn, ok := compiledFn.(*object.CompiledFunction)
-			if !ok {
-				return fmt.Errorf("type missmatch: cannot call non function type %s", compiledFn.Type())
+			err := vm.executeCall()
+			if err != nil {
+				return err
 			}
-
-			functionFrame := NewFrame(fn, vm.sp-int(numArgs))
-			vm.pushFrame(functionFrame)
-
-			vm.sp += fn.NumLocals + 1
 		case code.OpReturnValue:
 			returnValue := vm.pop()
 
@@ -266,6 +266,54 @@ func (vm *VM) Run() error {
 	}
 
 	return nil
+}
+
+func (vm *VM) executeCall() error {
+	ip := vm.currentFrame().ip
+
+	numArgs := code.ReadUint8(vm.currentFrame().Instructions()[ip+1:])
+	vm.currentFrame().ip++
+
+	callee := vm.stack[vm.sp-1-int(numArgs)]
+	switch callee.(type) {
+	case *object.CompiledFunction:
+		fn, ok := callee.(*object.CompiledFunction)
+		if !ok {
+		}
+
+		functionFrame := NewFrame(fn, vm.sp-int(numArgs))
+		vm.pushFrame(functionFrame)
+
+		vm.sp += fn.NumLocals + 1
+	case *object.Builtin:
+		builtin := callee.(*object.Builtin)
+
+		args := make([]object.Object, numArgs)
+		for i := range numArgs {
+			args[numArgs-1-i] = vm.pop()
+		}
+
+		result := builtin.Fn(args...)
+
+		vm.stack[vm.sp-1] = wrapNativeValue(result)
+	default:
+		return fmt.Errorf("type missmatch: cannot call non function type %s", callee.Type())
+	}
+
+	return nil
+}
+
+func wrapNativeValue(value interface{}) object.Object {
+	switch value := value.(type) {
+	case bool:
+		return booleanObjectFromBool(value)
+	case nil:
+		return NULL
+	case object.Object:
+		return value
+	default:
+		panic("Trying to wrap native value that does not exist in vm")
+	}
 }
 
 func (vm *VM) executeBinaryOperation(op code.Opcode) error {
