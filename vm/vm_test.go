@@ -125,7 +125,7 @@ func TestFunctions(t *testing.T) {
 	tests := []vmTestCase{
 		{`fn() { return 10 }()`, 10},
 		{`fn() {}()`, NULL},
-		{`let x = fn() { 10 + 5 }()`, 15},
+		{`let x = fn() { 10 + 5 }(); x`, 15},
 		{`let x = fn() { 10 + 5 }; let y = fn() { x() + 5 }(); y`, 20},
 		{`let x = fn() { 10 + 5 }; let y = fn() { x }; y()()`, 15},
 		{`fn(a) { a }(10)`, 10},

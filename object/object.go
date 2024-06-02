@@ -132,7 +132,7 @@ func (null *Null) String() string {
 
 type Builtin struct {
 	Name string
-	Fn   func(args ...Object) Object
+	Fn   func(args ...Object) interface{}
 }
 
 func (builtin *Builtin) Type() ObjectType {
@@ -153,4 +153,8 @@ func (compiledFn *CompiledFunction) Type() ObjectType {
 }
 func (compiledFn *CompiledFunction) String() string {
 	return ""
+}
+
+func NewError(format string, a ...interface{}) *Error {
+	return &Error{Message: fmt.Sprintf(format, a...)}
 }

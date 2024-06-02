@@ -4,7 +4,6 @@ import (
 	"compiler/ast"
 	"compiler/object"
 	"compiler/token"
-	"fmt"
 )
 
 type Builtin func(*ast.CallExpression, *Environment) object.Object
@@ -17,8 +16,18 @@ type Evaluator struct {
 	environment *Environment
 }
 
+func getBuiltinByName(name string) *object.Builtin {
+	for _, builtin := range object.Builtins {
+		if builtin.Name == name {
+			return builtin
+		}
+	}
+
+	return nil
+}
+
 func New() *Evaluator {
-	environment := FromMap(constructBuiltins())
+	environment := NewEnvironment()
 
 	e := &Evaluator{environment: environment}
 
@@ -68,9 +77,14 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 	case *ast.StringLiteral:
 		return &object.String{Value: v.Value}
 	case *ast.Identifier:
+		builtin := getBuiltinByName(v.Value)
+		if builtin != nil {
+			return builtin
+		}
+
 		variable := env.get(v.Value)
 		if variable == nil {
-			return newError("undefined: %s", v.TokenLiteral())
+			return object.NewError("undefined: %s", v.TokenLiteral())
 		}
 		return variable
 	case *ast.FunctionLiteral:
@@ -95,16 +109,16 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 				}
 				args[i] = currentArg
 			}
-			return builtin.Fn(args...)
+			return wrapNativeValue(builtin.Fn(args...))
 		}
 
 		function, ok := left.(*object.Function)
 		if !ok {
-			return newError("not a function. Got %s", left.Type())
+			return object.NewError("not a function. Got %s", left.Type())
 		}
 
 		if numArg, numParam := len(v.Arguments), len(function.Parameters); numArg != numParam {
-			return newError("wrong number of arguments: expected %d. Got %d", numParam, numArg)
+			return object.NewError("wrong number of arguments: expected %d. Got %d", numParam, numArg)
 		}
 
 		newEnv := FromEnvironment(env)
@@ -133,7 +147,7 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 
 		booleanEvalResult, ok := evaluatedCondition.(*object.Boolean)
 		if !ok {
-			return newError("non-boolean condition in if-expression")
+			return object.NewError("non-boolean condition in if-expression")
 		}
 
 		if booleanEvalResult.Value {
@@ -162,7 +176,7 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 			}
 			hashableKey, ok := keyObject.(object.Hashable)
 			if !ok {
-				return newError("not a valid hash key: %s", keyObject.Type())
+				return object.NewError("not a valid hash key: %s", keyObject.Type())
 			}
 
 			valueObject := evaluate(value, env)
@@ -193,16 +207,16 @@ func evaluate(node ast.Node, env *Environment) object.Object {
 			mapObj := left.(*object.Map)
 			return evaluateMapIndexExpression(mapObj, index)
 		default:
-			return newError("type missmatch: cannot index %s", left.Type())
+			return object.NewError("type missmatch: cannot index %s", left.Type())
 		}
 	default:
-		return newError("Node of type %T unknown", v)
+		return object.NewError("Node of type %T unknown", v)
 	}
 }
 
 func evaluateArrayIndexExpression(left *object.Array, index *object.Integer) object.Object {
 	if 0 > index.Value || index.Value >= int64(len(left.Elements)) {
-		return newError("index %d out of bounds for array of length %d", index.Value, len(left.Elements))
+		return object.NewError("index %d out of bounds for array of length %d", index.Value, len(left.Elements))
 	}
 	return left.Elements[index.Value]
 }
@@ -210,7 +224,7 @@ func evaluateArrayIndexExpression(left *object.Array, index *object.Integer) obj
 func evaluateMapIndexExpression(left *object.Map, index object.Object) object.Object {
 	hashableIndex, ok := index.(object.Hashable)
 	if !ok {
-		return newError("not a valid hash key: %s", index.Type())
+		return object.NewError("not a valid hash key: %s", index.Type())
 	}
 
 	key := hashableIndex.Hash()
@@ -250,19 +264,19 @@ func evaluatePrefixExpression(prefixExpr *ast.PrefixExpression, env *Environment
 	case token.MINUS:
 		intExpr, ok := expr.(*object.Integer)
 		if !ok {
-			return newError("Operation not supported: -%s", expr.Type())
+			return object.NewError("Operation not supported: -%s", expr.Type())
 		}
 
 		return &object.Integer{Value: -intExpr.Value}
 	case token.BANG:
 		boolExpr, ok := expr.(*object.Boolean)
 		if !ok {
-			return newError("Operation not supported: !%s", expr.Type())
+			return object.NewError("Operation not supported: !%s", expr.Type())
 		}
 
 		return newBool(!boolExpr.Value)
 	default:
-		return newError("Prefix unknown: %s", prefixExpr.Operator)
+		return object.NewError("Prefix unknown: %s", prefixExpr.Operator)
 	}
 }
 
@@ -294,7 +308,7 @@ func evaluateInfixExpression(infixExpr *ast.InfixExpression, env *Environment) o
 
 		return evaluateStringInfixExpression(infixExpr.Operator, leftStr, rightStr)
 	default:
-		return newError("Operation not supported %s %s %s", left.Type(), infixExpr.Operator, right.Type())
+		return object.NewError("Operation not supported %s %s %s", left.Type(), infixExpr.Operator, right.Type())
 	}
 }
 
@@ -319,7 +333,7 @@ func evaluateIntegerInfixExpression(operator token.TokenType, left *object.Integ
 	case token.LESS_EQUAL:
 		return newBool(left.Value <= right.Value)
 	default:
-		return newError("Infix operator unknown: %s", operator)
+		return object.NewError("Infix operator unknown: %s", operator)
 	}
 }
 
@@ -334,7 +348,7 @@ func evaluateBooleanInfixExpression(operator token.TokenType, left *object.Boole
 	case token.OR:
 		return newBool(left == TRUE || right == TRUE)
 	default:
-		return newError("Infix operator unknown: %s", operator)
+		return object.NewError("Infix operator unknown: %s", operator)
 	}
 }
 
@@ -347,12 +361,8 @@ func evaluateStringInfixExpression(operator token.TokenType, left *object.String
 	case token.PLUS:
 		return &object.String{Value: left.Value + right.Value}
 	default:
-		return newError("Infix operator unknown: %s", operator)
+		return object.NewError("Infix operator unknown: %s", operator)
 	}
-}
-
-func newError(format string, a ...interface{}) *object.Error {
-	return &object.Error{Message: fmt.Sprintf(format, a...)}
 }
 
 func newBool(value bool) *object.Boolean {
@@ -368,5 +378,18 @@ func isError(obj object.Object) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+func wrapNativeValue(value interface{}) object.Object {
+	switch value := value.(type) {
+	case bool:
+		return newBool(value)
+	case nil:
+		return NULL
+	case object.Object:
+		return value
+	default:
+		panic("Trying to wrap native value that does not exist in evaluator")
 	}
 }
