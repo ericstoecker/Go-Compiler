@@ -20,6 +20,7 @@ const (
 	NULL              = "NULL"
 	BUILTIN           = "BUILTIN"
 	COMPILED_FUNCTION = "COMPILED_FUNCTION"
+	CLOSURE           = "CLOSURE"
 )
 
 type ObjectType string
@@ -157,4 +158,16 @@ func (compiledFn *CompiledFunction) String() string {
 
 func NewError(format string, a ...interface{}) *Error {
 	return &Error{Message: fmt.Sprintf(format, a...)}
+}
+
+type Closure struct {
+	Fn   *CompiledFunction
+	Free []Object
+}
+
+func (c *Closure) Type() ObjectType {
+	return CLOSURE
+}
+func (c *Closure) String() string {
+	return fmt.Sprintf("Closure[%p]", c)
 }

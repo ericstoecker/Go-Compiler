@@ -29,7 +29,8 @@ type VM struct {
 
 func New(bytecode *compiler.Bytecode) *VM {
 	mainFn := &object.CompiledFunction{Instructions: bytecode.Instructions}
-	mainFrame := NewFrame(mainFn, 0)
+	mainClosure := &object.Closure{Fn: mainFn}
+	mainFrame := NewFrame(mainClosure, 0)
 
 	frames := make([]*Frame, FramesSize)
 	frames[0] = mainFrame
@@ -57,10 +58,11 @@ func (vm *VM) Run() error {
 
 		ip := vm.currentFrame().ip
 		op := code.Opcode(vm.currentFrame().Instructions()[ip])
+		ins := vm.currentFrame().Instructions()
 
 		switch op {
 		case code.OpConstant:
-			constIndex := code.ReadUint16(vm.currentFrame().Instructions()[ip+1:])
+			constIndex := code.ReadUint16(ins[ip+1:])
 			vm.currentFrame().ip += 2
 
 			err := vm.push(vm.constants[constIndex])
@@ -105,21 +107,21 @@ func (vm *VM) Run() error {
 			}
 
 			if !booleanCondition.Value {
-				jumpPosition := code.ReadUint16(vm.currentFrame().Instructions()[ip+1:])
+				jumpPosition := code.ReadUint16(ins[ip+1:])
 				vm.currentFrame().ip = int(jumpPosition - 1)
 			} else {
 				vm.currentFrame().ip += 2
 			}
 		case code.OpJump:
-			jumpPosition := code.ReadUint16(vm.currentFrame().Instructions()[ip+1:])
+			jumpPosition := code.ReadUint16(ins[ip+1:])
 			vm.currentFrame().ip = int(jumpPosition - 1)
 		case code.OpSetGlobal:
-			globalsIndex := code.ReadUint16(vm.currentFrame().Instructions()[ip+1:])
+			globalsIndex := code.ReadUint16(ins[ip+1:])
 			vm.currentFrame().ip += 2
 
 			vm.globals[globalsIndex] = vm.pop()
 		case code.OpGetGlobal:
-			globalsIndex := code.ReadUint16(vm.currentFrame().Instructions()[ip+1:])
+			globalsIndex := code.ReadUint16(ins[ip+1:])
 			vm.currentFrame().ip += 2
 
 			obj := vm.globals[globalsIndex]
@@ -132,12 +134,12 @@ func (vm *VM) Run() error {
 				return err
 			}
 		case code.OpSetLocal:
-			localsIndex := code.ReadUint8(vm.currentFrame().Instructions()[ip+1:])
+			localsIndex := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
 
 			vm.stack[vm.currentFrame().basePointer+int(localsIndex)] = vm.pop()
 		case code.OpGetLocal:
-			localsIndex := code.ReadUint8(vm.currentFrame().Instructions()[ip+1:])
+			localsIndex := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
 
 			obj := vm.stack[vm.currentFrame().basePointer+int(localsIndex)]
@@ -150,7 +152,7 @@ func (vm *VM) Run() error {
 				return err
 			}
 		case code.OpGetBuiltin:
-			builtinIndex := code.ReadUint8(vm.currentFrame().Instructions()[ip+1:])
+			builtinIndex := code.ReadUint8(ins[ip+1:])
 			vm.currentFrame().ip += 1
 
 			builtin := object.Builtins[builtinIndex]
@@ -160,7 +162,7 @@ func (vm *VM) Run() error {
 				return err
 			}
 		case code.OpArray:
-			numElements := int(code.ReadUint16(vm.currentFrame().Instructions()[ip+1:]))
+			numElements := int(code.ReadUint16(ins[ip+1:]))
 			vm.currentFrame().ip += 2
 
 			vm.sp = vm.sp - numElements
@@ -175,7 +177,7 @@ func (vm *VM) Run() error {
 				return err
 			}
 		case code.OpMap:
-			numEntries := int(code.ReadUint16(vm.currentFrame().Instructions()[ip+1:]))
+			numEntries := int(code.ReadUint16(ins[ip+1:]))
 			vm.currentFrame().ip += 2
 
 			vm.sp = vm.sp - numEntries*2
@@ -260,12 +262,32 @@ func (vm *VM) Run() error {
 			if err != nil {
 				return err
 			}
+		case code.OpClosure:
+			constIndex := code.ReadUint16(ins[ip+1:])
+			_ = code.ReadUint8(ins[ip+3:])
+			vm.currentFrame().ip += 3
+
+			err := vm.pushClosure(int(constIndex))
+			if err != nil {
+				return err
+			}
 		case code.OpPop:
 			vm.pop()
 		}
 	}
 
 	return nil
+}
+
+func (vm *VM) pushClosure(constIndex int) error {
+	constant := vm.constants[constIndex]
+	function, ok := constant.(*object.CompiledFunction)
+	if !ok {
+		return fmt.Errorf("not a function: %+v", constant)
+	}
+
+	closure := &object.Closure{Fn: function}
+	return vm.push(closure)
 }
 
 func (vm *VM) executeCall() error {
@@ -276,15 +298,15 @@ func (vm *VM) executeCall() error {
 
 	callee := vm.stack[vm.sp-1-int(numArgs)]
 	switch callee.(type) {
-	case *object.CompiledFunction:
-		fn, ok := callee.(*object.CompiledFunction)
+	case *object.Closure:
+		cl, ok := callee.(*object.Closure)
 		if !ok {
 		}
 
-		functionFrame := NewFrame(fn, vm.sp-int(numArgs))
+		functionFrame := NewFrame(cl, vm.sp-int(numArgs))
 		vm.pushFrame(functionFrame)
 
-		vm.sp += fn.NumLocals + 1
+		vm.sp += cl.Fn.NumLocals + 1
 	case *object.Builtin:
 		builtin := callee.(*object.Builtin)
 
