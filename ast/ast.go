@@ -3,6 +3,7 @@ package ast
 import (
 	"bytes"
 	"compiler/token"
+	"fmt"
 )
 
 type Node interface {
@@ -253,6 +254,7 @@ type FunctionLiteral struct {
 	Token      token.Token
 	Parameters []*Identifier
 	Body       *BlockStatement
+	Name       string
 }
 
 func (fn *FunctionLiteral) TokenLiteral() string {
@@ -261,6 +263,10 @@ func (fn *FunctionLiteral) TokenLiteral() string {
 func (fn *FunctionLiteral) expressionNode() {}
 func (fn *FunctionLiteral) String() string {
 	var out bytes.Buffer
+
+	if fn.Name != "" {
+		out.WriteString(fmt.Sprintf("<%s>", fn.Name))
+	}
 
 	out.WriteString("fn(")
 	for _, s := range fn.Parameters {
