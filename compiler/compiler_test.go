@@ -662,6 +662,7 @@ func TestRecursiveFunctions(t *testing.T) {
 				code.Make(code.OpSetGlobal, 0),
 				code.Make(code.OpGetGlobal, 0),
 				code.Make(code.OpConstant, 2),
+				code.Make(code.OpCall, 1),
 				code.Make(code.OpPop),
 			},
 		},

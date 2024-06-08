@@ -146,6 +146,7 @@ func (builtin *Builtin) String() string {
 type CompiledFunction struct {
 	Instructions code.Instructions
 
+	NumParams int
 	NumLocals int
 }
 

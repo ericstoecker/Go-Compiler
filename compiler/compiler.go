@@ -213,7 +213,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.loadSymbol(s)
 		}
 
-		compiledFn := &object.CompiledFunction{Instructions: functionInstructions, NumLocals: numLocals}
+		compiledFn := &object.CompiledFunction{
+			Instructions: functionInstructions,
+			NumParams:    len(node.Parameters),
+			NumLocals:    numLocals,
+		}
 
 		fnIndex := c.addConstant(compiledFn)
 		c.emit(code.OpClosure, fnIndex, len(freeSymbols))
