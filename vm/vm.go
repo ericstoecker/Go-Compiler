@@ -103,7 +103,7 @@ func (vm *VM) Run() error {
 			condition := vm.pop()
 			booleanCondition, ok := condition.(*object.Boolean)
 			if !ok {
-				return fmt.Errorf("not able to execute OpJumpNotTrue if non boolean object on top of stack")
+				return fmt.Errorf("type missmatch: expected BOOLEAN, got %s", condition.Type())
 			}
 
 			if !booleanCondition.Value {
@@ -214,7 +214,7 @@ func (vm *VM) Run() error {
 
 				indexValue := intIndex.Value
 				if indexValue < 0 || int(indexValue) >= len(arr.Elements) {
-					return fmt.Errorf("index %d out of range for array of length %d", indexValue, len(arr.Elements))
+					return fmt.Errorf("index %d out of bounds for length %d", indexValue, len(arr.Elements))
 				}
 
 				value := arr.Elements[indexValue]
@@ -318,10 +318,12 @@ func (vm *VM) executeCall() error {
 	vm.currentFrame().ip++
 
 	callee := vm.stack[vm.sp-1-int(numArgs)]
-	switch callee.(type) {
+	switch callee := callee.(type) {
 	case *object.Closure:
-		cl, ok := callee.(*object.Closure)
-		if !ok {
+		cl := callee
+
+		if int(numArgs) != cl.Fn.NumParams {
+			return fmt.Errorf("wrong number of arguments: expected %d, got %d", cl.Fn.NumParams, numArgs)
 		}
 
 		functionFrame := NewFrame(cl, vm.sp-int(numArgs))
@@ -329,7 +331,7 @@ func (vm *VM) executeCall() error {
 
 		vm.sp += cl.Fn.NumLocals + 1
 	case *object.Builtin:
-		builtin := callee.(*object.Builtin)
+		builtin := callee
 
 		args := make([]object.Object, numArgs)
 		for i := range numArgs {
@@ -337,6 +339,11 @@ func (vm *VM) executeCall() error {
 		}
 
 		result := builtin.Fn(args...)
+
+		err, ok := result.(*object.Error)
+		if ok {
+			return fmt.Errorf(err.Message)
+		}
 
 		vm.stack[vm.sp-1] = wrapNativeValue(result)
 	default:
@@ -375,9 +382,9 @@ func (vm *VM) executeBinaryOperation(op code.Opcode) error {
 		leftValue := left.(*object.String).Value
 		rightValue := right.(*object.String).Value
 		return vm.executeBinaryStringOperation(op, leftValue, rightValue)
+	default:
+		return fmt.Errorf("type missmatch: %s, %s", leftType, rightType)
 	}
-
-	return nil
 }
 
 func (vm *VM) executeBinaryIntegerOperation(op code.Opcode, left int64, right int64) error {

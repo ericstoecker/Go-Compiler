@@ -248,6 +248,71 @@ func TestRecursiveFunctions(t *testing.T) {
 	runVmTests(t, tests)
 }
 
+func TestErrorHandling(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			input: `
+			let x = fn(a, b) { return a + b };
+			x(1, 2, 3);
+			`,
+			expected: fmt.Errorf("wrong number of arguments: expected 2, got 3"),
+		},
+		{
+			input: `
+			let x = [];
+			x[0]
+			`,
+			expected: fmt.Errorf("index 0 out of bounds for length 0"),
+		},
+		{
+			input: `
+			if (10) {};
+			`,
+			expected: fmt.Errorf("type missmatch: expected BOOLEAN, got INT"),
+		},
+		{
+			input: `
+			10 + "test"
+			`,
+			expected: fmt.Errorf("type missmatch: INT, STRING"),
+		},
+		{
+			input: `
+			len([], [])
+			`,
+			expected: fmt.Errorf("wrong number of arguments: expected 1. Got 2"),
+		},
+	}
+
+	testVmError(t, tests)
+}
+
+func testVmError(t *testing.T, tests []vmTestCase) {
+	t.Helper()
+
+	for _, tt := range tests {
+		program := parse(tt.input)
+
+		comp := compiler.New()
+		err := comp.Compile(program)
+		if err != nil {
+			t.Fatalf("compiler error: %s", err)
+		}
+
+		vm := New(comp.Bytecode())
+		err = vm.Run()
+
+		if err == nil {
+			t.Fatalf("expected error")
+		}
+
+		expectedError := tt.expected.(error)
+		if err.Error() != expectedError.Error() {
+			t.Fatalf("wrong error: expected '%s', got '%s'", expectedError, err)
+		}
+	}
+}
+
 func runVmTests(t *testing.T, tests []vmTestCase) {
 	t.Helper()
 
