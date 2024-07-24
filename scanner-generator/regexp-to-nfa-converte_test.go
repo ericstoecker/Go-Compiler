@@ -19,13 +19,23 @@ func TestConversion(t *testing.T) {
 				"b": {0: 1},
 			},
 		},
+		{
+			"ab",
+			map[string]map[int]int{
+				"a":     {0: 1},
+				EPSILON: {1: 2},
+				"b":     {2: 3},
+			},
+		},
 	}
 
-	regexpToNfaConverter := &RegexpToNfaConverter{}
 	for _, tt := range tests {
-		result := regexpToNfaConverter.Convert(tt.input)
+		regexpToNfaConverter := &RegexpToNfaConverter{input: tt.input}
+		result := regexpToNfaConverter.Convert()
 
 		t.Logf("current input: %s", tt.input)
+		t.Logf("expected: %v", tt.expected)
+		t.Logf("result: %v", result)
 		if result == nil {
 			t.Errorf("expected result not to be nil")
 		}
@@ -37,7 +47,7 @@ func TestConversion(t *testing.T) {
 			}
 
 			if len(resultMappings) != len(stateMappings) {
-				t.Errorf("state mappings differ in size. Expected %v. Got %v", stateMappings, resultMappings)
+				t.Errorf("transitions for symbol '%s' differ in size. Expected %v. Got %v", symbol, stateMappings, resultMappings)
 			}
 
 			for stateFrom, stateTo := range stateMappings {
