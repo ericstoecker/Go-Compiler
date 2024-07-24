@@ -27,6 +27,15 @@ func TestConversion(t *testing.T) {
 				"b":     {2: 3},
 			},
 		},
+		{
+			"abc",
+			map[string]map[int]int{
+				"a":     {0: 1},
+				EPSILON: {1: 2, 3: 4},
+				"b":     {2: 3},
+				"c":     {4: 5},
+			},
+		},
 	}
 
 	for _, tt := range tests {
