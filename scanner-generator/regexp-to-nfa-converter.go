@@ -1,9 +1,5 @@
 package scannergenerator
 
-import (
-	"slices"
-)
-
 const EPSILON = "EPSILON"
 
 const (
@@ -33,16 +29,20 @@ func New(input string) *RegexpToNfaConverter {
 }
 
 func (c *RegexpToNfaConverter) Convert() (result map[string]map[int][]int) {
-	return c.parseExpression(LOWEST)
+	nfa := c.parseExpression(LOWEST)
+	if nfa != nil {
+		return nfa.Transitions
+	}
+	return nil
 }
 
-func (c *RegexpToNfaConverter) parseExpression(precedence int) map[string]map[int][]int {
-	leftExpr := c.prefixHandler()
+func (c *RegexpToNfaConverter) parseExpression(precedence int) *Nfa {
+	left := c.prefixHandler()
 	for c.position < len(c.input)-1 && precedence < c.peekPrecedence() {
 		c.position++
-		leftExpr = c.parseInfixExpression(leftExpr)
+		left = c.parseInfixExpression(left)
 	}
-	return leftExpr
+	return left
 }
 
 func (c *RegexpToNfaConverter) peekPrecedence() int {
@@ -57,7 +57,7 @@ func (c *RegexpToNfaConverter) peekPrecedence() int {
 	return CONCATENATION
 }
 
-func (c *RegexpToNfaConverter) prefixHandler() map[string]map[int][]int {
+func (c *RegexpToNfaConverter) prefixHandler() *Nfa {
 	switch currentSymbol := string(c.input[c.position]); currentSymbol {
 	case "(":
 		return nil
@@ -68,106 +68,35 @@ func (c *RegexpToNfaConverter) prefixHandler() map[string]map[int][]int {
 	}
 }
 
-func (c *RegexpToNfaConverter) convertSingleSymbol() map[string]map[int][]int {
+func (c *RegexpToNfaConverter) convertSingleSymbol() *Nfa {
 	currentSymbol := string(c.input[c.position])
-	return map[string]map[int][]int{
-		currentSymbol: {0: []int{1}},
+	return &Nfa{
+		Transitions: map[string]map[int][]int{
+			currentSymbol: {0: []int{1}},
+		},
+		InitialState: 0,
+		FinalState:   1,
 	}
 }
 
-func (c *RegexpToNfaConverter) parseInfixExpression(leftExpr map[string]map[int][]int) map[string]map[int][]int {
+func (c *RegexpToNfaConverter) parseInfixExpression(left *Nfa) *Nfa {
 	switch currentSymbol := string(c.input[c.position]); currentSymbol {
 	case "|":
-		return c.parseAlternation(leftExpr)
+		return c.parseAlternation(left)
 	default:
-		return c.parseConcatenation(leftExpr)
+		return c.parseConcatenation(left)
 	}
 }
 
-func (c *RegexpToNfaConverter) parseAlternation(leftExpr map[string]map[int][]int) map[string]map[int][]int {
+func (c *RegexpToNfaConverter) parseAlternation(left *Nfa) *Nfa {
 	c.position++
-	rightExpr := c.parseExpression(ALTERNATION)
+	right := c.parseExpression(ALTERNATION)
 
-	highestStateInLeftExpr := findHighestState(leftExpr)
-	lowestStateInLeftExpr := findLowestState(leftExpr)
-	highestStateInRightExpr := findHighestState(rightExpr)
-
-	for symbol, transitions := range rightExpr {
-		if leftExpr[symbol] == nil {
-			leftExpr[symbol] = make(map[int][]int)
-		}
-		for stateFrom, stateTo := range transitions {
-			statesTo := []int{}
-			for _, state := range stateTo {
-				statesTo = append(statesTo, state+highestStateInLeftExpr+1)
-			}
-			leftExpr[symbol][stateFrom+highestStateInLeftExpr+1] = statesTo
-		}
-	}
-
-	if leftExpr[EPSILON] == nil {
-		leftExpr[EPSILON] = make(map[int][]int)
-	}
-
-	numberOfStatesInUnion := highestStateInLeftExpr + highestStateInRightExpr + 2
-	leftExpr[EPSILON][numberOfStatesInUnion] = []int{highestStateInLeftExpr + 1, lowestStateInLeftExpr}
-	leftExpr[EPSILON][highestStateInLeftExpr] = []int{numberOfStatesInUnion + 1}
-	leftExpr[EPSILON][highestStateInLeftExpr+highestStateInRightExpr+1] = []int{numberOfStatesInUnion + 1}
-
-	return leftExpr
+	return left.union(right)
 }
 
-func (c *RegexpToNfaConverter) parseConcatenation(leftExpr map[string]map[int][]int) map[string]map[int][]int {
-	rightExpr := c.parseExpression(CONCATENATION)
+func (c *RegexpToNfaConverter) parseConcatenation(left *Nfa) *Nfa {
+	right := c.parseExpression(CONCATENATION)
 
-	highestStateInLeftExpr := findHighestState(leftExpr)
-	for symbol, transitions := range rightExpr {
-		if leftExpr[symbol] == nil {
-			leftExpr[symbol] = make(map[int][]int)
-		}
-		for stateFrom, stateTo := range transitions {
-			statesTo := []int{}
-			for _, state := range stateTo {
-				statesTo = append(statesTo, state+highestStateInLeftExpr+1)
-			}
-			leftExpr[symbol][stateFrom+highestStateInLeftExpr+1] = statesTo
-		}
-	}
-
-	if leftExpr[EPSILON] == nil {
-		leftExpr[EPSILON] = make(map[int][]int)
-	}
-	leftExpr[EPSILON][highestStateInLeftExpr] = []int{highestStateInLeftExpr + 1}
-
-	return leftExpr
-}
-
-func findHighestState(expr map[string]map[int][]int) int {
-	highestState := 0
-	for _, stateMappings := range expr {
-		for stateFrom, stateTo := range stateMappings {
-			if stateFrom > highestState {
-				highestState = stateFrom
-			}
-			if slices.Max(stateTo) > highestState {
-				highestState = slices.Max(stateTo)
-			}
-		}
-	}
-	return highestState
-}
-
-func findLowestState(expr map[string]map[int][]int) int {
-	lowestState := 0
-	for _, stateMappings := range expr {
-		for stateFrom, stateTo := range stateMappings {
-			if stateFrom < lowestState {
-				lowestState = stateFrom
-			}
-			if slices.Min(stateTo) < lowestState {
-				lowestState = slices.Min(stateTo)
-			}
-		}
-	}
-	return lowestState
+	return left.concatenation(right)
 }
