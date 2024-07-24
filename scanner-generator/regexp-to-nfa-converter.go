@@ -7,6 +7,7 @@ const (
 	LOWEST
 	ALTERNATION
 	CONCATENATION
+	KLEENE
 )
 
 type RegexpToNfaConverter struct {
@@ -19,6 +20,7 @@ type RegexpToNfaConverter struct {
 func New(input string) *RegexpToNfaConverter {
 	precedences := map[string]int{
 		"|": ALTERNATION,
+		"*": KLEENE,
 	}
 
 	return &RegexpToNfaConverter{
@@ -61,8 +63,6 @@ func (c *RegexpToNfaConverter) prefixHandler() *Nfa {
 	switch currentSymbol := string(c.input[c.position]); currentSymbol {
 	case "(":
 		return nil
-	case "*":
-		return nil
 	default:
 		return c.convertSingleSymbol()
 	}
@@ -83,9 +83,16 @@ func (c *RegexpToNfaConverter) parseInfixExpression(left *Nfa) *Nfa {
 	switch currentSymbol := string(c.input[c.position]); currentSymbol {
 	case "|":
 		return c.parseAlternation(left)
+	case "*":
+		return c.parseKleeneStar(left)
 	default:
 		return c.parseConcatenation(left)
 	}
+}
+
+func (c *RegexpToNfaConverter) parseKleeneStar(left *Nfa) *Nfa {
+	c.position++
+	return left.kleene()
 }
 
 func (c *RegexpToNfaConverter) parseAlternation(left *Nfa) *Nfa {

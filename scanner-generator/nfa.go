@@ -55,5 +55,15 @@ func (n *Nfa) union(other *Nfa) *Nfa {
 }
 
 func (n *Nfa) kleene() *Nfa {
-	return nil
+	if n.Transitions[EPSILON] == nil {
+		n.Transitions[EPSILON] = make(map[int][]int)
+	}
+
+	initialState := n.FinalState + 1
+	finalState := n.FinalState + 2
+
+	n.Transitions[EPSILON][initialState] = []int{n.InitialState, finalState}
+	n.Transitions[EPSILON][n.FinalState] = []int{n.InitialState, finalState}
+
+	return &Nfa{Transitions: n.Transitions, InitialState: initialState, FinalState: finalState}
 }
