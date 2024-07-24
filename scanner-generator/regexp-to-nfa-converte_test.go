@@ -1,39 +1,50 @@
 package scannergenerator
 
-import "testing"
+import (
+	"slices"
+	"testing"
+)
 
 func TestConversion(t *testing.T) {
 	tests := []struct {
 		input    string
-		expected map[string]map[int]int
+		expected map[string]map[int][]int
 	}{
 		{
 			"a",
-			map[string]map[int]int{
-				"a": {0: 1},
+			map[string]map[int][]int{
+				"a": {0: []int{1}},
 			},
 		},
 		{
 			"b",
-			map[string]map[int]int{
-				"b": {0: 1},
+			map[string]map[int][]int{
+				"b": {0: []int{1}},
 			},
 		},
 		{
 			"ab",
-			map[string]map[int]int{
-				"a":     {0: 1},
-				EPSILON: {1: 2},
-				"b":     {2: 3},
+			map[string]map[int][]int{
+				"a":     {0: []int{1}},
+				"b":     {2: []int{3}},
+				EPSILON: {1: []int{2}},
 			},
 		},
 		{
 			"abc",
-			map[string]map[int]int{
-				"a":     {0: 1},
-				EPSILON: {1: 2, 3: 4},
-				"b":     {2: 3},
-				"c":     {4: 5},
+			map[string]map[int][]int{
+				"a":     {0: []int{1}},
+				"b":     {2: []int{3}},
+				"c":     {4: []int{5}},
+				EPSILON: {1: []int{2}, 3: []int{4}},
+			},
+		},
+		{
+			"a|b",
+			map[string]map[int][]int{
+				"a":     {0: []int{1}},
+				"b":     {2: []int{3}},
+				EPSILON: {4: []int{0, 2}, 1: []int{5}, 3: []int{5}},
 			},
 		},
 	}
@@ -49,26 +60,39 @@ func TestConversion(t *testing.T) {
 			t.Errorf("expected result not to be nil")
 		}
 
-		for symbol, stateMappings := range tt.expected {
+		for symbol, transitionsForSymbol := range tt.expected {
 			resultMappings := result[symbol]
 			if resultMappings == nil {
-				t.Errorf("expected mappings for symbol '%s' but was nil", symbol)
+				t.Errorf("expected transitions for symbol '%s' but was nil", symbol)
 			}
 
-			if len(resultMappings) != len(stateMappings) {
-				t.Errorf("transitions for symbol '%s' differ in size. Expected %v. Got %v", symbol, stateMappings, resultMappings)
+			if len(resultMappings) != len(transitionsForSymbol) {
+				t.Errorf("transitions for symbol '%s' differ in size. Expected %v. Got %v", symbol, transitionsForSymbol, resultMappings)
 			}
 
-			for stateFrom, stateTo := range stateMappings {
-				mappingInResultForSymbol, ok := resultMappings[stateFrom]
+			for state, transitions := range transitionsForSymbol {
+				mappingInResultForSymbol, ok := resultMappings[state]
 				if !ok {
-					t.Errorf("expected mapping from state %d under symbol '%s' but was not defined",
-						stateFrom, symbol)
-				} else if stateTo != mappingInResultForSymbol {
-					t.Errorf("state mapping from state %d under symbol '%s' differs. Expected %d. Got %d",
-						stateFrom, symbol, stateTo, mappingInResultForSymbol)
+					t.Errorf("expected transitions from state %d under symbol '%s' but was not defined",
+						state, symbol)
+				} else {
+					compareTransitions(transitions, mappingInResultForSymbol, t)
 				}
 			}
+		}
+	}
+}
+
+func compareTransitions(expected, actual []int, t *testing.T) {
+	if len(expected) != len(actual) {
+		t.Errorf("expected transitions %v but got %v", expected, actual)
+	}
+
+	slices.Sort(expected)
+	slices.Sort(actual)
+	for i, expectedState := range expected {
+		if expectedState != actual[i] {
+			t.Errorf("expected transitions %v but got %v", expected, actual)
 		}
 	}
 }
