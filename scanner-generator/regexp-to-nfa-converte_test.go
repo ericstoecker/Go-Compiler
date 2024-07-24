@@ -13,6 +13,12 @@ func TestConversion(t *testing.T) {
 				"a": {0: 1},
 			},
 		},
+		{
+			"b",
+			map[string]map[int]int{
+				"b": {0: 1},
+			},
+		},
 	}
 
 	regexpToNfaConverter := &RegexpToNfaConverter{}
