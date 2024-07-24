@@ -1,26 +1,60 @@
 package scannergenerator
 
-import "slices"
+import (
+	"slices"
+)
 
 const EPSILON = "EPSILON"
+
+const (
+	_ int = iota
+	LOWEST
+	ALTERNATION
+	CONCATENATION
+)
 
 type RegexpToNfaConverter struct {
 	input    string
 	position int
+
+	precedences map[string]int
 }
 
-// maybe also return error
+func New(input string) *RegexpToNfaConverter {
+	precedences := map[string]int{
+		"|": ALTERNATION,
+	}
+
+	return &RegexpToNfaConverter{
+		input:       input,
+		position:    0,
+		precedences: precedences,
+	}
+}
+
 func (c *RegexpToNfaConverter) Convert() (result map[string]map[int][]int) {
-	return c.parseExpression()
+	return c.parseExpression(LOWEST)
 }
 
-func (c *RegexpToNfaConverter) parseExpression() map[string]map[int][]int {
+func (c *RegexpToNfaConverter) parseExpression(precedence int) map[string]map[int][]int {
 	leftExpr := c.prefixHandler()
-	for c.position < len(c.input)-1 {
+	for c.position < len(c.input)-1 && precedence < c.peekPrecedence() {
 		c.position++
 		leftExpr = c.parseInfixExpression(leftExpr)
 	}
 	return leftExpr
+}
+
+func (c *RegexpToNfaConverter) peekPrecedence() int {
+	if c.position+1 >= len(c.input) {
+		return CONCATENATION
+	}
+
+	nextSymbol := string(c.input[c.position+1])
+	if precedence, ok := c.precedences[nextSymbol]; ok {
+		return precedence
+	}
+	return CONCATENATION
 }
 
 func (c *RegexpToNfaConverter) prefixHandler() map[string]map[int][]int {
@@ -52,11 +86,11 @@ func (c *RegexpToNfaConverter) parseInfixExpression(leftExpr map[string]map[int]
 
 func (c *RegexpToNfaConverter) parseAlternation(leftExpr map[string]map[int][]int) map[string]map[int][]int {
 	c.position++
-	rightExpr := c.parseExpression()
+	rightExpr := c.parseExpression(ALTERNATION)
 
 	highestStateInLeftExpr := findHighestState(leftExpr)
+	lowestStateInLeftExpr := findLowestState(leftExpr)
 	highestStateInRightExpr := findHighestState(rightExpr)
-	lowestStateInRightExpr := findLowestState(rightExpr)
 
 	for symbol, transitions := range rightExpr {
 		if leftExpr[symbol] == nil {
@@ -76,7 +110,7 @@ func (c *RegexpToNfaConverter) parseAlternation(leftExpr map[string]map[int][]in
 	}
 
 	numberOfStatesInUnion := highestStateInLeftExpr + highestStateInRightExpr + 2
-	leftExpr[EPSILON][numberOfStatesInUnion] = []int{highestStateInRightExpr + 1, lowestStateInRightExpr}
+	leftExpr[EPSILON][numberOfStatesInUnion] = []int{highestStateInLeftExpr + 1, lowestStateInLeftExpr}
 	leftExpr[EPSILON][highestStateInLeftExpr] = []int{numberOfStatesInUnion + 1}
 	leftExpr[EPSILON][highestStateInLeftExpr+highestStateInRightExpr+1] = []int{numberOfStatesInUnion + 1}
 
@@ -84,7 +118,7 @@ func (c *RegexpToNfaConverter) parseAlternation(leftExpr map[string]map[int][]in
 }
 
 func (c *RegexpToNfaConverter) parseConcatenation(leftExpr map[string]map[int][]int) map[string]map[int][]int {
-	rightExpr := c.parseExpression()
+	rightExpr := c.parseExpression(CONCATENATION)
 
 	highestStateInLeftExpr := findHighestState(leftExpr)
 	for symbol, transitions := range rightExpr {
