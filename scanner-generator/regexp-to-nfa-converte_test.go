@@ -72,6 +72,24 @@ func TestConversion(t *testing.T) {
 				EPSILON: {2: []int{0, 3}, 1: []int{0, 3}},
 			},
 		},
+		{
+			"a(b|c)",
+			map[string]map[int][]int{
+				"a":     {0: []int{1}},
+				"b":     {2: []int{3}},
+				"c":     {4: []int{5}},
+				EPSILON: {6: []int{2, 4}, 3: []int{7}, 5: []int{7}, 1: []int{6}},
+			},
+		},
+		{
+			"a(b|c)*",
+			map[string]map[int][]int{
+				"a":     {0: []int{1}},
+				"b":     {2: []int{3}},
+				"c":     {4: []int{5}},
+				EPSILON: {6: []int{2, 4}, 3: []int{7}, 5: []int{7}, 1: []int{8}, 8: []int{6, 9}, 7: []int{6, 9}},
+			},
+		},
 	}
 
 	for _, tt := range tests {

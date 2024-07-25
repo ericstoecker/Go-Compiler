@@ -8,6 +8,7 @@ const (
 	ALTERNATION
 	CONCATENATION
 	KLEENE
+	PARENTHESIS
 )
 
 type RegexpToNfaConverter struct {
@@ -21,6 +22,7 @@ func New(input string) *RegexpToNfaConverter {
 	precedences := map[string]int{
 		"|": ALTERNATION,
 		"*": KLEENE,
+		"(": PARENTHESIS,
 	}
 
 	return &RegexpToNfaConverter{
@@ -40,8 +42,12 @@ func (c *RegexpToNfaConverter) Convert() (result map[string]map[int][]int) {
 
 func (c *RegexpToNfaConverter) parseExpression(precedence int) *Nfa {
 	left := c.prefixHandler()
+
 	for c.position < len(c.input)-1 && precedence < c.peekPrecedence() {
 		c.position++
+		if c.input[c.position] == ')' {
+			return left
+		}
 		left = c.parseInfixExpression(left)
 	}
 	return left
@@ -62,13 +68,20 @@ func (c *RegexpToNfaConverter) peekPrecedence() int {
 func (c *RegexpToNfaConverter) prefixHandler() *Nfa {
 	switch currentSymbol := string(c.input[c.position]); currentSymbol {
 	case "(":
-		return nil
+		return c.parseParenthesis()
 	default:
-		return c.convertSingleSymbol()
+		return c.parseSingleSymbol()
 	}
 }
 
-func (c *RegexpToNfaConverter) convertSingleSymbol() *Nfa {
+func (c *RegexpToNfaConverter) parseParenthesis() *Nfa {
+	c.position++
+	nfa := c.parseExpression(LOWEST)
+	c.position += 2
+	return nfa
+}
+
+func (c *RegexpToNfaConverter) parseSingleSymbol() *Nfa {
 	currentSymbol := string(c.input[c.position])
 	return &Nfa{
 		Transitions: map[string]map[int][]int{
