@@ -18,7 +18,7 @@ type RegexpToNfaConverter struct {
 	precedences map[string]int
 }
 
-func New(input string) *RegexpToNfaConverter {
+func NewRegexpToNfaConverter(input string) *RegexpToNfaConverter {
 	precedences := map[string]int{
 		"|": ALTERNATION,
 		"*": KLEENE,
@@ -32,12 +32,8 @@ func New(input string) *RegexpToNfaConverter {
 	}
 }
 
-func (c *RegexpToNfaConverter) Convert() (result map[string]map[int][]int) {
-	nfa := c.parseExpression(LOWEST)
-	if nfa != nil {
-		return nfa.Transitions
-	}
-	return nil
+func (c *RegexpToNfaConverter) Convert() *Nfa {
+	return c.parseExpression(LOWEST)
 }
 
 func (c *RegexpToNfaConverter) parseExpression(precedence int) *Nfa {

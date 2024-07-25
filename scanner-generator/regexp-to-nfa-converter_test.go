@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestConversion(t *testing.T) {
+func TestRegexpToNfaConversion(t *testing.T) {
 	tests := []struct {
 		input    string
 		expected map[string]map[int][]int
@@ -94,7 +94,7 @@ func TestConversion(t *testing.T) {
 
 	for _, tt := range tests {
 		regexpToNfaConverter := &RegexpToNfaConverter{input: tt.input}
-		result := regexpToNfaConverter.Convert()
+		result := regexpToNfaConverter.Convert().Transitions
 
 		t.Logf("current input: %s", tt.input)
 		t.Logf("expected: %v", tt.expected)
