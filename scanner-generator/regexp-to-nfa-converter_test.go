@@ -93,7 +93,7 @@ func TestRegexpToNfaConversion(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		regexpToNfaConverter := &RegexpToNfaConverter{input: tt.input}
+		regexpToNfaConverter := &RegexpToNfaConverter{regexp: tt.input}
 		result := regexpToNfaConverter.Convert().Transitions
 
 		t.Logf("current input: %s", tt.input)

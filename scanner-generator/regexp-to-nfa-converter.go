@@ -12,7 +12,7 @@ const (
 )
 
 type RegexpToNfaConverter struct {
-	input    string
+	regexp   string
 	position int
 
 	precedences map[string]int
@@ -26,7 +26,7 @@ func NewRegexpToNfaConverter(input string) *RegexpToNfaConverter {
 	}
 
 	return &RegexpToNfaConverter{
-		input:       input,
+		regexp:      input,
 		position:    0,
 		precedences: precedences,
 	}
@@ -39,9 +39,9 @@ func (c *RegexpToNfaConverter) Convert() *Nfa {
 func (c *RegexpToNfaConverter) parseExpression(precedence int) *Nfa {
 	left := c.prefixHandler()
 
-	for c.position < len(c.input)-1 && precedence < c.peekPrecedence() {
+	for c.position < len(c.regexp)-1 && precedence < c.peekPrecedence() {
 		c.position++
-		if c.input[c.position] == ')' {
+		if c.regexp[c.position] == ')' {
 			return left
 		}
 		left = c.parseInfixExpression(left)
@@ -50,11 +50,11 @@ func (c *RegexpToNfaConverter) parseExpression(precedence int) *Nfa {
 }
 
 func (c *RegexpToNfaConverter) peekPrecedence() int {
-	if c.position+1 >= len(c.input) {
+	if c.position+1 >= len(c.regexp) {
 		return CONCATENATION
 	}
 
-	nextSymbol := string(c.input[c.position+1])
+	nextSymbol := string(c.regexp[c.position+1])
 	if precedence, ok := c.precedences[nextSymbol]; ok {
 		return precedence
 	}
@@ -62,7 +62,7 @@ func (c *RegexpToNfaConverter) peekPrecedence() int {
 }
 
 func (c *RegexpToNfaConverter) prefixHandler() *Nfa {
-	switch currentSymbol := string(c.input[c.position]); currentSymbol {
+	switch currentSymbol := string(c.regexp[c.position]); currentSymbol {
 	case "(":
 		return c.parseParenthesis()
 	default:
@@ -78,18 +78,18 @@ func (c *RegexpToNfaConverter) parseParenthesis() *Nfa {
 }
 
 func (c *RegexpToNfaConverter) parseSingleSymbol() *Nfa {
-	currentSymbol := string(c.input[c.position])
+	currentSymbol := string(c.regexp[c.position])
 	return &Nfa{
 		Transitions: map[string]map[int][]int{
 			currentSymbol: {0: []int{1}},
 		},
-		InitialState: 0,
-		FinalState:   1,
+		InitialState:    0,
+		AcceptingStates: []int{1},
 	}
 }
 
 func (c *RegexpToNfaConverter) parseInfixExpression(left *Nfa) *Nfa {
-	switch currentSymbol := string(c.input[c.position]); currentSymbol {
+	switch currentSymbol := string(c.regexp[c.position]); currentSymbol {
 	case "|":
 		return c.parseAlternation(left)
 	case "*":

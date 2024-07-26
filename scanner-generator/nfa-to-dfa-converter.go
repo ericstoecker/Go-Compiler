@@ -6,6 +6,8 @@ import (
 
 type NfaToDfaConverter struct {
 	nfa *Nfa
+
+	TypePrecedences map[string]int
 }
 
 func NewNfaToDfaConverter(nfa *Nfa) *NfaToDfaConverter {
@@ -52,7 +54,8 @@ func (c *NfaToDfaConverter) Convert() *Dfa {
 
 		}
 
-		if slices.Contains(currentItem, c.nfa.FinalState) {
+		// TODO fix later
+		if slices.Contains(currentItem, c.nfa.AcceptingStates[0]) {
 			acceptingStates = append(acceptingStates, currentItemsIndex)
 		}
 	}
