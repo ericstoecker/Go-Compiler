@@ -1,6 +1,9 @@
 package scannergenerator
 
-import "testing"
+import (
+	"compiler/token"
+	"testing"
+)
 
 func TestNfaToDfaConversion(t *testing.T) {
 	tests := []struct {
@@ -70,17 +73,20 @@ func TestNfaToDfaConversion(t *testing.T) {
 
 func TestMultistateNfaToDfaConversion(t *testing.T) {
 	tests := []struct {
-		input    []string
-		expected Dfa
+		input      []string
+		tokenTypes []token.TokenType
+		expected   Dfa
 	}{
 		{
 			[]string{"a", "b"},
+			[]token.TokenType{"first", "second"},
 			Dfa{
 				Transitions: map[string]map[int]int{
 					"a": {0: 1},
 					"b": {0: 2},
 				},
 				AcceptingStates: []int{1, 2},
+				TypeTable:       map[int]token.TokenType{1: "first", 2: "second"},
 			},
 		},
 	}
@@ -88,9 +94,11 @@ func TestMultistateNfaToDfaConversion(t *testing.T) {
 	for _, tt := range tests {
 		regexpToNfaConverter := NewRegexpToNfaConverter(tt.input[0])
 		nfa := regexpToNfaConverter.Convert()
+		nfa.TypeTable = map[int]token.TokenType{1: tt.tokenTypes[0]}
 
 		secondConverter := NewRegexpToNfaConverter(tt.input[1])
 		secondNfa := secondConverter.Convert()
+		secondNfa.TypeTable = map[int]token.TokenType{1: tt.tokenTypes[1]}
 
 		nfaToDfaConverter := NewNfaToDfaConverter(nfa.UnionDistinct(secondNfa))
 		dfa := nfaToDfaConverter.Convert()
@@ -106,8 +114,23 @@ func TestMultistateNfaToDfaConversion(t *testing.T) {
 
 		dfaTransitions := dfa.Transitions
 		testTransitions(t, tt.expected.Transitions, dfaTransitions)
+
+		testTypeTables(t, tt.expected.TypeTable, dfa.TypeTable)
 	}
 
+}
+
+func testTypeTables(t *testing.T, expected, actual map[int]token.TokenType) {
+	for state, expectedType := range expected {
+		actualType, ok := actual[state]
+		if !ok {
+			t.Fatalf("expected type for state %d but was not defined", state)
+		}
+
+		if expectedType != actualType {
+			t.Fatalf("expected type for state %d to be %s. Got %s", state, expectedType, actualType)
+		}
+	}
 }
 
 func testTransitions(t *testing.T, expected, actual map[string]map[int]int) {

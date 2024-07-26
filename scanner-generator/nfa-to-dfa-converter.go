@@ -1,6 +1,7 @@
 package scannergenerator
 
 import (
+	"compiler/token"
 	"slices"
 )
 
@@ -32,6 +33,7 @@ func (c *NfaToDfaConverter) Convert() *Dfa {
 	workList := [][]int{currentItem}
 
 	acceptingStates := make([]int, 0)
+	typeTable := make(map[int]token.TokenType)
 	for len(workList) != 0 {
 		currentItem, workList = workList[0], workList[1:]
 		currentItemsIndex := findIndex(currentItem, dfaStates)
@@ -51,12 +53,13 @@ func (c *NfaToDfaConverter) Convert() *Dfa {
 			} else {
 				transitions[char][currentItemsIndex] = tempsIndex
 			}
-
 		}
 
+		// TODO add prioritization when multiple matches occur
 		for _, acceptingNfaState := range c.nfa.AcceptingStates {
 			if slices.Contains(currentItem, acceptingNfaState) {
 				acceptingStates = append(acceptingStates, currentItemsIndex)
+				typeTable[currentItemsIndex] = c.nfa.TypeTable[acceptingNfaState]
 			}
 		}
 	}
@@ -65,6 +68,7 @@ func (c *NfaToDfaConverter) Convert() *Dfa {
 		Transitions:     transitions,
 		InitialState:    0,
 		AcceptingStates: filterDuplicates(acceptingStates),
+		TypeTable:       typeTable,
 	}
 }
 

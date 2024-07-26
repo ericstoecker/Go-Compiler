@@ -102,8 +102,16 @@ func (n *Nfa) UnionDistinct(other *Nfa) *Nfa {
 	for _, state := range other.AcceptingStates {
 		acceptingStates = append(acceptingStates, state+highestState+1)
 	}
-	return &Nfa{Transitions: n.Transitions, InitialState: numberOfStatesInUnion, AcceptingStates: acceptingStates}
 
+	typeTable := make(map[int]token.TokenType)
+	for state, tokenType := range n.TypeTable {
+		typeTable[state] = tokenType
+	}
+	for state, tokenType := range other.TypeTable {
+		typeTable[state+highestState+1] = tokenType
+	}
+
+	return &Nfa{Transitions: n.Transitions, InitialState: numberOfStatesInUnion, AcceptingStates: acceptingStates, TypeTable: typeTable}
 }
 
 func (n *Nfa) Kleene() *Nfa {
