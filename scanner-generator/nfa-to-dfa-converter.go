@@ -21,6 +21,7 @@ func (c *NfaToDfaConverter) Convert() *Dfa {
 			transitions[char] = make(map[int]int)
 		}
 	}
+	slices.Sort(characters) // Sort characters to ensure deterministic order
 
 	currentItem := c.followEpsilon([]int{c.nfa.InitialState})
 	dfaStates := [][]int{currentItem}
