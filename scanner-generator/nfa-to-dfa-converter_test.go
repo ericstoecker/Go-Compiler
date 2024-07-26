@@ -5,21 +5,26 @@ import "testing"
 func TestNfaToDfaConversion(t *testing.T) {
 	tests := []struct {
 		input    string
-		expected map[string]map[int]int
+		expected Dfa
 	}{
 		{
 			"ab",
-			map[string]map[int]int{
-				"a": {0: 1},
-				"b": {1: 2},
+			Dfa{
+				Transitions: map[string]map[int]int{
+					"a": {0: 1},
+					"b": {1: 2},
+				},
+				AcceptingStates: []int{2},
 			},
 		},
 		{
 			"a|b",
-			map[string]map[int]int{
-				"a": {0: 1},
-				"b": {0: 2},
-				// add accepting states testing
+			Dfa{
+				Transitions: map[string]map[int]int{
+					"a": {0: 1},
+					"b": {0: 2},
+				},
+				AcceptingStates: []int{1, 2},
 			},
 		},
 	}
@@ -30,25 +35,26 @@ func TestNfaToDfaConversion(t *testing.T) {
 
 		nfaToDfaConverter := NewNfaToDfaConverter(nfa)
 		dfa := nfaToDfaConverter.Convert()
+		t.Logf("current input: %s", tt.input)
+		t.Logf("expected: %v", tt.expected)
+		t.Logf("result: %v", dfa)
 
 		if dfa == nil {
 			t.Fatalf("expected dfa not to be nil")
 		}
 
-		dfaTransitions := dfa.Transitions
+		testAcceptinStates(t, tt.expected.AcceptingStates, dfa.AcceptingStates)
 
-		t.Logf("current input: %s", tt.input)
-		t.Logf("expected: %v", tt.expected)
-		t.Logf("result: %v", dfaTransitions)
+		dfaTransitions := dfa.Transitions
 		if dfaTransitions == nil {
 			t.Fatalf("expected dfa transitions not to be nil")
 		}
 
-		if len(dfaTransitions) != len(tt.expected) {
-			t.Fatalf("sizes of transition tables differ. Expected %d. Got %d", len(dfaTransitions), len(tt.expected))
+		if len(dfaTransitions) != len(tt.expected.Transitions) {
+			t.Fatalf("sizes of transition tables differ. Expected %d. Got %d", len(dfaTransitions), len(tt.expected.Transitions))
 		}
 
-		for symbol, transitionsForSymbol := range tt.expected {
+		for symbol, transitionsForSymbol := range tt.expected.Transitions {
 			resultMappings := dfaTransitions[symbol]
 			if resultMappings == nil {
 				t.Fatalf("expected transitions for symbol '%s' but was nil", symbol)
@@ -72,5 +78,17 @@ func TestNfaToDfaConversion(t *testing.T) {
 			}
 		}
 	}
+}
 
+func testAcceptinStates(t *testing.T, expected, actual []int) {
+	if len(expected) != len(actual) {
+		t.Fatalf("sizes of accepting states differ. Expected %d. Got %d", len(expected), len(actual))
+	}
+
+	for i, expectedState := range expected {
+		actualState := actual[i]
+		if expectedState != actualState {
+			t.Fatalf("expected accepting state %d. Got %d", expectedState, actualState)
+		}
+	}
 }
