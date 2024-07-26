@@ -101,18 +101,18 @@ func (c *RegexpToNfaConverter) parseInfixExpression(left *Nfa) *Nfa {
 
 func (c *RegexpToNfaConverter) parseKleeneStar(left *Nfa) *Nfa {
 	c.position++
-	return left.kleene()
+	return left.Kleene()
 }
 
 func (c *RegexpToNfaConverter) parseAlternation(left *Nfa) *Nfa {
 	c.position++
 	right := c.parseExpression(ALTERNATION)
 
-	return left.union(right)
+	return left.Union(right)
 }
 
 func (c *RegexpToNfaConverter) parseConcatenation(left *Nfa) *Nfa {
 	right := c.parseExpression(CONCATENATION)
 
-	return left.concatenation(right)
+	return left.Concatenation(right)
 }

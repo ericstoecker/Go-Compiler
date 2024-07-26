@@ -54,16 +54,17 @@ func (c *NfaToDfaConverter) Convert() *Dfa {
 
 		}
 
-		// TODO fix later
-		if slices.Contains(currentItem, c.nfa.AcceptingStates[0]) {
-			acceptingStates = append(acceptingStates, currentItemsIndex)
+		for _, acceptingNfaState := range c.nfa.AcceptingStates {
+			if slices.Contains(currentItem, acceptingNfaState) {
+				acceptingStates = append(acceptingStates, currentItemsIndex)
+			}
 		}
 	}
 
 	return &Dfa{
 		Transitions:     transitions,
 		InitialState:    0,
-		AcceptingStates: acceptingStates,
+		AcceptingStates: filterDuplicates(acceptingStates),
 	}
 }
 
