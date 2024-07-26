@@ -27,6 +27,24 @@ func TestNfaToDfaConversion(t *testing.T) {
 				AcceptingStates: []int{1, 2},
 			},
 		},
+		{
+			"a*",
+			Dfa{
+				Transitions: map[string]map[int]int{
+					"a": {0: 1, 1: 1},
+				},
+				AcceptingStates: []int{0, 1},
+			},
+		},
+		{
+			"aa*",
+			Dfa{
+				Transitions: map[string]map[int]int{
+					"a": {0: 1, 1: 2, 2: 2},
+				},
+				AcceptingStates: []int{1, 2},
+			},
+		},
 	}
 
 	for _, tt := range tests {
