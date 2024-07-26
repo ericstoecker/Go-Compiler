@@ -36,6 +36,10 @@ func TestAccepting(t *testing.T) {
 			"d",
 			token.Token{Type: token.ILLEGAL, Literal: "d"},
 		},
+		{
+			" a",
+			token.Token{Type: "ACCEPT", Literal: "a"},
+		},
 	}
 
 	for _, tt := range tests {
