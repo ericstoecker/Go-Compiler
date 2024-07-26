@@ -16,10 +16,12 @@ func (c *NfaToDfaConverter) Convert() *Dfa {
 	characters := make([]string, 0)
 	transitions := make(map[string]map[int]int)
 	for char := range c.nfa.Transitions {
-		if char != EPSILON {
-			characters = append(characters, char)
-			transitions[char] = make(map[int]int)
+		if char == EPSILON {
+			continue
 		}
+
+		characters = append(characters, char)
+		transitions[char] = make(map[int]int)
 	}
 	slices.Sort(characters) // Sort characters to ensure deterministic order
 
@@ -36,14 +38,16 @@ func (c *NfaToDfaConverter) Convert() *Dfa {
 			temp := c.followEpsilon(c.delta(currentItem, char))
 			tempsIndex := findIndex(temp, dfaStates)
 
-			if len(temp) != 0 {
-				if tempsIndex == -1 {
-					dfaStates = append(dfaStates, temp)
-					workList = append(workList, temp)
-					transitions[char][currentItemsIndex] = len(dfaStates) - 1
-				} else {
-					transitions[char][currentItemsIndex] = tempsIndex
-				}
+			if len(temp) == 0 {
+				continue
+			}
+
+			if tempsIndex == -1 {
+				dfaStates = append(dfaStates, temp)
+				workList = append(workList, temp)
+				transitions[char][currentItemsIndex] = len(dfaStates) - 1
+			} else {
+				transitions[char][currentItemsIndex] = tempsIndex
 			}
 
 		}
