@@ -29,21 +29,27 @@ func TestNfaToDfaConversion(t *testing.T) {
 		nfa := regexpToNfaConverter.Convert()
 
 		nfaToDfaConverter := NewNfaToDfaConverter(nfa)
-		result := nfaToDfaConverter.Convert()
+		dfa := nfaToDfaConverter.Convert()
+
+		if dfa == nil {
+			t.Fatalf("expected dfa not to be nil")
+		}
+
+		dfaTransitions := dfa.Transitions
 
 		t.Logf("current input: %s", tt.input)
 		t.Logf("expected: %v", tt.expected)
-		t.Logf("result: %v", result)
-		if result == nil {
-			t.Fatalf("expected result not to be nil")
+		t.Logf("result: %v", dfaTransitions)
+		if dfaTransitions == nil {
+			t.Fatalf("expected dfa transitions not to be nil")
 		}
 
-		if len(result) != len(tt.expected) {
-			t.Fatalf("sizes of transition tables differ. Expected %d. Got %d", len(result), len(tt.expected))
+		if len(dfaTransitions) != len(tt.expected) {
+			t.Fatalf("sizes of transition tables differ. Expected %d. Got %d", len(dfaTransitions), len(tt.expected))
 		}
 
 		for symbol, transitionsForSymbol := range tt.expected {
-			resultMappings := result[symbol]
+			resultMappings := dfaTransitions[symbol]
 			if resultMappings == nil {
 				t.Fatalf("expected transitions for symbol '%s' but was nil", symbol)
 			}

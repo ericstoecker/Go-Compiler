@@ -12,22 +12,21 @@ func NewNfaToDfaConverter(nfa *Nfa) *NfaToDfaConverter {
 	return &NfaToDfaConverter{nfa: nfa}
 }
 
-func (c *NfaToDfaConverter) Convert() map[string]map[int]int {
+func (c *NfaToDfaConverter) Convert() *Dfa {
 	characters := make([]string, 0)
 	transitions := make(map[string]map[int]int)
 	for char := range c.nfa.Transitions {
-		if char == EPSILON {
-			break
+		if char != EPSILON {
+			characters = append(characters, char)
+			transitions[char] = make(map[int]int)
 		}
-
-		characters = append(characters, char)
-		transitions[char] = make(map[int]int)
 	}
 
 	currentItem := c.followEpsilon([]int{c.nfa.InitialState})
 	dfaStates := [][]int{currentItem}
 	workList := [][]int{currentItem}
 
+	acceptingStates := make([]int, 0)
 	for len(workList) != 0 {
 		currentItem, workList = workList[0], workList[1:]
 		currentItemsIndex := findIndex(currentItem, dfaStates)
@@ -47,9 +46,17 @@ func (c *NfaToDfaConverter) Convert() map[string]map[int]int {
 			}
 
 		}
+
+		if slices.Contains(currentItem, c.nfa.FinalState) {
+			acceptingStates = append(acceptingStates, currentItemsIndex)
+		}
 	}
 
-	return transitions
+	return &Dfa{
+		Transitions:     transitions,
+		InitialState:    0,
+		AcceptingStates: acceptingStates,
+	}
 }
 
 func (c *NfaToDfaConverter) followEpsilon(states []int) []int {
