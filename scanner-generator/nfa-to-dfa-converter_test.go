@@ -14,6 +14,14 @@ func TestNfaToDfaConversion(t *testing.T) {
 				"b": {1: 2},
 			},
 		},
+		{
+			"a|b",
+			map[string]map[int]int{
+				"a": {0: 1},
+				"b": {0: 2},
+				// add accepting states testing
+			},
+		},
 	}
 
 	for _, tt := range tests {
