@@ -96,6 +96,11 @@ func TestSpecialCharacters(t *testing.T) {
 			"(",
 			token.Token{Type: "ACCEPT", Literal: "("},
 		},
+		{
+			"\\)a",
+			")a",
+			token.Token{Type: "ACCEPT", Literal: ")a"},
+		},
 	}
 
 	for _, tt := range tests {
