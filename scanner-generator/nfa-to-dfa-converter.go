@@ -59,7 +59,9 @@ func (c *NfaToDfaConverter) Convert() *Dfa {
 		for _, acceptingNfaState := range c.nfa.AcceptingStates {
 			if slices.Contains(currentItem, acceptingNfaState) {
 				acceptingStates = append(acceptingStates, currentItemsIndex)
-				typeTable[currentItemsIndex] = c.nfa.TypeTable[acceptingNfaState]
+				if statesType, ok := c.nfa.TypeTable[acceptingNfaState]; ok {
+					typeTable[currentItemsIndex] = statesType
+				}
 			}
 		}
 	}

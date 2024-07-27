@@ -47,7 +47,10 @@ func (s *TableDrivenScanner) NextToken() token.Token {
 	}
 
 	if s.isAcceptingState(state) {
-		tokenType := s.dfa.TypeTable[state]
+		tokenType, ok := s.dfa.TypeTable[state]
+		if !ok {
+			panic("In an accepting state, but no token type found")
+		}
 		return token.Token{Type: tokenType, Literal: lexeme}
 	}
 	return token.Token{Type: token.ILLEGAL, Literal: lexeme}
