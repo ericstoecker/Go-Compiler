@@ -47,7 +47,8 @@ func (s *TableDrivenScanner) NextToken() token.Token {
 	}
 
 	if s.isAcceptingState(state) {
-		return token.Token{Type: "ACCEPT", Literal: lexeme}
+		tokenType := s.dfa.TypeTable[state]
+		return token.Token{Type: tokenType, Literal: lexeme}
 	}
 	return token.Token{Type: token.ILLEGAL, Literal: lexeme}
 }

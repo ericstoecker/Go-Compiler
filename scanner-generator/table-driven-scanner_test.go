@@ -8,6 +8,9 @@ import (
 func TestAccepting(t *testing.T) {
 	RegexpToNfaConverter := NewRegexpToNfaConverter("a(b|c)*")
 	nfa := RegexpToNfaConverter.Convert()
+	nfa.TypeTable = map[int]token.TokenType{
+		9: "ACCEPT",
+	}
 
 	nfaToDfaConverter := NewNfaToDfaConverter(nfa)
 	dfa := nfaToDfaConverter.Convert()
