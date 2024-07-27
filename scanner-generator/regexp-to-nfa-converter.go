@@ -1,10 +1,5 @@
 package scannergenerator
 
-import (
-	"fmt"
-	"strconv"
-)
-
 const EPSILON = "EPSILON"
 
 const (
@@ -86,9 +81,9 @@ func (c *RegexpToNfaConverter) parseEscapedSymbol() *Nfa {
 
 func (c *RegexpToNfaConverter) parseRange() *Nfa {
 	c.position++
-	lowerBound, _ := strconv.ParseInt(string(c.regexp[c.position]), 0, 64)
+	lowerBound := c.regexp[c.position]
 	c.position += 2
-	upperBound, _ := strconv.ParseInt(string(c.regexp[c.position]), 0, 64)
+	upperBound := c.regexp[c.position]
 	c.position += 2
 
 	if lowerBound > upperBound {
@@ -99,7 +94,7 @@ func (c *RegexpToNfaConverter) parseRange() *Nfa {
 	for i := lowerBound; i <= upperBound; i++ {
 		symbolNfa := &Nfa{
 			Transitions: map[string]map[int][]int{
-				fmt.Sprint(i): {0: []int{1}},
+				string(i): {0: []int{1}},
 			},
 			InitialState:    0,
 			AcceptingStates: []int{1},

@@ -101,6 +101,31 @@ func TestSpecialCharacters(t *testing.T) {
 			")a",
 			token.Token{Type: "ACCEPT", Literal: ")a"},
 		},
+		{
+			"[a-z]",
+			"a",
+			token.Token{Type: "ACCEPT", Literal: "a"},
+		},
+		{
+			"[a-z]",
+			"t",
+			token.Token{Type: "ACCEPT", Literal: "t"},
+		},
+		{
+			"[a-c]",
+			"d",
+			token.Token{Type: token.ILLEGAL, Literal: "d"},
+		},
+		{
+			"[A-Z]",
+			"C",
+			token.Token{Type: "ACCEPT", Literal: "C"},
+		},
+		{
+			"[A-Z]",
+			"c",
+			token.Token{Type: token.ILLEGAL, Literal: "c"},
+		},
 	}
 
 	for _, tt := range tests {
