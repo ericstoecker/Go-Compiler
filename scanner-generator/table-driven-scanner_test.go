@@ -50,6 +50,68 @@ func TestAccepting(t *testing.T) {
 	}
 }
 
+func TestSpecialCharacters(t *testing.T) {
+	tests := []struct {
+		regexp        string
+		input         string
+		expectedToken token.Token
+	}{
+		{
+			"[1-3]([1-5])*",
+			"1",
+			token.Token{Type: "ACCEPT", Literal: "1"},
+		},
+		{
+			"[1-3]([1-5])*",
+			"2",
+			token.Token{Type: "ACCEPT", Literal: "2"},
+		},
+		{
+			"[1-3]([1-5])*",
+			"3",
+			token.Token{Type: "ACCEPT", Literal: "3"},
+		},
+		{
+			"[1-3]([1-5])*",
+			"4",
+			token.Token{Type: token.ILLEGAL, Literal: "4"},
+		},
+		{
+			"[1-3]([1-5])*",
+			"15",
+			token.Token{Type: "ACCEPT", Literal: "15"},
+		},
+		{
+			"[1-3]([1-5])*",
+			"151",
+			token.Token{Type: "ACCEPT", Literal: "151"},
+		},
+		{
+			"\\(",
+			"(",
+			token.Token{Type: "ACCEPT", Literal: "("},
+		},
+		{
+			"(\\()",
+			"(",
+			token.Token{Type: "ACCEPT", Literal: "("},
+		},
+	}
+
+	for _, tt := range tests {
+		RegexpToNfaConverter := NewRegexpToNfaConverter(tt.regexp)
+		nfa := RegexpToNfaConverter.Convert()
+		nfa.TypeTable = make(map[int]token.TokenType)
+		for _, acceptingState := range nfa.AcceptingStates {
+			nfa.TypeTable[acceptingState] = "ACCEPT"
+		}
+
+		nfaToDfaConverter := NewNfaToDfaConverter(nfa, map[token.TokenType]int{})
+		dfa := nfaToDfaConverter.Convert()
+		testNextChar(t, tt.input, dfa, tt.expectedToken)
+	}
+}
+
 func TestMultipleCategories(t *testing.T) {
 	firstConverter := NewRegexpToNfaConverter("ab*")
 	firstNfa := firstConverter.Convert()

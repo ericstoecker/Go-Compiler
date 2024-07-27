@@ -1,5 +1,10 @@
 package scannergenerator
 
+import (
+	"fmt"
+	"strconv"
+)
+
 const EPSILON = "EPSILON"
 
 const (
@@ -65,9 +70,47 @@ func (c *RegexpToNfaConverter) prefixHandler() *Nfa {
 	switch currentSymbol := string(c.regexp[c.position]); currentSymbol {
 	case "(":
 		return c.parseParenthesis()
+	case "[":
+		return c.parseRange()
+	case "\\":
+		return c.parseEscapedSymbol()
 	default:
 		return c.parseSingleSymbol()
 	}
+}
+
+func (c *RegexpToNfaConverter) parseEscapedSymbol() *Nfa {
+	c.position++
+	return c.parseSingleSymbol()
+}
+
+func (c *RegexpToNfaConverter) parseRange() *Nfa {
+	c.position++
+	lowerBound, _ := strconv.ParseInt(string(c.regexp[c.position]), 0, 64)
+	c.position += 2
+	upperBound, _ := strconv.ParseInt(string(c.regexp[c.position]), 0, 64)
+	c.position += 2
+
+	if lowerBound > upperBound {
+		panic("Lower bound is greater than upper bound")
+	}
+
+	var nfa *Nfa
+	for i := lowerBound; i <= upperBound; i++ {
+		symbolNfa := &Nfa{
+			Transitions: map[string]map[int][]int{
+				fmt.Sprint(i): {0: []int{1}},
+			},
+			InitialState:    0,
+			AcceptingStates: []int{1},
+		}
+		if nfa == nil {
+			nfa = symbolNfa
+		} else {
+			nfa = nfa.Union(symbolNfa)
+		}
+	}
+	return nfa
 }
 
 func (c *RegexpToNfaConverter) parseParenthesis() *Nfa {
