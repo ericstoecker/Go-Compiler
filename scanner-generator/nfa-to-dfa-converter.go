@@ -8,11 +8,11 @@ import (
 type NfaToDfaConverter struct {
 	nfa *Nfa
 
-	TypePrecedences map[string]int
+	TypePrecedences map[token.TokenType]int
 }
 
-func NewNfaToDfaConverter(nfa *Nfa) *NfaToDfaConverter {
-	return &NfaToDfaConverter{nfa: nfa}
+func NewNfaToDfaConverter(nfa *Nfa, typePrecedences map[token.TokenType]int) *NfaToDfaConverter {
+	return &NfaToDfaConverter{nfa: nfa, TypePrecedences: typePrecedences}
 }
 
 func (c *NfaToDfaConverter) Convert() *Dfa {
@@ -55,11 +55,14 @@ func (c *NfaToDfaConverter) Convert() *Dfa {
 			}
 		}
 
-		// TODO add prioritization when multiple matches occur
+		highestRankingTokenType := -1
 		for _, acceptingNfaState := range c.nfa.AcceptingStates {
 			if slices.Contains(currentItem, acceptingNfaState) {
 				acceptingStates = append(acceptingStates, currentItemsIndex)
-				if statesType, ok := c.nfa.TypeTable[acceptingNfaState]; ok {
+				statesType, ok := c.nfa.TypeTable[acceptingNfaState]
+
+				if ok && c.TypePrecedences[statesType] > highestRankingTokenType {
+					highestRankingTokenType = c.TypePrecedences[statesType]
 					typeTable[currentItemsIndex] = statesType
 				}
 			}

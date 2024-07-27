@@ -12,7 +12,7 @@ func TestAccepting(t *testing.T) {
 		9: "ACCEPT",
 	}
 
-	nfaToDfaConverter := NewNfaToDfaConverter(nfa)
+	nfaToDfaConverter := NewNfaToDfaConverter(nfa, map[token.TokenType]int{})
 	dfa := nfaToDfaConverter.Convert()
 
 	tests := []struct {
@@ -46,12 +46,7 @@ func TestAccepting(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		scanner := New(tt.input, dfa)
-		token := scanner.NextToken()
-		if token != tt.expectedToken {
-			t.Logf("current input: %s", tt.input)
-			t.Errorf("expected: %v, got: %v", tt.expectedToken, token)
-		}
+		testNextChar(t, tt.input, dfa, tt.expectedToken)
 	}
 }
 
@@ -69,10 +64,10 @@ func TestMultipleCategories(t *testing.T) {
 	}
 
 	combinedNfa := firstNfa.UnionDistinct(secondNfa)
-	dfa := NewNfaToDfaConverter(combinedNfa).Convert()
+	dfa := NewNfaToDfaConverter(combinedNfa, map[token.TokenType]int{}).Convert()
 
 	tests := []struct {
-		inputs        string
+		input         string
 		expectedToken token.Token
 	}{
 		{
@@ -98,11 +93,56 @@ func TestMultipleCategories(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		scanner := New(tt.inputs, dfa)
-		token := scanner.NextToken()
-		if token != tt.expectedToken {
-			t.Logf("current input: %s", tt.inputs)
-			t.Errorf("expected: %v, got: %v", tt.expectedToken, token)
-		}
+		testNextChar(t, tt.input, dfa, tt.expectedToken)
+	}
+}
+
+func TestConflictingCategories(t *testing.T) {
+	firstConverter := NewRegexpToNfaConverter("a")
+	firstNfa := firstConverter.Convert()
+	firstNfa.TypeTable = map[int]token.TokenType{
+		1: "FIRST",
+	}
+
+	secondConverter := NewRegexpToNfaConverter("aa*")
+	secondNfa := secondConverter.Convert()
+	secondNfa.TypeTable = map[int]token.TokenType{
+		5: "SECOND",
+	}
+
+	combinedNfa := firstNfa.UnionDistinct(secondNfa)
+	typePrecedences := map[token.TokenType]int{
+		"FIRST":  2,
+		"SECOND": 1,
+	}
+	dfa := NewNfaToDfaConverter(combinedNfa, typePrecedences).Convert()
+
+	tests := []struct {
+		input         string
+		expectedToken token.Token
+	}{
+		{
+			"a",
+			token.Token{Type: "FIRST", Literal: "a"},
+		},
+		{
+			"aa",
+			token.Token{Type: "SECOND", Literal: "aa"},
+		},
+	}
+
+	for _, tt := range tests {
+		testNextChar(t, tt.input, dfa, tt.expectedToken)
+	}
+}
+
+func testNextChar(t *testing.T, input string, dfa *Dfa, expectedToken token.Token) {
+	t.Helper()
+
+	scanner := New(input, dfa)
+	token := scanner.NextToken()
+	if token != expectedToken {
+		t.Logf("current input: %s", input)
+		t.Errorf("expected: %v, got: %v", expectedToken, token)
 	}
 }
