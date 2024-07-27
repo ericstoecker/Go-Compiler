@@ -33,10 +33,10 @@ func (s *TableDrivenScanner) NextToken() token.Token {
 
 		if stateAfterTransition, ok := s.dfa.Transitions[string(s.ch)][state]; ok {
 			state = stateAfterTransition
+			s.readChar()
 		} else {
 			state = -1
 		}
-		s.readChar()
 	}
 
 	for !s.isAcceptingState(state) && len(stack) > 1 {
@@ -45,6 +45,7 @@ func (s *TableDrivenScanner) NextToken() token.Token {
 		lexeme = lexeme[:len(lexeme)-1]
 		s.rollback()
 	}
+	s.readChar()
 
 	if s.isAcceptingState(state) {
 		tokenType, ok := s.dfa.TypeTable[state]

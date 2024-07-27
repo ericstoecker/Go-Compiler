@@ -8,12 +8,15 @@ import (
 var tokenClassifications = []TokenClassification{
 	{"let", token.LET, 2},
 	{"[a-z]([a-z])*", token.IDENT, 1},
+	{"=", token.ASSIGN, 1},
+	{"[0-9]([0-9])*", token.INT, 1},
+	{";", token.SEMICOLON, 1},
 }
 
 func TestGeneratedScanner(t *testing.T) {
-	input := `let five`
-	// let ten = 10;
-
+	input := `let five = 5;
+	let ten = 10;
+	`
 	// let add = fn(x, y) {
 	//     x + y;
 	// };
@@ -37,13 +40,13 @@ func TestGeneratedScanner(t *testing.T) {
 	}{
 		{token.LET, "let"},
 		{token.IDENT, "five"},
-		// {token.ASSIGN, "="},
-		// {token.INT, "5"},
-		// {token.SEMICOLON, ";"},
-		// {token.LET, "let"},
-		// {token.IDENT, "ten"},
-		// {token.ASSIGN, "="},
-		// {token.INT, "10"},
+		{token.ASSIGN, "="},
+		{token.INT, "5"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "ten"},
+		{token.ASSIGN, "="},
+		{token.INT, "10"},
 		// {token.SEMICOLON, ";"},
 		// {token.LET, "let"},
 		// {token.IDENT, "add"},
