@@ -72,13 +72,13 @@ func (s *TableDrivenScanner) readChar() {
 }
 
 func (s *TableDrivenScanner) rollback() {
-	if s.readPosition == 0 {
+	if s.readPosition <= 1 {
 		return
 	}
 
 	s.readPosition = s.position
 	s.position -= 1
-	s.ch = s.input[s.readPosition]
+	s.ch = s.input[s.position]
 }
 
 func (s *TableDrivenScanner) skipWhitespace() {

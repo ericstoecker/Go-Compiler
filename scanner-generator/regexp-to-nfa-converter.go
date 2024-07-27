@@ -1,5 +1,7 @@
 package scannergenerator
 
+import "compiler/token"
+
 const EPSILON = "EPSILON"
 
 const (
@@ -33,7 +35,12 @@ func NewRegexpToNfaConverter(input string) *RegexpToNfaConverter {
 }
 
 func (c *RegexpToNfaConverter) Convert() *Nfa {
-	return c.parseExpression(LOWEST)
+	nfa := c.parseExpression(LOWEST)
+	if nfa.TypeTable == nil {
+		nfa.TypeTable = make(map[int]token.TokenType)
+	}
+
+	return nfa
 }
 
 func (c *RegexpToNfaConverter) parseExpression(precedence int) *Nfa {

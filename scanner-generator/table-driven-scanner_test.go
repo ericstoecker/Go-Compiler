@@ -149,10 +149,10 @@ func TestMultipleCategories(t *testing.T) {
 		5: "FIRST",
 	}
 
-	secondConverter := NewRegexpToNfaConverter("cd*")
+	secondConverter := NewRegexpToNfaConverter("([c-d])*")
 	secondNfa := secondConverter.Convert()
-	secondNfa.TypeTable = map[int]token.TokenType{
-		5: "SECOND",
+	for _, acceptingState := range secondNfa.AcceptingStates {
+		secondNfa.TypeTable[acceptingState] = "SECOND"
 	}
 
 	combinedNfa := firstNfa.UnionDistinct(secondNfa)

@@ -95,7 +95,7 @@ func (n *Nfa) UnionDistinct(other *Nfa) *Nfa {
 
 	highestStateInOther := slices.Max(other.AcceptingStates)
 	numberOfStatesInUnion := highestState + highestStateInOther + 2
-	n.Transitions[EPSILON][numberOfStatesInUnion] = []int{highestState + 1, n.InitialState}
+	n.Transitions[EPSILON][numberOfStatesInUnion] = []int{other.InitialState + highestState + 1, n.InitialState}
 
 	acceptingStates := make([]int, 0)
 	acceptingStates = append(acceptingStates, n.AcceptingStates...)
