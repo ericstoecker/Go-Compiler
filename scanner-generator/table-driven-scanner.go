@@ -23,6 +23,10 @@ func New(input string, dfa *Dfa) *TableDrivenScanner {
 func (s *TableDrivenScanner) NextToken() token.Token {
 	s.skipWhitespace()
 
+	if s.position >= len(s.input) {
+		return token.Token{Type: token.EOF, Literal: ""}
+	}
+
 	state := 0
 	lexeme := ""
 	stack := []int{}
@@ -64,10 +68,10 @@ func (s *TableDrivenScanner) isAcceptingState(state int) bool {
 func (s *TableDrivenScanner) readChar() {
 	if s.readPosition >= len(s.input) {
 		s.ch = 0
-		return
+	} else {
+		s.ch = s.input[s.readPosition]
 	}
 
-	s.ch = s.input[s.readPosition]
 	s.position = s.readPosition
 	s.readPosition += 1
 }

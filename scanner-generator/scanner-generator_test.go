@@ -6,33 +6,56 @@ import (
 )
 
 var tokenClassifications = []TokenClassification{
-	{"let", token.LET, 2},
-	{"[a-z]([a-z])*", token.IDENT, 1},
 	{"=", token.ASSIGN, 1},
-	{"[0-9]([0-9])*", token.INT, 1},
+	{"+", token.PLUS, 1},
+	{",", token.COMMA, 1},
 	{";", token.SEMICOLON, 1},
+	{":", token.COLON, 1},
+	{"\\(", token.LPAREN, 1},
+	{"\\)", token.RPAREN, 1},
+	{"{", token.LBRACE, 1},
+	{"}", token.RBRACE, 1},
+	{"\\[", token.LBRACKET, 1},
+	{"\\]", token.RBRACKET, 1},
+	{">", token.GT, 1},
+	{">=", token.GREATER_EQUAL, 1},
+	{"<", token.LT, 1},
+	{"<=", token.LESS_EQUAL, 1},
+	{"==", token.EQUALS, 1},
+	{"!", token.BANG, 1},
+	{"!=", token.NOT_EQUALS, 1},
+	{"/", token.SLASH, 1},
+	{"let", token.LET, 2},
+	{"return", token.RETURN, 2},
+	{"fn", token.FUNCTION, 2},
+	{"\"([a-z])*\"", token.STRING, 1},
+	{"[a-z]([a-z])*", token.IDENT, 1},
+	{"[0-9]([0-9])*", token.INT, 1},
 }
 
 func TestGeneratedScanner(t *testing.T) {
-	input := `let five = 5;
+	input := `let five = 55;
 	let ten = 10;
+
+	let add = fn(x, y) {
+	    x + y;
+	};
+
+	let result = add(five, ten);
+
+	==
+	!=
+	<=
+	>=
+	!
+	return
+	[]
+	:
+
+	>
+	<
+	/
 	`
-	// let add = fn(x, y) {
-	//     x + y;
-	// };
-
-	// let result = add(five, ten);
-
-	// ==
-	// !=
-	// <=
-	// >=
-	// !
-	// return
-	// []
-	// "test"
-	// :
-	// `
 
 	tests := []struct {
 		expectedType    token.TokenType
@@ -41,50 +64,53 @@ func TestGeneratedScanner(t *testing.T) {
 		{token.LET, "let"},
 		{token.IDENT, "five"},
 		{token.ASSIGN, "="},
-		{token.INT, "5"},
+		{token.INT, "55"},
 		{token.SEMICOLON, ";"},
 		{token.LET, "let"},
 		{token.IDENT, "ten"},
 		{token.ASSIGN, "="},
 		{token.INT, "10"},
-		// {token.SEMICOLON, ";"},
-		// {token.LET, "let"},
-		// {token.IDENT, "add"},
-		// {token.ASSIGN, "="},
-		// {token.FUNCTION, "fn"},
-		// {token.LPAREN, "("},
-		// {token.IDENT, "x"},
-		// {token.COMMA, ","},
-		// {token.IDENT, "y"},
-		// {token.RPAREN, ")"},
-		// {token.LBRACE, "{"},
-		// {token.IDENT, "x"},
-		// {token.PLUS, "+"},
-		// {token.IDENT, "y"},
-		// {token.SEMICOLON, ";"},
-		// {token.RBRACE, "}"},
-		// {token.SEMICOLON, ";"},
-		// {token.LET, "let"},
-		// {token.IDENT, "result"},
-		// {token.ASSIGN, "="},
-		// {token.IDENT, "add"},
-		// {token.LPAREN, "("},
-		// {token.IDENT, "five"},
-		// {token.COMMA, ","},
-		// {token.IDENT, "ten"},
-		// {token.RPAREN, ")"},
-		// {token.SEMICOLON, ";"},
-		// {token.EQUALS, "=="},
-		// {token.NOT_EQUALS, "!="},
-		// {token.LESS_EQUAL, "<="},
-		// {token.GREATER_EQUAL, ">="},
-		// {token.BANG, "!"},
-		// {token.RETURN, "return"},
-		// {token.LBRACKET, "["},
-		// {token.RBRACKET, "]"},
-		// {token.STRING, "test"},
-		// {token.COLON, ":"},
-		// {token.EOF, ""},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "add"},
+		{token.ASSIGN, "="},
+		{token.FUNCTION, "fn"},
+		{token.LPAREN, "("},
+		{token.IDENT, "x"},
+		{token.COMMA, ","},
+		{token.IDENT, "y"},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+		{token.IDENT, "x"},
+		{token.PLUS, "+"},
+		{token.IDENT, "y"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "result"},
+		{token.ASSIGN, "="},
+		{token.IDENT, "add"},
+		{token.LPAREN, "("},
+		{token.IDENT, "five"},
+		{token.COMMA, ","},
+		{token.IDENT, "ten"},
+		{token.RPAREN, ")"},
+		{token.SEMICOLON, ";"},
+		{token.EQUALS, "=="},
+		{token.NOT_EQUALS, "!="},
+		{token.LESS_EQUAL, "<="},
+		{token.GREATER_EQUAL, ">="},
+		{token.BANG, "!"},
+		{token.RETURN, "return"},
+		{token.LBRACKET, "["},
+		{token.RBRACKET, "]"},
+		// {token.STRING, "\"test\""},
+		{token.COLON, ":"},
+		{token.GT, ">"},
+		{token.LT, "<"},
+		{token.SLASH, "/"},
+		{token.EOF, ""},
 	}
 
 	scannerGenerator := NewScannerGenerator()
