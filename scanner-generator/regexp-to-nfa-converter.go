@@ -91,7 +91,7 @@ func (c *RegexpToNfaConverter) parseRange() *Nfa {
 	lowerBound := c.regexp[c.position]
 	c.position += 2
 	upperBound := c.regexp[c.position]
-	c.position += 2
+	c.position += 1
 
 	if lowerBound > upperBound {
 		panic("Lower bound is greater than upper bound")
@@ -112,7 +112,6 @@ func (c *RegexpToNfaConverter) parseRange() *Nfa {
 func (c *RegexpToNfaConverter) parseParenthesis() *Nfa {
 	c.position++
 	nfa := c.parseExpression(LOWEST)
-	c.position += 2
 	return nfa
 }
 

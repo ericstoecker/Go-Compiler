@@ -29,12 +29,12 @@ var tokenClassifications = []TokenClassification{
 	{"return", token.RETURN, 2},
 	{"fn", token.FUNCTION, 2},
 	{"\"([a-z])*\"", token.STRING, 1},
-	{"[a-z]([a-z])*", token.IDENT, 1},
+	{"[a-z]([a-z]|[A-Z])*", token.IDENT, 1},
 	{"[0-9]([0-9])*", token.INT, 1},
 }
 
 func TestGeneratedScanner(t *testing.T) {
-	input := `let five = 55;
+	input := `let fiveTen = 55;
 	let ten = 10;
 
 	let add = fn(x, y) {
@@ -62,7 +62,7 @@ func TestGeneratedScanner(t *testing.T) {
 		expectedLiteral string
 	}{
 		{token.LET, "let"},
-		{token.IDENT, "five"},
+		{token.IDENT, "fiveTen"},
 		{token.ASSIGN, "="},
 		{token.INT, "55"},
 		{token.SEMICOLON, ";"},
