@@ -93,20 +93,17 @@ func (c *RegexpToNfaConverter) parseRange() *Nfa {
 	upperBound := c.regexp[c.position]
 	c.position += 1
 
-	if lowerBound > upperBound {
-		panic("Lower bound is greater than upper bound")
+	if lowerBound >= upperBound {
+		panic("Lower bound is greater or equal upper bound")
 	}
 
-	var nfa *Nfa
+	nfasForSymbols := make([]*Nfa, upperBound-lowerBound+1)
 	for i := lowerBound; i <= upperBound; i++ {
 		symbolNfa := NfaFromSingleSymbol(string(i))
-		if nfa == nil {
-			nfa = symbolNfa
-		} else {
-			nfa = nfa.Union(symbolNfa)
-		}
+		nfasForSymbols[i-lowerBound] = symbolNfa
 	}
-	return nfa
+
+	return nfasForSymbols[0].Union(nfasForSymbols[1:]...)
 }
 
 func (c *RegexpToNfaConverter) parseParenthesis() *Nfa {

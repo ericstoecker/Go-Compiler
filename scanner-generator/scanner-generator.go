@@ -10,24 +10,21 @@ func NewScannerGenerator() *ScannerGenerator {
 }
 
 func (s *ScannerGenerator) GenerateScanner(tokenClassifications []token.TokenClassification) *Dfa {
-	var nfa *Nfa
 	precedences := make(map[token.TokenType]int)
-	for _, tokenClassification := range tokenClassifications {
+	nfas := make([]*Nfa, len(tokenClassifications))
+	for i, tokenClassification := range tokenClassifications {
 		nfaForClassification := NewRegexpToNfaConverter(tokenClassification.Regexp).Convert()
 
 		for _, state := range nfaForClassification.AcceptingStates {
 			nfaForClassification.TypeTable[state] = tokenClassification.TokenType
 		}
 
-		if nfa == nil {
-			nfa = nfaForClassification
-		} else {
-			nfa = nfa.UnionDistinct(nfaForClassification)
-		}
+		nfas[i] = nfaForClassification
 
 		precedences[tokenClassification.TokenType] = tokenClassification.Precedence
 	}
 
+	nfa := nfas[0].UnionDistinct(nfas[1:]...)
 	dfa := NewNfaToDfaConverter(nfa, precedences).Convert()
 
 	return dfa
