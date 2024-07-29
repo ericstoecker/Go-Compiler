@@ -99,13 +99,7 @@ func (c *RegexpToNfaConverter) parseRange() *Nfa {
 
 	var nfa *Nfa
 	for i := lowerBound; i <= upperBound; i++ {
-		symbolNfa := &Nfa{
-			Transitions: map[string]map[int][]int{
-				string(i): {0: []int{1}},
-			},
-			InitialState:    0,
-			AcceptingStates: []int{1},
-		}
+		symbolNfa := NfaFromSingleSymbol(string(i))
 		if nfa == nil {
 			nfa = symbolNfa
 		} else {
@@ -124,13 +118,7 @@ func (c *RegexpToNfaConverter) parseParenthesis() *Nfa {
 
 func (c *RegexpToNfaConverter) parseSingleSymbol() *Nfa {
 	currentSymbol := string(c.regexp[c.position])
-	return &Nfa{
-		Transitions: map[string]map[int][]int{
-			currentSymbol: {0: []int{1}},
-		},
-		InitialState:    0,
-		AcceptingStates: []int{1},
-	}
+	return NfaFromSingleSymbol(currentSymbol)
 }
 
 func (c *RegexpToNfaConverter) parseInfixExpression(left *Nfa) *Nfa {
