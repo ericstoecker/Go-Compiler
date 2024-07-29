@@ -2,12 +2,6 @@ package scannergenerator
 
 import "compiler/token"
 
-type TokenClassification struct {
-	regexp     string
-	tokenType  token.TokenType
-	precedence int
-}
-
 type ScannerGenerator struct {
 }
 
@@ -15,14 +9,14 @@ func NewScannerGenerator() *ScannerGenerator {
 	return &ScannerGenerator{}
 }
 
-func (s *ScannerGenerator) GenerateScanner(tokenClassifications []TokenClassification) *Dfa {
+func (s *ScannerGenerator) GenerateScanner(tokenClassifications []token.TokenClassification) *Dfa {
 	var nfa *Nfa
 	precedences := make(map[token.TokenType]int)
 	for _, tokenClassification := range tokenClassifications {
-		nfaForClassification := NewRegexpToNfaConverter(tokenClassification.regexp).Convert()
+		nfaForClassification := NewRegexpToNfaConverter(tokenClassification.Regexp).Convert()
 
 		for _, state := range nfaForClassification.AcceptingStates {
-			nfaForClassification.TypeTable[state] = tokenClassification.tokenType
+			nfaForClassification.TypeTable[state] = tokenClassification.TokenType
 		}
 
 		if nfa == nil {
@@ -31,7 +25,7 @@ func (s *ScannerGenerator) GenerateScanner(tokenClassifications []TokenClassific
 			nfa = nfa.UnionDistinct(nfaForClassification)
 		}
 
-		precedences[tokenClassification.tokenType] = tokenClassification.precedence
+		precedences[tokenClassification.TokenType] = tokenClassification.Precedence
 	}
 
 	dfa := NewNfaToDfaConverter(nfa, precedences).Convert()

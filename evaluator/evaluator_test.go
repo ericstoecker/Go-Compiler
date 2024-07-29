@@ -1,9 +1,9 @@
 package evaluator
 
 import (
-	"compiler/lexer"
 	"compiler/object"
 	"compiler/parser"
+	"compiler/scanner"
 	"testing"
 )
 
@@ -209,7 +209,7 @@ func runEvaluatorTests(t *testing.T, tests []evaluatorTest) {
 	t.Helper()
 
 	for _, tt := range tests {
-		l := lexer.New(tt.input)
+		l := scanner.New(tt.input)
 		p := parser.New(l)
 
 		program := p.ParseProgram()
@@ -308,7 +308,7 @@ func TestErrorHandling(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		l := lexer.New(tt.input)
+		l := scanner.New(tt.input)
 		p := parser.New(l)
 
 		program := p.ParseProgram()

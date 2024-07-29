@@ -2,7 +2,7 @@ package parser
 
 import (
 	"compiler/ast"
-	"compiler/lexer"
+	"compiler/scanner"
 	"compiler/token"
 	"fmt"
 	"strconv"
@@ -25,7 +25,7 @@ type PrefixParseFn func() ast.Expression
 type InfixParseFn func(ast.Expression) ast.Expression
 
 type Parser struct {
-	lexer *lexer.Lexer
+	scanner scanner.Scanner
 
 	currentToken token.Token
 	peekToken    token.Token
@@ -37,8 +37,8 @@ type Parser struct {
 	Errors []string
 }
 
-func New(l *lexer.Lexer) *Parser {
-	p := &Parser{lexer: l}
+func New(l scanner.Scanner) *Parser {
+	p := &Parser{scanner: l}
 
 	p.precedences = make(map[token.TokenType]int)
 	p.precedences[token.EQUALS] = EQUALS
@@ -94,7 +94,7 @@ func New(l *lexer.Lexer) *Parser {
 
 func (p *Parser) nextToken() {
 	p.currentToken = p.peekToken
-	p.peekToken = p.lexer.NextToken()
+	p.peekToken = p.scanner.NextToken()
 }
 
 func (p *Parser) ParseProgram() *ast.Program {

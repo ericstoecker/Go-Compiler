@@ -3,9 +3,9 @@ package compiler
 import (
 	"compiler/ast"
 	"compiler/code"
-	"compiler/lexer"
 	"compiler/object"
 	"compiler/parser"
+	"compiler/scanner"
 	"fmt"
 	"testing"
 )
@@ -17,7 +17,7 @@ type compilerTestCase struct {
 }
 
 func parse(t *testing.T, input string) *ast.Program {
-	l := lexer.New(input)
+	l := scanner.New(input)
 	p := parser.New(l)
 	program := p.ParseProgram()
 

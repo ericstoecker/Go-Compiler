@@ -3,8 +3,9 @@ package repl
 import (
 	"bufio"
 	"compiler/evaluator"
-	"compiler/lexer"
 	"compiler/parser"
+	scannergenerator "compiler/scanner-generator"
+	"compiler/token"
 	"fmt"
 	"io"
 )
@@ -13,6 +14,9 @@ const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+
+	generator := scannergenerator.NewScannerGenerator()
+	dfa := generator.GenerateScanner(token.TokenClassifications)
 
 	e := evaluator.New()
 	for {
@@ -23,8 +27,9 @@ func Start(in io.Reader, out io.Writer) {
 		}
 
 		line := scanner.Text()
-		l := lexer.New(line)
-		p := parser.New(l)
+		s := scannergenerator.New(line, dfa)
+		// l := lexer.New(line)
+		p := parser.New(s)
 
 		program := p.ParseProgram()
 		if len(p.Errors) != 0 {
