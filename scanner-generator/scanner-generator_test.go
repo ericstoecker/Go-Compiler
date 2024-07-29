@@ -8,6 +8,7 @@ import (
 var tokenClassifications = []TokenClassification{
 	{"=", token.ASSIGN, 1},
 	{"+", token.PLUS, 1},
+	{"-", token.MINUS, 1},
 	{",", token.COMMA, 1},
 	{";", token.SEMICOLON, 1},
 	{":", token.COLON, 1},
@@ -24,10 +25,16 @@ var tokenClassifications = []TokenClassification{
 	{"==", token.EQUALS, 1},
 	{"!", token.BANG, 1},
 	{"!=", token.NOT_EQUALS, 1},
+	{"&&", token.AND, 1},
+	{"\\|\\|", token.OR, 1},
 	{"/", token.SLASH, 1},
 	{"let", token.LET, 2},
 	{"return", token.RETURN, 2},
 	{"fn", token.FUNCTION, 2},
+	{"if", token.IF, 2},
+	{"else", token.ELSE, 2},
+	{"true", token.TRUE, 2},
+	{"false", token.FALSE, 2},
 	{"\"([a-z])*\"", token.STRING, 1},
 	{"[a-z]([a-z]|[A-Z])*", token.IDENT, 1},
 	{"[0-9]([0-9])*", token.INT, 1},
@@ -55,6 +62,15 @@ func TestGeneratedScanner(t *testing.T) {
 	>
 	<
 	/
+	-
+
+	&&
+	||
+
+	if
+	else
+	true
+	false
 	`
 
 	tests := []struct {
@@ -110,6 +126,13 @@ func TestGeneratedScanner(t *testing.T) {
 		{token.GT, ">"},
 		{token.LT, "<"},
 		{token.SLASH, "/"},
+		{token.MINUS, "-"},
+		{token.AND, "&&"},
+		{token.OR, "||"},
+		{token.IF, "if"},
+		{token.ELSE, "else"},
+		{token.TRUE, "true"},
+		{token.FALSE, "false"},
 		{token.EOF, ""},
 	}
 
