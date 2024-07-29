@@ -132,7 +132,6 @@ func (c *RegexpToNfaConverter) parseInfixExpression(left *Nfa) *Nfa {
 }
 
 func (c *RegexpToNfaConverter) parseKleeneStar(left *Nfa) *Nfa {
-	c.position++
 	return left.Kleene()
 }
 

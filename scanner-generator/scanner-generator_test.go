@@ -35,9 +35,9 @@ var tokenClassifications = []TokenClassification{
 	{"else", token.ELSE, 2},
 	{"true", token.TRUE, 2},
 	{"false", token.FALSE, 2},
-	{"\"([a-z])*\"", token.STRING, 1},
 	{"[a-z]([a-z]|[A-Z])*", token.IDENT, 1},
 	{"[0-9]([0-9])*", token.INT, 1},
+	{`"([a-z]|[A-Z]|[0-9])*"`, token.STRING, 1},
 }
 
 func TestGeneratedScanner(t *testing.T) {
@@ -71,6 +71,8 @@ func TestGeneratedScanner(t *testing.T) {
 	else
 	true
 	false
+
+	"test1TEST2"
 	`
 
 	tests := []struct {
@@ -121,7 +123,6 @@ func TestGeneratedScanner(t *testing.T) {
 		{token.RETURN, "return"},
 		{token.LBRACKET, "["},
 		{token.RBRACKET, "]"},
-		// {token.STRING, "\"test\""},
 		{token.COLON, ":"},
 		{token.GT, ">"},
 		{token.LT, "<"},
@@ -133,6 +134,7 @@ func TestGeneratedScanner(t *testing.T) {
 		{token.ELSE, "else"},
 		{token.TRUE, "true"},
 		{token.FALSE, "false"},
+		{token.STRING, "\"test1TEST2\""},
 		{token.EOF, ""},
 	}
 
