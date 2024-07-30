@@ -7,7 +7,7 @@ import (
 
 func TestAccepting(t *testing.T) {
 	RegexpToNfaConverter := NewRegexpToNfaConverter("a(b|c)*")
-	nfa := RegexpToNfaConverter.Convert()
+	nfa, _ := RegexpToNfaConverter.Convert()
 	nfa.TypeTable = map[int]token.TokenType{
 		9: "ACCEPT",
 	}
@@ -130,7 +130,7 @@ func TestSpecialCharacters(t *testing.T) {
 
 	for _, tt := range tests {
 		RegexpToNfaConverter := NewRegexpToNfaConverter(tt.regexp)
-		nfa := RegexpToNfaConverter.Convert()
+		nfa, _ := RegexpToNfaConverter.Convert()
 		nfa.TypeTable = make(map[int]token.TokenType)
 		for _, acceptingState := range nfa.AcceptingStates {
 			nfa.TypeTable[acceptingState] = "ACCEPT"
@@ -144,13 +144,13 @@ func TestSpecialCharacters(t *testing.T) {
 
 func TestMultipleCategories(t *testing.T) {
 	firstConverter := NewRegexpToNfaConverter("ab*")
-	firstNfa := firstConverter.Convert()
+	firstNfa, _ := firstConverter.Convert()
 	firstNfa.TypeTable = map[int]token.TokenType{
 		5: "FIRST",
 	}
 
 	secondConverter := NewRegexpToNfaConverter("([c-d])*")
-	secondNfa := secondConverter.Convert()
+	secondNfa, _ := secondConverter.Convert()
 	for _, acceptingState := range secondNfa.AcceptingStates {
 		secondNfa.TypeTable[acceptingState] = "SECOND"
 	}
@@ -191,13 +191,13 @@ func TestMultipleCategories(t *testing.T) {
 
 func TestConflictingCategories(t *testing.T) {
 	firstConverter := NewRegexpToNfaConverter("a")
-	firstNfa := firstConverter.Convert()
+	firstNfa, _ := firstConverter.Convert()
 	firstNfa.TypeTable = map[int]token.TokenType{
 		1: "FIRST",
 	}
 
 	secondConverter := NewRegexpToNfaConverter("aa*")
-	secondNfa := secondConverter.Convert()
+	secondNfa, _ := secondConverter.Convert()
 	secondNfa.TypeTable = map[int]token.TokenType{
 		5: "SECOND",
 	}

@@ -1,6 +1,9 @@
 package scannergenerator
 
-import "compiler/token"
+import (
+	"compiler/token"
+	"fmt"
+)
 
 type ScannerGenerator struct {
 }
@@ -13,7 +16,10 @@ func (s *ScannerGenerator) GenerateScanner(tokenClassifications []token.TokenCla
 	precedences := make(map[token.TokenType]int)
 	nfas := make([]*Nfa, len(tokenClassifications))
 	for i, tokenClassification := range tokenClassifications {
-		nfaForClassification := NewRegexpToNfaConverter(tokenClassification.Regexp).Convert()
+		nfaForClassification, err := NewRegexpToNfaConverter(tokenClassification.Regexp).Convert()
+		if err != nil {
+			panic(fmt.Sprintf("error when converting regexp '%s' to nfa: %v", tokenClassification.Regexp, err))
+		}
 
 		for _, state := range nfaForClassification.AcceptingStates {
 			nfaForClassification.TypeTable[state] = tokenClassification.TokenType

@@ -119,5 +119,4 @@ func TestGeneratedScanner(t *testing.T) {
 			t.Fatalf("tests[%d] - literal wrong. expected=%q, got %q", i, tt.expectedLiteral, tok.Literal)
 		}
 	}
-
 }

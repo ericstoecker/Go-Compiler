@@ -52,7 +52,7 @@ func TestNfaToDfaConversion(t *testing.T) {
 
 	for _, tt := range tests {
 		regexpToNfaConverter := NewRegexpToNfaConverter(tt.input)
-		nfa := regexpToNfaConverter.Convert()
+		nfa, _ := regexpToNfaConverter.Convert()
 
 		nfaToDfaConverter := NewNfaToDfaConverter(nfa, map[token.TokenType]int{})
 		dfa := nfaToDfaConverter.Convert()
@@ -93,11 +93,11 @@ func TestMultistateNfaToDfaConversion(t *testing.T) {
 
 	for _, tt := range tests {
 		regexpToNfaConverter := NewRegexpToNfaConverter(tt.input[0])
-		nfa := regexpToNfaConverter.Convert()
+		nfa, _ := regexpToNfaConverter.Convert()
 		nfa.TypeTable = map[int]token.TokenType{1: tt.tokenTypes[0]}
 
 		secondConverter := NewRegexpToNfaConverter(tt.input[1])
-		secondNfa := secondConverter.Convert()
+		secondNfa, _ := secondConverter.Convert()
 		secondNfa.TypeTable = map[int]token.TokenType{1: tt.tokenTypes[1]}
 
 		nfaToDfaConverter := NewNfaToDfaConverter(nfa.UnionDistinct(secondNfa), map[token.TokenType]int{})

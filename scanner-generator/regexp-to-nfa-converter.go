@@ -1,11 +1,15 @@
 package scannergenerator
 
-import "compiler/token"
+import (
+	"compiler/token"
+	"fmt"
+)
 
 const EPSILON = "EPSILON"
 
 const (
 	_ int = iota
+	CLOSING
 	LOWEST
 	ALTERNATION
 	CONCATENATION
@@ -17,6 +21,8 @@ type RegexpToNfaConverter struct {
 	regexp   string
 	position int
 
+	ch byte
+
 	precedences map[string]int
 }
 
@@ -25,35 +31,46 @@ func NewRegexpToNfaConverter(input string) *RegexpToNfaConverter {
 		"|": ALTERNATION,
 		"*": KLEENE,
 		"(": PARENTHESIS,
+		")": CLOSING,
 	}
 
-	return &RegexpToNfaConverter{
+	converter := &RegexpToNfaConverter{
 		regexp:      input,
-		position:    0,
+		position:    -1,
 		precedences: precedences,
 	}
+	converter.readCharacter()
+
+	return converter
 }
 
-func (c *RegexpToNfaConverter) Convert() *Nfa {
-	nfa := c.parseExpression(LOWEST)
+func (c *RegexpToNfaConverter) Convert() (*Nfa, error) {
+	nfa, err := c.parseExpression(LOWEST)
+	if err != nil {
+		return nil, err
+	}
+
 	if nfa.TypeTable == nil {
 		nfa.TypeTable = make(map[int]token.TokenType)
 	}
-
-	return nfa
+	return nfa, nil
 }
 
-func (c *RegexpToNfaConverter) parseExpression(precedence int) *Nfa {
-	left := c.prefixHandler()
+func (c *RegexpToNfaConverter) parseExpression(precedence int) (*Nfa, error) {
+	left, err := c.prefixHandler()
+	if err != nil {
+		return nil, err
+	}
 
 	for c.position < len(c.regexp)-1 && precedence < c.peekPrecedence() {
-		c.position++
-		if c.regexp[c.position] == ')' {
-			return left
+		c.readCharacter()
+
+		left, err = c.parseInfixExpression(left)
+		if err != nil {
+			return nil, err
 		}
-		left = c.parseInfixExpression(left)
 	}
-	return left
+	return left, nil
 }
 
 func (c *RegexpToNfaConverter) peekPrecedence() int {
@@ -68,30 +85,31 @@ func (c *RegexpToNfaConverter) peekPrecedence() int {
 	return CONCATENATION
 }
 
-func (c *RegexpToNfaConverter) prefixHandler() *Nfa {
-	switch currentSymbol := string(c.regexp[c.position]); currentSymbol {
-	case "(":
+func (c *RegexpToNfaConverter) prefixHandler() (*Nfa, error) {
+	switch currentSymbol := c.ch; currentSymbol {
+	case '(':
 		return c.parseParenthesis()
-	case "[":
+	case '[':
 		return c.parseRange()
-	case "\\":
-		return c.parseEscapedSymbol()
+	case '\\':
+		return c.parseEscapedSymbol(), nil
 	default:
-		return c.parseSingleSymbol()
+		return c.parseSingleSymbol(), nil
 	}
 }
 
 func (c *RegexpToNfaConverter) parseEscapedSymbol() *Nfa {
-	c.position++
+	c.readCharacter()
 	return c.parseSingleSymbol()
 }
 
-func (c *RegexpToNfaConverter) parseRange() *Nfa {
-	c.position++
-	lowerBound := c.regexp[c.position]
-	c.position += 2
-	upperBound := c.regexp[c.position]
-	c.position += 1
+func (c *RegexpToNfaConverter) parseRange() (*Nfa, error) {
+	c.readCharacter()
+	lowerBound := c.ch
+	c.readCharacter()
+	c.readCharacter()
+	upperBound := c.ch
+	c.readCharacter()
 
 	if lowerBound >= upperBound {
 		panic("Lower bound is greater or equal upper bound")
@@ -103,26 +121,36 @@ func (c *RegexpToNfaConverter) parseRange() *Nfa {
 		nfasForSymbols[i-lowerBound] = symbolNfa
 	}
 
-	return nfasForSymbols[0].Union(nfasForSymbols[1:]...)
+	return nfasForSymbols[0].Union(nfasForSymbols[1:]...), nil
 }
 
-func (c *RegexpToNfaConverter) parseParenthesis() *Nfa {
-	c.position++
-	nfa := c.parseExpression(LOWEST)
-	return nfa
+func (c *RegexpToNfaConverter) parseParenthesis() (*Nfa, error) {
+	c.readCharacter()
+
+	nfa, err := c.parseExpression(LOWEST)
+	if err != nil {
+		return nil, err
+	}
+
+	c.readCharacter()
+	if string(c.ch) != ")" {
+		return nil, fmt.Errorf("expected closing ')'")
+	}
+
+	return nfa, nil
 }
 
 func (c *RegexpToNfaConverter) parseSingleSymbol() *Nfa {
-	currentSymbol := string(c.regexp[c.position])
+	currentSymbol := string(c.ch)
 	return NfaFromSingleSymbol(currentSymbol)
 }
 
-func (c *RegexpToNfaConverter) parseInfixExpression(left *Nfa) *Nfa {
+func (c *RegexpToNfaConverter) parseInfixExpression(left *Nfa) (*Nfa, error) {
 	switch currentSymbol := string(c.regexp[c.position]); currentSymbol {
 	case "|":
 		return c.parseAlternation(left)
 	case "*":
-		return c.parseKleeneStar(left)
+		return c.parseKleeneStar(left), nil
 	default:
 		return c.parseConcatenation(left)
 	}
@@ -132,15 +160,34 @@ func (c *RegexpToNfaConverter) parseKleeneStar(left *Nfa) *Nfa {
 	return left.Kleene()
 }
 
-func (c *RegexpToNfaConverter) parseAlternation(left *Nfa) *Nfa {
-	c.position++
-	right := c.parseExpression(ALTERNATION)
+func (c *RegexpToNfaConverter) parseAlternation(left *Nfa) (*Nfa, error) {
+	c.readCharacter()
+	right, err := c.parseExpression(ALTERNATION)
+	if err != nil {
+		return nil, err
+	}
 
-	return left.Union(right)
+	return left.Union(right), nil
 }
 
-func (c *RegexpToNfaConverter) parseConcatenation(left *Nfa) *Nfa {
-	right := c.parseExpression(CONCATENATION)
+func (c *RegexpToNfaConverter) parseConcatenation(left *Nfa) (*Nfa, error) {
+	if c.ch == ')' {
+		return left, nil
+	}
 
-	return left.Concatenation(right)
+	right, err := c.parseExpression(CONCATENATION)
+	if err != nil {
+		return nil, err
+	}
+
+	return left.Concatenation(right), nil
+}
+
+func (c *RegexpToNfaConverter) readCharacter() {
+	if c.position >= len(c.regexp)-1 {
+		c.ch = 0
+	} else {
+		c.position++
+		c.ch = c.regexp[c.position]
+	}
 }
