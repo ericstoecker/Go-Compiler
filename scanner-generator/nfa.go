@@ -60,6 +60,10 @@ func (n *Nfa) Concatenation(other *Nfa) *Nfa {
 }
 
 func (n *Nfa) Union(others ...*Nfa) *Nfa {
+	if len(others) == 0 {
+		return n
+	}
+
 	if n.NumberOfStates == 0 {
 		panic("n.NumberOfStates is 0")
 	}
@@ -109,6 +113,10 @@ func (n *Nfa) Union(others ...*Nfa) *Nfa {
 }
 
 func (n *Nfa) UnionDistinct(others ...*Nfa) *Nfa {
+	if len(others) == 0 {
+		return n
+	}
+
 	if n.NumberOfStates == 0 {
 		panic("n.NumberOfStates is 0")
 	}
