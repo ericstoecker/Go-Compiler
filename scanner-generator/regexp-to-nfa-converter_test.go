@@ -22,6 +22,10 @@ func TestErrorHandling(t *testing.T) {
 			"[2-1]",
 			fmt.Errorf("lower bound greater or equal to upper bound '[2-1]'"),
 		},
+		{
+			"a|",
+			fmt.Errorf("expected right side of |"),
+		},
 	}
 
 	for _, tt := range tests {

@@ -97,6 +97,8 @@ func (c *RegexpToNfaConverter) prefixHandler() (*Nfa, error) {
 		return c.parseRange()
 	case '\\':
 		return c.parseEscapedSymbol(), nil
+	case 0:
+		return nil, nil
 	default:
 		return c.parseSingleSymbol(), nil
 	}
@@ -169,6 +171,9 @@ func (c *RegexpToNfaConverter) parseAlternation(left *Nfa) (*Nfa, error) {
 	right, err := c.parseExpression(ALTERNATION)
 	if err != nil {
 		return nil, err
+	}
+	if right == nil {
+		return nil, fmt.Errorf("expected right side of |")
 	}
 
 	return left.Union(right), nil
