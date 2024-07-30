@@ -14,6 +14,10 @@ func TestErrorHandling(t *testing.T) {
 			"a(",
 			fmt.Errorf("expected closing ')'"),
 		},
+		{
+			"a)",
+			fmt.Errorf("expected opening ')'"),
+		},
 	}
 
 	for _, tt := range tests {

@@ -172,7 +172,7 @@ func (c *RegexpToNfaConverter) parseAlternation(left *Nfa) (*Nfa, error) {
 
 func (c *RegexpToNfaConverter) parseConcatenation(left *Nfa) (*Nfa, error) {
 	if c.ch == ')' {
-		return left, nil
+		return nil, fmt.Errorf("expected opening ')'")
 	}
 
 	right, err := c.parseExpression(CONCATENATION)
