@@ -112,13 +112,21 @@ func (c *RegexpToNfaConverter) parseEscapedSymbol() *Nfa {
 func (c *RegexpToNfaConverter) parseRange() (*Nfa, error) {
 	c.readCharacter()
 	lowerBound := c.ch
+
 	c.readCharacter()
+	if c.ch != '-' {
+		return nil, fmt.Errorf("expected '-' in between range")
+	}
+
 	c.readCharacter()
 	upperBound := c.ch
-	c.readCharacter()
-
 	if lowerBound >= upperBound {
 		return nil, fmt.Errorf("lower bound greater or equal to upper bound '[%s-%s]'", string(lowerBound), string(upperBound))
+	}
+
+	c.readCharacter()
+	if c.ch != ']' {
+		return nil, fmt.Errorf("expected closing ']' for range")
 	}
 
 	nfasForSymbols := make([]*Nfa, upperBound-lowerBound+1)

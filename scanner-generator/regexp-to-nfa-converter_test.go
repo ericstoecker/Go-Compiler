@@ -26,6 +26,18 @@ func TestErrorHandling(t *testing.T) {
 			"a|",
 			fmt.Errorf("expected right side of |"),
 		},
+		{
+			"[a-r0",
+			fmt.Errorf("expected closing ']' for range"),
+		},
+		{
+			"[a-r",
+			fmt.Errorf("expected closing ']' for range"),
+		},
+		{
+			"[aib]",
+			fmt.Errorf("expected '-' in between range"),
+		},
 	}
 
 	for _, tt := range tests {
