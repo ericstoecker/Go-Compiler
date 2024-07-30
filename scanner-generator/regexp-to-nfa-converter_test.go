@@ -18,10 +18,14 @@ func TestErrorHandling(t *testing.T) {
 			"a)",
 			fmt.Errorf("expected opening ')'"),
 		},
+		{
+			"[2-1]",
+			fmt.Errorf("lower bound greater or equal to upper bound '[2-1]'"),
+		},
 	}
 
 	for _, tt := range tests {
-		regexpToNfaConverter := &RegexpToNfaConverter{regexp: tt.input}
+		regexpToNfaConverter := NewRegexpToNfaConverter(tt.input)
 		_, err := regexpToNfaConverter.Convert()
 
 		if err == nil {

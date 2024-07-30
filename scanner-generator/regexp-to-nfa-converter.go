@@ -50,6 +50,10 @@ func (c *RegexpToNfaConverter) Convert() (*Nfa, error) {
 		return nil, err
 	}
 
+	if c.position < len(c.regexp)-1 && c.regexp[c.position+1] == ')' {
+		return nil, fmt.Errorf("expected opening ')'")
+	}
+
 	if nfa.TypeTable == nil {
 		nfa.TypeTable = make(map[int]token.TokenType)
 	}
@@ -112,7 +116,7 @@ func (c *RegexpToNfaConverter) parseRange() (*Nfa, error) {
 	c.readCharacter()
 
 	if lowerBound >= upperBound {
-		panic("Lower bound is greater or equal upper bound")
+		return nil, fmt.Errorf("lower bound greater or equal to upper bound '[%s-%s]'", string(lowerBound), string(upperBound))
 	}
 
 	nfasForSymbols := make([]*Nfa, upperBound-lowerBound+1)
@@ -171,10 +175,6 @@ func (c *RegexpToNfaConverter) parseAlternation(left *Nfa) (*Nfa, error) {
 }
 
 func (c *RegexpToNfaConverter) parseConcatenation(left *Nfa) (*Nfa, error) {
-	if c.ch == ')' {
-		return nil, fmt.Errorf("expected opening ')'")
-	}
-
 	right, err := c.parseExpression(CONCATENATION)
 	if err != nil {
 		return nil, err
