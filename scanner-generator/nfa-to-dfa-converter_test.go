@@ -171,6 +171,10 @@ func testTransitions(t *testing.T, expected, actual map[string]map[int]int) {
 func testAcceptingStates(t *testing.T, expected, actual []int) {
 	t.Helper()
 
+	if actual == nil {
+		t.Fatalf("expected accepting states not to be nil")
+	}
+
 	if len(expected) != len(actual) {
 		t.Fatalf("sizes of accepting states differ. Expected %d. Got %d", len(expected), len(actual))
 	}
