@@ -27,7 +27,7 @@ func (s *TableDrivenScanner) NextToken() token.Token {
 		return token.Token{Type: token.EOF, Literal: ""}
 	}
 
-	state := 0
+	state := s.dfa.InitialState
 	lexeme := ""
 	stack := []int{}
 
