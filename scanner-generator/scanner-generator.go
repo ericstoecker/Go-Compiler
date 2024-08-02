@@ -33,5 +33,7 @@ func (s *ScannerGenerator) GenerateScanner(tokenClassifications []token.TokenCla
 	nfa := nfas[0].UnionDistinct(nfas[1:]...)
 	dfa := NewNfaToDfaConverter(nfa, precedences).Convert()
 
-	return dfa
+	dfaMinimizer := &DfaMinimizer{}
+
+	return dfaMinimizer.Minimize(dfa)
 }
