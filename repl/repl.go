@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"compiler/evaluator"
 	"compiler/parser"
-	scannergenerator "compiler/scanner-generator"
+	scannergenerator "compiler/scanner"
 	"compiler/token"
 	"fmt"
 	"io"
@@ -27,7 +27,7 @@ func Start(in io.Reader, out io.Writer) {
 		}
 
 		line := scanner.Text()
-		s := scannergenerator.New(line, dfa)
+		s := scannergenerator.NewTableDrivenScanner(line, dfa)
 		// l := lexer.New(line)
 		p := parser.New(s)
 

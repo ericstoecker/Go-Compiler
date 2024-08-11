@@ -1,4 +1,4 @@
-package scannergenerator
+package scanner
 
 import (
 	"compiler/token"

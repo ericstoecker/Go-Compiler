@@ -209,7 +209,7 @@ func runEvaluatorTests(t *testing.T, tests []evaluatorTest) {
 	t.Helper()
 
 	for _, tt := range tests {
-		l := scanner.New(tt.input)
+		l := scanner.NewHandcodedScanner(tt.input)
 		p := parser.New(l)
 
 		program := p.ParseProgram()
@@ -308,7 +308,7 @@ func TestErrorHandling(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		l := scanner.New(tt.input)
+		l := scanner.NewHandcodedScanner(tt.input)
 		p := parser.New(l)
 
 		program := p.ParseProgram()

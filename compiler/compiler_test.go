@@ -17,7 +17,7 @@ type compilerTestCase struct {
 }
 
 func parse(t *testing.T, input string) *ast.Program {
-	l := scanner.New(input)
+	l := scanner.NewHandcodedScanner(input)
 	p := parser.New(l)
 	program := p.ParseProgram()
 

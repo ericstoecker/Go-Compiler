@@ -14,7 +14,7 @@ func TestLetStatement(t *testing.T) {
     let foobar = 6934;
     `
 
-	l := scanner.New(input)
+	l := scanner.NewHandcodedScanner(input)
 	p := New(l)
 
 	program := p.ParseProgram()
@@ -50,7 +50,7 @@ func TestReturnStatement(t *testing.T) {
     return;
     `
 
-	l := scanner.New(input)
+	l := scanner.NewHandcodedScanner(input)
 	p := New(l)
 
 	program := p.ParseProgram()
@@ -74,7 +74,7 @@ func TestErrorHandling(t *testing.T) {
 	input := `
     let x 5
     `
-	l := scanner.New(input)
+	l := scanner.NewHandcodedScanner(input)
 	p := New(l)
 
 	p.ParseProgram()
@@ -92,7 +92,7 @@ func TestErrorHandling(t *testing.T) {
 func TestIdentifier(t *testing.T) {
 	input := "foobar;"
 
-	l := scanner.New(input)
+	l := scanner.NewHandcodedScanner(input)
 	p := New(l)
 	program := p.ParseProgram()
 	checkParserErrors(t, p)
@@ -122,7 +122,7 @@ func TestIdentifier(t *testing.T) {
 func TestIntegerLiteralExpression(t *testing.T) {
 	input := "10;"
 
-	l := scanner.New(input)
+	l := scanner.NewHandcodedScanner(input)
 	p := New(l)
 	program := p.ParseProgram()
 	checkParserErrors(t, p)
@@ -154,7 +154,7 @@ func TestPrefixExpressions(t *testing.T) {
     -5;
     `
 
-	l := scanner.New(input)
+	l := scanner.NewHandcodedScanner(input)
 	p := New(l)
 	program := p.ParseProgram()
 	checkParserErrors(t, p)
@@ -268,7 +268,7 @@ func TestIfExpression(t *testing.T) {
     if (true) {5 + 5}
     `
 
-	l := scanner.New(input)
+	l := scanner.NewHandcodedScanner(input)
 	p := New(l)
 	program := p.ParseProgram()
 	checkParserErrors(t, p)
@@ -315,7 +315,7 @@ func TestIfElseExpression(t *testing.T) {
     if (true) {5 + 5} else { 10 }
     `
 
-	l := scanner.New(input)
+	l := scanner.NewHandcodedScanner(input)
 	p := New(l)
 	program := p.ParseProgram()
 	checkParserErrors(t, p)
@@ -573,7 +573,7 @@ func TestHashMap(t *testing.T) {
 }
 
 func parseProgram(input string, t *testing.T) *ast.Program {
-	l := scanner.New(input)
+	l := scanner.NewHandcodedScanner(input)
 	p := New(l)
 	program := p.ParseProgram()
 	checkParserErrors(t, p)
@@ -582,7 +582,7 @@ func parseProgram(input string, t *testing.T) *ast.Program {
 }
 
 func testInfixExpression(t *testing.T, input string, expected string) {
-	l := scanner.New(input)
+	l := scanner.NewHandcodedScanner(input)
 	p := New(l)
 	program := p.ParseProgram()
 	checkParserErrors(t, p)

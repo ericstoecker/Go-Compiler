@@ -1,4 +1,4 @@
-package scannergenerator
+package scanner
 
 import (
 	"compiler/token"
@@ -14,7 +14,7 @@ type TableDrivenScanner struct {
 	dfa *Dfa
 }
 
-func New(input string, dfa *Dfa) *TableDrivenScanner {
+func NewTableDrivenScanner(input string, dfa *Dfa) *TableDrivenScanner {
 	s := &TableDrivenScanner{input: input, dfa: dfa}
 	s.readChar()
 	return s

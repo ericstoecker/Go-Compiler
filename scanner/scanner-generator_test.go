@@ -1,4 +1,4 @@
-package scannergenerator
+package scanner
 
 import (
 	"compiler/token"
@@ -105,7 +105,7 @@ func TestGeneratedScanner(t *testing.T) {
 
 	scannerGenerator := NewScannerGenerator()
 	dfa := scannerGenerator.GenerateScanner(token.TokenClassifications)
-	s := New(input, dfa)
+	s := NewTableDrivenScanner(input, dfa)
 
 	for i, tt := range tests {
 		tok := s.NextToken()

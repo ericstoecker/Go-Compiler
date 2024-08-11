@@ -338,7 +338,7 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 }
 
 func parse(input string) *ast.Program {
-	l := scanner.New(input)
+	l := scanner.NewHandcodedScanner(input)
 	p := parser.New(l)
 
 	return p.ParseProgram()

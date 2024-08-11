@@ -9,7 +9,7 @@ type HandcodedScanner struct {
 	ch           byte
 }
 
-func New(input string) *HandcodedScanner {
+func NewHandcodedScanner(input string) *HandcodedScanner {
 	l := &HandcodedScanner{input: input}
 	l.readChar()
 	return l

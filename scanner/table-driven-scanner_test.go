@@ -1,4 +1,4 @@
-package scannergenerator
+package scanner
 
 import (
 	"compiler/token"
@@ -231,7 +231,7 @@ func TestConflictingCategories(t *testing.T) {
 func testNextChar(t *testing.T, input string, dfa *Dfa, expectedToken token.Token) {
 	t.Helper()
 
-	scanner := New(input, dfa)
+	scanner := NewTableDrivenScanner(input, dfa)
 	token := scanner.NextToken()
 	if token != expectedToken {
 		t.Logf("current input: %s", input)
