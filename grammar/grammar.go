@@ -1,18 +1,27 @@
 package grammar
 
-type GrammarRule interface {
+type Category string
+
+type Production interface {
 	grammarRule()
 }
 
 type NonTerminal struct {
-	Name      string
+	Name      Category
 	RightSide RightSide
+}
+
+func NewNonTerminal(name Category, rightSide RightSide) *NonTerminal {
+	return &NonTerminal{
+		Name:      name,
+		RightSide: rightSide,
+	}
 }
 
 func (n *NonTerminal) grammarRule() {}
 
 type Terminal struct {
-	Name   string
+	Name   Category
 	Regexp string
 }
 
@@ -23,17 +32,19 @@ type RightSide interface {
 }
 
 type Sequence struct {
+	Items []*Identifier
 }
 
 func (s *Sequence) rightSide() {}
 
 type Choice struct {
+	Items []RightSide
 }
 
 func (c *Choice) rightSide() {}
 
 type Identifier struct {
-	Name string
+	Name Category
 }
 
 func (i *Identifier) rightSide() {}
