@@ -4,6 +4,7 @@ import (
 	"compiler/grammar"
 	"fmt"
 	"log"
+	"slices"
 )
 
 type TableGenerator struct{}
@@ -29,7 +30,8 @@ func (tg *TableGenerator) generateCanonicalCollection(productions []grammar.Prod
 		ccZero[lrItem.String()] = lrItem
 	}
 
-	result := closure(ccZero, flattenedProductions)
+	firstSets := first(flattenedProductions)
+	_ = closure(ccZero, flattenedProductions, firstSets)
 
 	return nil
 }
@@ -64,17 +66,99 @@ func productionToLrItem(prod grammar.Production) *LrItem {
 	return &LrItem{left: left, right: right, position: 0}
 }
 
-func closure(s map[string]*LrItem, productions map[grammar.Category]grammar.Production) map[string]*LrItem {
+func closure(s map[string]*LrItem, productions map[grammar.Category][]grammar.Production, first map[grammar.Category][]grammar.Category) map[string]*LrItem {
+	changed := true
+	for changed {
+		changed = false
 
-	return nil
+		for _, lrItem := range s {
+			var lookahead grammar.Category
+			if len(lrItem.right)-1 > lrItem.position {
+				lookahead = lrItem.right[lrItem.position+1]
+			} else {
+				lookahead = lrItem.lookahead
+			}
+
+			currentItem := lrItem.right[lrItem.position]
+			for _, production := range productions[currentItem] {
+				for _, b := range first[lookahead] {
+					resultingLrItem := productionToLrItem(production)
+					resultingLrItem.lookahead = b
+
+					lrItemString := resultingLrItem.String()
+					_, ok := s[lrItemString]
+					if !ok {
+						changed = true
+						s[lrItemString] = resultingLrItem
+					}
+				}
+			}
+		}
+	}
+
+	return s
 }
 
 func goTo(map[string]grammar.Category) map[string]*LrItem {
 	return nil
 }
 
-func first(symbol string) []string {
-	return nil
+func first(productionsGroupedBySymbol map[grammar.Category][]grammar.Production) map[grammar.Category][]grammar.Category {
+	firstSets := make(map[grammar.Category][]grammar.Category)
+
+	// todo no need to loop over inner elements
+	// simply use first item
+	// at least one has to exist due to earlier construction
+	// otherwise panic
+	for _, productionsForSymbol := range productionsGroupedBySymbol {
+		for _, production := range productionsForSymbol {
+			switch typedProduction := production.(type) {
+			case *grammar.Terminal:
+				firstSets[typedProduction.Name] = []grammar.Category{typedProduction.Name}
+			case *grammar.NonTerminal:
+				firstSets[typedProduction.Name] = make([]grammar.Category, 0)
+			}
+		}
+	}
+
+	changed := true
+	for changed {
+		changed = false
+
+		for symbol, productionsForSymbol := range productionsGroupedBySymbol {
+			for _, production := range productionsForSymbol {
+				switch typedProduction := production.(type) {
+				case *grammar.Terminal:
+					continue
+				case *grammar.NonTerminal:
+					switch rightSide := typedProduction.RightSide.(type) {
+					case *grammar.Choice:
+						panic("encountered grammar.Choice when computing first sets")
+					case *grammar.Identifier:
+						index := slices.Index(firstSets[symbol], rightSide.Name)
+						if index == -1 {
+							firstSets[symbol] = append(firstSets[symbol], rightSide.Name)
+							changed = true
+						}
+					case *grammar.Sequence:
+						if len(rightSide.Items) == 0 {
+							panic("encountered right side with no items when computing first sets")
+						}
+
+						firstItemInSequence := rightSide.Items[0].Name
+
+						index := slices.Index(firstSets[symbol], firstItemInSequence)
+						if index == -1 {
+							firstSets[symbol] = append(firstSets[symbol], firstItemInSequence)
+							changed = true
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return firstSets
 }
 
 func flattenProductions(productions []grammar.Production) (map[grammar.Category][]grammar.Production, grammar.Category) {

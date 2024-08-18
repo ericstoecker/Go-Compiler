@@ -3,13 +3,12 @@ package parsergenerator
 import (
 	"bytes"
 	"compiler/grammar"
-	"compiler/token"
 )
 
 type LrItem struct {
 	left      grammar.Category
 	right     []grammar.Category
-	lookahead token.TokenType
+	lookahead grammar.Category
 
 	position int
 }
