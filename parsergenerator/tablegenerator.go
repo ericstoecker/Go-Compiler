@@ -110,18 +110,17 @@ func goTo(map[string]grammar.Category) map[string]*LrItem {
 func first(productionsGroupedBySymbol map[grammar.Category][]grammar.Production) map[grammar.Category][]grammar.Category {
 	firstSets := make(map[grammar.Category][]grammar.Category)
 
-	// todo no need to loop over inner elements
-	// simply use first item
-	// at least one has to exist due to earlier construction
-	// otherwise panic
 	for _, productionsForSymbol := range productionsGroupedBySymbol {
-		for _, production := range productionsForSymbol {
-			switch typedProduction := production.(type) {
-			case *grammar.Terminal:
-				firstSets[typedProduction.Name] = []grammar.Category{typedProduction.Name}
-			case *grammar.NonTerminal:
-				firstSets[typedProduction.Name] = make([]grammar.Category, 0)
-			}
+		if len(productionsForSymbol) == 0 {
+			panic("encountered empty production when constructing initial firstSet")
+		}
+
+		production := productionsForSymbol[0]
+		switch typedProduction := production.(type) {
+		case *grammar.Terminal:
+			firstSets[typedProduction.Name] = []grammar.Category{typedProduction.Name}
+		case *grammar.NonTerminal:
+			firstSets[typedProduction.Name] = make([]grammar.Category, 0)
 		}
 	}
 	firstSets[token.EOF] = []grammar.Category{token.EOF}
@@ -136,6 +135,7 @@ func first(productionsGroupedBySymbol map[grammar.Category][]grammar.Production)
 				case *grammar.Terminal:
 					continue
 				case *grammar.NonTerminal:
+					firstSetOfSymbol := firstSets[symbol]
 					switch rightSide := typedProduction.RightSide.(type) {
 					case *grammar.Choice:
 						panic("encountered grammar.Choice when computing first sets")
@@ -145,7 +145,7 @@ func first(productionsGroupedBySymbol map[grammar.Category][]grammar.Production)
 							continue
 						}
 
-						newFirstSet, newElementsAdded := appendFirstSet(firstSets[symbol], firstSetOfRight)
+						newFirstSet, newElementsAdded := appendFirstSet(firstSetOfSymbol, firstSetOfRight)
 						if newElementsAdded {
 							firstSets[symbol] = newFirstSet
 							changed = true
@@ -161,7 +161,7 @@ func first(productionsGroupedBySymbol map[grammar.Category][]grammar.Production)
 							continue
 						}
 
-						newFirstSet, newElementsAdded := appendFirstSet(firstSets[symbol], firstSetOfRight)
+						newFirstSet, newElementsAdded := appendFirstSet(firstSetOfSymbol, firstSetOfRight)
 						if newElementsAdded {
 							firstSets[symbol] = newFirstSet
 							changed = true
