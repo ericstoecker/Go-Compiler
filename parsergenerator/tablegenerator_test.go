@@ -3,6 +3,8 @@ package parsergenerator
 import (
 	"compiler/grammar"
 	"compiler/token"
+	"maps"
+	"slices"
 	"testing"
 )
 
@@ -98,7 +100,7 @@ func TestTableConstruction(t *testing.T) {
 					LIST,
 					PAIR,
 				},
-				lookahead: token.LPAREN,
+				lookahead: LEFTPAREN,
 				position:  0,
 			},
 			&LrItem{
@@ -106,7 +108,7 @@ func TestTableConstruction(t *testing.T) {
 				right: []grammar.Category{
 					PAIR,
 				},
-				lookahead: token.LPAREN,
+				lookahead: LEFTPAREN,
 			},
 			&LrItem{
 				left: LIST,
@@ -142,7 +144,7 @@ func TestTableConstruction(t *testing.T) {
 					LIST,
 					RIGHTPAREN,
 				},
-				lookahead: token.LPAREN,
+				lookahead: LEFTPAREN,
 				position:  0,
 			},
 			&LrItem{
@@ -160,7 +162,7 @@ func TestTableConstruction(t *testing.T) {
 					LEFTPAREN,
 					RIGHTPAREN,
 				},
-				lookahead: token.LPAREN,
+				lookahead: LEFTPAREN,
 				position:  0,
 			},
 		},
@@ -176,8 +178,19 @@ func TestTableConstruction(t *testing.T) {
 	for i, canonicalCollection := range canonicalCollections {
 		resultingCollection := result[i]
 
-		t.Logf("actual collection %d: %v", i, resultingCollection)
-		t.Logf("expected collection %d: %v", i, canonicalCollection)
+		t.Logf("actual collection:")
+		stringifiedResult := getKeys(resultingCollection)
+		slices.Sort(stringifiedResult)
+		for _, lrItem := range stringifiedResult {
+			t.Logf(lrItem)
+		}
+
+		t.Logf("expected collection:")
+		stringifiedCanonicalCollection := mapToStringRepresentation(canonicalCollection)
+		slices.Sort(stringifiedCanonicalCollection)
+		for _, lrItem := range stringifiedCanonicalCollection {
+			t.Logf(lrItem)
+		}
 
 		if resultingCollection == nil {
 			t.Fatalf("expected to have canonical collection %d. Got nil", i)
@@ -196,4 +209,21 @@ func TestTableConstruction(t *testing.T) {
 			}
 		}
 	}
+}
+
+func getKeys(sourceMap map[string]*LrItem) []string {
+	keys := make([]string, 0)
+	for key := range maps.Keys(sourceMap) {
+		keys = append(keys, key)
+	}
+
+	return keys
+}
+
+func mapToStringRepresentation(lrItems []*LrItem) []string {
+	stringified := make([]string, len(lrItems))
+	for i, lrItem := range lrItems {
+		stringified[i] = lrItem.String()
+	}
+	return stringified
 }

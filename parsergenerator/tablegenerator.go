@@ -2,6 +2,7 @@ package parsergenerator
 
 import (
 	"compiler/grammar"
+	"compiler/token"
 	"fmt"
 	"log"
 	"slices"
@@ -27,13 +28,14 @@ func (tg *TableGenerator) generateCanonicalCollection(productions []grammar.Prod
 	ccZero := make(map[string]*LrItem)
 	for _, production := range flattenedProductions[rootSymbol] {
 		lrItem := productionToLrItem(production)
+		lrItem.lookahead = token.EOF
 		ccZero[lrItem.String()] = lrItem
 	}
 
 	firstSets := first(flattenedProductions)
-	_ = closure(ccZero, flattenedProductions, firstSets)
+	ccZero = closure(ccZero, flattenedProductions, firstSets)
 
-	return nil
+	return []map[string]*LrItem{ccZero}
 }
 
 func productionToLrItem(prod grammar.Production) *LrItem {
@@ -81,6 +83,9 @@ func closure(s map[string]*LrItem, productions map[grammar.Category][]grammar.Pr
 
 			currentItem := lrItem.right[lrItem.position]
 			for _, production := range productions[currentItem] {
+				if _, isTerminal := production.(*grammar.Terminal); isTerminal {
+					continue
+				}
 				for _, b := range first[lookahead] {
 					resultingLrItem := productionToLrItem(production)
 					resultingLrItem.lookahead = b
@@ -120,6 +125,7 @@ func first(productionsGroupedBySymbol map[grammar.Category][]grammar.Production)
 			}
 		}
 	}
+	firstSets[token.EOF] = []grammar.Category{token.EOF}
 
 	changed := true
 	for changed {
@@ -135,9 +141,14 @@ func first(productionsGroupedBySymbol map[grammar.Category][]grammar.Production)
 					case *grammar.Choice:
 						panic("encountered grammar.Choice when computing first sets")
 					case *grammar.Identifier:
-						index := slices.Index(firstSets[symbol], rightSide.Name)
-						if index == -1 {
-							firstSets[symbol] = append(firstSets[symbol], rightSide.Name)
+						firstSetOfRight, ok := firstSets[rightSide.Name]
+						if !ok {
+							continue
+						}
+
+						newFirstSet, newElementsAdded := appendFirstSet(firstSets[symbol], firstSetOfRight)
+						if newElementsAdded {
+							firstSets[symbol] = newFirstSet
 							changed = true
 						}
 					case *grammar.Sequence:
@@ -146,10 +157,14 @@ func first(productionsGroupedBySymbol map[grammar.Category][]grammar.Production)
 						}
 
 						firstItemInSequence := rightSide.Items[0].Name
+						firstSetOfRight, ok := firstSets[firstItemInSequence]
+						if !ok {
+							continue
+						}
 
-						index := slices.Index(firstSets[symbol], firstItemInSequence)
-						if index == -1 {
-							firstSets[symbol] = append(firstSets[symbol], firstItemInSequence)
+						newFirstSet, newElementsAdded := appendFirstSet(firstSets[symbol], firstSetOfRight)
+						if newElementsAdded {
+							firstSets[symbol] = newFirstSet
 							changed = true
 						}
 					}
@@ -159,6 +174,19 @@ func first(productionsGroupedBySymbol map[grammar.Category][]grammar.Production)
 	}
 
 	return firstSets
+}
+
+func appendFirstSet(existing []grammar.Category, newElements []grammar.Category) ([]grammar.Category, bool) {
+	changed := false
+	for _, newElement := range newElements {
+
+		index := slices.Index(existing, newElement)
+		if index == -1 {
+			existing = append(existing, newElement)
+			changed = true
+		}
+	}
+	return existing, changed
 }
 
 func flattenProductions(productions []grammar.Production) (map[grammar.Category][]grammar.Production, grammar.Category) {
