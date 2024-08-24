@@ -17,8 +17,7 @@ func NewTableGenerator() *TableGenerator {
 func (tg *TableGenerator) generateCanonicalCollection(productions []grammar.Production) []map[string]*LrItem {
 	flattenedProductions, rootSymbol := flattenProductions(productions)
 
-	for key, productions := range flattenedProductions {
-		log.Printf("productions for key %s", key)
+	for _, productions := range flattenedProductions {
 		for _, production := range productions {
 			lrItem := productionToLrItem(production)
 			log.Print(lrItem.String())
