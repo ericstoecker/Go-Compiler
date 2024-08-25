@@ -30,10 +30,10 @@ func TestTableConstruction(t *testing.T) {
 				Items: []grammar.RightSide{
 					&grammar.Sequence{
 						Items: []*grammar.Identifier{
-							&grammar.Identifier{
+							{
 								Name: LIST,
 							},
-							&grammar.Identifier{
+							{
 								Name: PAIR,
 							},
 						},
@@ -50,23 +50,23 @@ func TestTableConstruction(t *testing.T) {
 				Items: []grammar.RightSide{
 					&grammar.Sequence{
 						Items: []*grammar.Identifier{
-							&grammar.Identifier{
+							{
 								Name: LEFTPAREN,
 							},
-							&grammar.Identifier{
+							{
 								Name: LIST,
 							},
-							&grammar.Identifier{
+							{
 								Name: RIGHTPAREN,
 							},
 						},
 					},
 					&grammar.Sequence{
 						Items: []*grammar.Identifier{
-							&grammar.Identifier{
+							{
 								Name: LEFTPAREN,
 							},
-							&grammar.Identifier{
+							{
 								Name: RIGHTPAREN,
 							},
 						},
@@ -166,10 +166,76 @@ func TestTableConstruction(t *testing.T) {
 				position:  0,
 			},
 		},
+		{
+			&LrItem{
+				left: GOAL,
+				right: []grammar.Category{
+					LIST,
+				},
+				lookahead: token.EOF,
+				position:  1,
+			},
+			&LrItem{
+				left: LIST,
+				right: []grammar.Category{
+					LIST,
+					PAIR,
+				},
+				lookahead: token.EOF,
+				position:  1,
+			},
+			&LrItem{
+				left: LIST,
+				right: []grammar.Category{
+					LIST,
+					PAIR,
+				},
+				lookahead: LEFTPAREN,
+				position:  1,
+			},
+			&LrItem{
+				left: PAIR,
+				right: []grammar.Category{
+					LEFTPAREN,
+					LIST,
+					RIGHTPAREN,
+				},
+				lookahead: token.EOF,
+				position:  0,
+			},
+			&LrItem{
+				left: PAIR,
+				right: []grammar.Category{
+					LEFTPAREN,
+					LIST,
+					RIGHTPAREN,
+				},
+				lookahead: LEFTPAREN,
+				position:  0,
+			},
+			&LrItem{
+				left: PAIR,
+				right: []grammar.Category{
+					LEFTPAREN,
+					RIGHTPAREN,
+				},
+				lookahead: token.EOF,
+				position:  0,
+			},
+			&LrItem{
+				left: PAIR,
+				right: []grammar.Category{
+					LEFTPAREN,
+					RIGHTPAREN,
+				},
+				lookahead: LEFTPAREN,
+				position:  0,
+			},
+		},
 	}
 
 	tg := NewTableGenerator()
-	result := tg.generateCanonicalCollection(productions)
+	result, _ := tg.generateCanonicalCollection(productions)
 
 	if len(result) != len(canonicalCollections) {
 		t.Fatalf("canonical collections do not have same size. Expected %d. Got %d", len(canonicalCollections), len(result))

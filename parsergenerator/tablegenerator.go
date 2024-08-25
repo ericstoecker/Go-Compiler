@@ -7,6 +7,26 @@ import (
 	"slices"
 )
 
+// todo
+// represent this as an interface
+// the types of the implementations will guide the action
+type parseAction int
+
+const (
+	SHIFT parseAction = iota
+	REDUCE
+	ACCEPT
+)
+
+type actionTableEntry struct {
+	parseAction  parseAction
+	left         grammar.Category
+	lenRightSide int
+}
+
+// TODO
+// make stateless
+// probably remove the entire struct since not necessary
 type TableGenerator struct {
 	firstSets   map[grammar.Category][]grammar.Category
 	productions map[grammar.Category][]grammar.Production
@@ -14,6 +34,38 @@ type TableGenerator struct {
 
 func NewTableGenerator() *TableGenerator {
 	return &TableGenerator{}
+}
+
+func (tg *TableGenerator) generateParseTables(input []grammar.Production) (actionTable map[int]map[grammar.Category]*actionTableEntry, gotoTable map[int]map[grammar.Category]int) {
+	canonicalCollections, gotoTable := tg.generateCanonicalCollection(input)
+
+	for i, collection := range canonicalCollections {
+		for _, lrItem := range collection {
+
+			isComplete := len(lrItem.right) == lrItem.position
+			if isComplete {
+				actionTable[i][lrItem.lookahead] = &actionTableEntry{
+					parseAction:  REDUCE,
+					left:         lrItem.left,
+					lenRightSide: len(lrItem.right),
+				}
+			} else if true {
+				actionTable[i][lrItem.lookahead] = &actionTableEntry{
+					parseAction: SHIFT,
+					// left: lrItem
+				}
+			} else if true {
+				actionTable[i][token.EOF] = &actionTableEntry{parseAction: ACCEPT}
+			} else {
+
+			}
+		}
+
+		// iterate over the non-terminals and fill entries
+		// isnt this already filled?
+	}
+
+	return
 }
 
 func (tg *TableGenerator) generateCanonicalCollection(input []grammar.Production) ([]map[string]*LrItem, map[int]map[grammar.Category]int) {
