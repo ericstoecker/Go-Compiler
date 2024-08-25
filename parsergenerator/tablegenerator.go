@@ -4,25 +4,21 @@ import (
 	"compiler/grammar"
 	"compiler/token"
 	"fmt"
-	"log"
 	"slices"
 )
 
-type TableGenerator struct{}
+type TableGenerator struct {
+	firstSets   map[grammar.Category][]grammar.Category
+	productions map[grammar.Category][]grammar.Production
+}
 
 func NewTableGenerator() *TableGenerator {
 	return &TableGenerator{}
 }
 
-func (tg *TableGenerator) generateCanonicalCollection(productions []grammar.Production) []map[string]*LrItem {
-	flattenedProductions, rootSymbol := flattenProductions(productions)
-
-	for _, productions := range flattenedProductions {
-		for _, production := range productions {
-			lrItem := productionToLrItem(production)
-			log.Print(lrItem.String())
-		}
-	}
+func (tg *TableGenerator) generateCanonicalCollection(input []grammar.Production) ([]map[string]*LrItem, map[int]map[grammar.Category]int) {
+	flattenedProductions, rootSymbol := groupProductionsByCategory(input)
+	tg.productions = flattenedProductions
 
 	ccZero := make(map[string]*LrItem)
 	for _, production := range flattenedProductions[rootSymbol] {
@@ -31,10 +27,68 @@ func (tg *TableGenerator) generateCanonicalCollection(productions []grammar.Prod
 		ccZero[lrItem.String()] = lrItem
 	}
 
-	firstSets := first(flattenedProductions)
-	ccZero = closure(ccZero, flattenedProductions, firstSets)
+	tg.firstSets = first(flattenedProductions)
+	ccZero = closure(ccZero, flattenedProductions, tg.firstSets)
 
-	return []map[string]*LrItem{ccZero}
+	transitions := make(map[int]map[grammar.Category]int)
+	canonicalCollections := []map[string]*LrItem{ccZero}
+
+	changed := true
+	for changed {
+		changed = false
+
+		for i, collection := range canonicalCollections {
+			_, ok := transitions[i]
+			if !ok {
+				transitions[i] = make(map[grammar.Category]int)
+			}
+			for _, lrItem := range collection {
+				if isAtEnd := len(lrItem.right) == lrItem.position; isAtEnd {
+					continue
+				}
+
+				x := lrItem.right[lrItem.position]
+				temp := tg.goTo(collection, x)
+
+				if index := findCollectionInCanonicalCollections(canonicalCollections, temp); index == -1 {
+					tempsIndex := len(canonicalCollections)
+					canonicalCollections = append(canonicalCollections, temp)
+
+					transitions[i][x] = tempsIndex
+					changed = true
+				} else {
+					transitions[i][x] = index
+				}
+			}
+		}
+	}
+
+	return canonicalCollections, transitions
+}
+
+func findCollectionInCanonicalCollections(cc []map[string]*LrItem, e map[string]*LrItem) int {
+	for i, collection := range cc {
+		if isCollectionEqual(collection, e) {
+			return i
+		}
+	}
+
+	return -1
+}
+
+func isCollectionEqual(a, b map[string]*LrItem) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for key := range a {
+		_, ok := b[key]
+		if !ok {
+			return false
+		}
+	}
+
+	return true
 }
 
 func productionToLrItem(prod grammar.Production) *LrItem {
@@ -80,6 +134,10 @@ func closure(s map[string]*LrItem, productions map[grammar.Category][]grammar.Pr
 				lookahead = lrItem.lookahead
 			}
 
+			if len(lrItem.right) == lrItem.position {
+				continue
+			}
+
 			currentItem := lrItem.right[lrItem.position]
 			for _, production := range productions[currentItem] {
 				if _, isTerminal := production.(*grammar.Terminal); isTerminal {
@@ -103,8 +161,27 @@ func closure(s map[string]*LrItem, productions map[grammar.Category][]grammar.Pr
 	return s
 }
 
-func goTo(map[string]grammar.Category) map[string]*LrItem {
-	return nil
+func (tg *TableGenerator) goTo(s map[string]*LrItem, x grammar.Category) map[string]*LrItem {
+	result := make(map[string]*LrItem)
+	for _, lrItem := range s {
+		if isAtEnd := len(lrItem.right) == lrItem.position; isAtEnd {
+			continue
+		}
+
+		isBeforeX := lrItem.right[lrItem.position] == x
+		if isBeforeX {
+			newItem := &LrItem{
+				left:      lrItem.left,
+				right:     lrItem.right,
+				position:  lrItem.position + 1,
+				lookahead: lrItem.lookahead,
+			}
+
+			result[newItem.String()] = newItem
+		}
+	}
+
+	return closure(result, tg.productions, tg.firstSets)
 }
 
 func first(productionsGroupedBySymbol map[grammar.Category][]grammar.Production) map[grammar.Category][]grammar.Category {
@@ -188,7 +265,7 @@ func appendFirstSet(existing []grammar.Category, newElements []grammar.Category)
 	return existing, changed
 }
 
-func flattenProductions(productions []grammar.Production) (map[grammar.Category][]grammar.Production, grammar.Category) {
+func groupProductionsByCategory(productions []grammar.Production) (map[grammar.Category][]grammar.Production, grammar.Category) {
 	productionsGroupedByName := make(map[grammar.Category][]grammar.Production)
 	var initialCategory grammar.Category
 
