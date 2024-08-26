@@ -7,26 +7,34 @@ import (
 	"slices"
 )
 
-// todo
-// represent this as an interface
-// the types of the implementations will guide the action
-type parseAction int
+type parseAction interface {
+	parseAction()
+}
 
-const (
-	SHIFT parseAction = iota
-	REDUCE
-	ACCEPT
-)
+type shift struct {
+	toState int
+}
 
-type actionTableEntry struct {
-	parseAction  parseAction
-	left         grammar.Category
+func (s *shift) parseAction() {}
+
+type reduce struct {
+	toCategory   grammar.Category
 	lenRightSide int
 }
+
+func (r *reduce) parseAction() {}
+
+type accept struct{}
+
+func (a *accept) parseAction() {}
 
 // TODO
 // make stateless
 // probably remove the entire struct since not necessary
+// cleanup code
+
+// maybe need more information about previous acitons
+// to be able to present reduce/reduce and shift/reduce errors
 type TableGenerator struct {
 	firstSets   map[grammar.Category][]grammar.Category
 	productions map[grammar.Category][]grammar.Production
@@ -36,36 +44,79 @@ func NewTableGenerator() *TableGenerator {
 	return &TableGenerator{}
 }
 
-func (tg *TableGenerator) generateParseTables(input []grammar.Production) (actionTable map[int]map[grammar.Category]*actionTableEntry, gotoTable map[int]map[grammar.Category]int) {
-	canonicalCollections, gotoTable := tg.generateCanonicalCollection(input)
+func (tg *TableGenerator) generateParseTables(productions []grammar.Production) (actionTable map[int]map[grammar.Category]parseAction, gotoTable map[int]map[grammar.Category]int) {
+	canonicalCollections, gotoTable := tg.generateCanonicalCollection(productions)
+	actionTable = make(map[int]map[grammar.Category]parseAction)
 
 	for i, collection := range canonicalCollections {
+		if actionTable[i] == nil {
+			actionTable[i] = make(map[grammar.Category]parseAction)
+		}
+
 		for _, lrItem := range collection {
 
 			isComplete := len(lrItem.right) == lrItem.position
-			if isComplete {
-				actionTable[i][lrItem.lookahead] = &actionTableEntry{
-					parseAction:  REDUCE,
-					left:         lrItem.left,
+			if lrItem.left != "Goal" && isComplete {
+				//todo if redefine then error
+				actionTable[i][lrItem.lookahead] = &reduce{
+					toCategory:   lrItem.left,
 					lenRightSide: len(lrItem.right),
 				}
-			} else if true {
-				actionTable[i][lrItem.lookahead] = &actionTableEntry{
-					parseAction: SHIFT,
-					// left: lrItem
-				}
-			} else if true {
-				actionTable[i][token.EOF] = &actionTableEntry{parseAction: ACCEPT}
-			} else {
+			} else if !isComplete && isFollowedByTerminal(lrItem, productions) {
+				followingTerminal := lrItem.right[lrItem.position]
 
+				goToState, ok := gotoTable[i][followingTerminal]
+				if !ok {
+					panic("no goto state defined")
+				}
+
+				//todo if redefine then error
+				actionTable[i][followingTerminal] = &shift{
+					toState: goToState,
+				}
+			} else if lrItem.left == "Goal" && isComplete && lrItem.lookahead == token.EOF {
+				//todo if redefine then error
+				actionTable[i][token.EOF] = &accept{}
 			}
 		}
-
-		// iterate over the non-terminals and fill entries
-		// isnt this already filled?
 	}
 
 	return
+}
+
+// todo use map instead of slice
+func isFollowedByTerminal(lrItem *LrItem, productions []grammar.Production) bool {
+	if len(lrItem.right) == lrItem.position {
+		return false
+	}
+
+	production := findProduction(productions, lrItem.right[lrItem.position])
+	if production == nil {
+		panic("encountered nil when searching for production when checking isFollowedByTerminal")
+	}
+
+	if _, isTerminal := production.(*grammar.Terminal); isTerminal {
+		return true
+	}
+
+	return false
+}
+
+func findProduction(productions []grammar.Production, identifier grammar.Category) grammar.Production {
+	for _, production := range productions {
+		switch typedProduction := production.(type) {
+		case *grammar.Terminal:
+			if typedProduction.Name == identifier {
+				return production
+			}
+		case *grammar.NonTerminal:
+			if typedProduction.Name == identifier {
+				return production
+			}
+		}
+	}
+
+	return nil
 }
 
 func (tg *TableGenerator) generateCanonicalCollection(input []grammar.Production) ([]map[string]*LrItem, map[int]map[grammar.Category]int) {

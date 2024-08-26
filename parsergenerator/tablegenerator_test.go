@@ -235,6 +235,11 @@ func TestTableConstruction(t *testing.T) {
 	}
 
 	tg := NewTableGenerator()
+
+	action, gotoTable := tg.generateParseTables(productions)
+	t.Logf("%v", action)
+	t.Logf("%v", gotoTable)
+
 	result, _ := tg.generateCanonicalCollection(productions)
 
 	if len(result) != len(canonicalCollections) {

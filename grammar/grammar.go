@@ -3,7 +3,7 @@ package grammar
 type Category string
 
 type Production interface {
-	grammarRule()
+	production()
 }
 
 type NonTerminal struct {
@@ -18,14 +18,14 @@ func NewNonTerminal(name Category, rightSide RightSide) *NonTerminal {
 	}
 }
 
-func (n *NonTerminal) grammarRule() {}
+func (n *NonTerminal) production() {}
 
 type Terminal struct {
 	Name   Category
 	Regexp string
 }
 
-func (t *Terminal) grammarRule() {}
+func (t *Terminal) production() {}
 
 type RightSide interface {
 	rightSide()
