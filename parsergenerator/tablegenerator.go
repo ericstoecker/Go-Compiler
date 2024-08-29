@@ -53,11 +53,21 @@ func (tg *TableGenerator) generateParseTables(productions []grammar.Production) 
 			actionTable[i] = make(map[grammar.Category]parseAction)
 		}
 
-		for _, lrItem := range collection {
+		keys := make([]string, 0, len(collection))
+		for key := range collection {
+			keys = append(keys, key)
+		}
+		slices.Sort(keys)
+
+		for _, key := range keys {
+			lrItem := collection[key]
 
 			isComplete := len(lrItem.right) == lrItem.position
 			if lrItem.left != "Goal" && isComplete {
-				//todo if redefine then error
+				if actionTable[i][lrItem.lookahead] != nil {
+					panic("redefined action")
+				}
+
 				actionTable[i][lrItem.lookahead] = &reduce{
 					toCategory:   lrItem.left,
 					lenRightSide: len(lrItem.right),
@@ -70,18 +80,34 @@ func (tg *TableGenerator) generateParseTables(productions []grammar.Production) 
 					panic("no goto state defined")
 				}
 
-				//todo if redefine then error
+				existingAction := actionTable[i][followingTerminal]
+				if isReduce(existingAction) {
+					panic("redefined action")
+				}
+
 				actionTable[i][followingTerminal] = &shift{
 					toState: goToState,
 				}
 			} else if lrItem.left == "Goal" && isComplete && lrItem.lookahead == token.EOF {
-				//todo if redefine then error
+				if actionTable[i][token.EOF] != nil {
+					panic("redefined action")
+				}
+
 				actionTable[i][token.EOF] = &accept{}
 			}
 		}
 	}
 
 	return
+}
+
+func isReduce(action parseAction) bool {
+	if action == nil {
+		return false
+	}
+
+	_, ok := action.(*reduce)
+	return ok
 }
 
 // todo use map instead of slice

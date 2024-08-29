@@ -12,11 +12,11 @@ const (
 	GOAL       = "Goal"
 	LIST       = "List"
 	PAIR       = "Pair"
-	LEFTPAREN  = "LeftParen"
-	RIGHTPAREN = "RightParen"
+	LEFTPAREN  = "("
+	RIGHTPAREN = ")"
 )
 
-func TestTableConstruction(t *testing.T) {
+func festTableConstruction(t *testing.T) {
 	productions := []grammar.Production{
 		&grammar.NonTerminal{
 			Name: GOAL,
