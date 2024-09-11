@@ -75,6 +75,12 @@ func TestGeneratedLrParserOnValidInputs(t *testing.T) {
 
 	tests := []string{
 		"()",
+		"(())",
+		"(()())",
+		"((()))",
+		"((((((()))))))", // Test deeply nested structure
+		"()()()",
+		"(())()",
 	}
 
 	tg := &TableGenerator{}

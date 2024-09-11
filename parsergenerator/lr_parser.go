@@ -60,7 +60,7 @@ func (lr *LrParser) Parse(input string) error {
 
 			stack = append(stack, &stackItem{
 				action.toCategory,
-				lr.gotoTable[currentState][grammar.Category(token.Type)],
+				lr.gotoTable[currentState][action.toCategory],
 			})
 		case *shift:
 			stack = append(stack, &stackItem{
