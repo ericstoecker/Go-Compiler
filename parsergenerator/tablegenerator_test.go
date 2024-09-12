@@ -14,9 +14,17 @@ const (
 	PAIR       = "Pair"
 	LEFTPAREN  = "("
 	RIGHTPAREN = ")"
+	LPAREN     = "("
+	RPAREN     = ")"
+	IF         = "if"
+	ELSE       = "else"
+	ELSEIF     = "elseif"
+	IFELSE     = "ifelse"
+	LBRACE     = "{"
+	RBRACE     = "}"
 )
 
-func festTableConstruction(t *testing.T) {
+func testTableConstruction(t *testing.T) {
 	productions := []grammar.Production{
 		&grammar.NonTerminal{
 			Name: GOAL,
