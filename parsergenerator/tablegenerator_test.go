@@ -16,7 +16,7 @@ const (
 	RIGHTPAREN = ")"
 	LPAREN     = "("
 	RPAREN     = ")"
-	IF         = "if"
+	IF         = "IF"
 	ELSE       = "else"
 	ELSEIF     = "elseif"
 	IFELSE     = "ifelse"

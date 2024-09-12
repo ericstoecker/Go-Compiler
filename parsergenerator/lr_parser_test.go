@@ -109,7 +109,7 @@ func TestGeneratedLrParserForBasicIfGrammar(t *testing.T) {
 			Name: IF,
 			RightSide: &grammar.Sequence{
 				Items: []*grammar.Identifier{
-					{Name: IF},
+					{Name: "if"},
 					{Name: LPAREN},
 					{Name: RPAREN},
 					{Name: LBRACE},
@@ -117,7 +117,7 @@ func TestGeneratedLrParserForBasicIfGrammar(t *testing.T) {
 				},
 			},
 		},
-		&grammar.Terminal{Name: IF, Regexp: "if"},
+		&grammar.Terminal{Name: "if", Regexp: "if"},
 		&grammar.Terminal{Name: LPAREN, Regexp: "\\("},
 		&grammar.Terminal{Name: RPAREN, Regexp: "\\)"},
 		&grammar.Terminal{Name: LBRACE, Regexp: "\\{"},
