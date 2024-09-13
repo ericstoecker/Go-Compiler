@@ -118,7 +118,7 @@ func isFollowedByTerminal(lrItem *LrItem, productions []grammar.Production) bool
 
 	production := findProduction(productions, lrItem.right[lrItem.position])
 	if production == nil {
-		panic("encountered nil when searching for production when checking isFollowedByTerminal")
+		panic(fmt.Sprintf("encountered nil production when checking if %s isFollowedByTerminal", lrItem.String()))
 	}
 
 	if _, isTerminal := production.(*grammar.Terminal); isTerminal {

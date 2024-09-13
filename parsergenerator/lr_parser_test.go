@@ -102,7 +102,58 @@ func TestGeneratedLrParserForBasicIfGrammar(t *testing.T) {
 		&grammar.NonTerminal{
 			Name: GOAL,
 			RightSide: &grammar.Identifier{
-				Name: IF,
+				Name: "IfElse",
+			},
+		},
+		&grammar.NonTerminal{
+			Name: "IfElse",
+			RightSide: &grammar.Choice{
+				Items: []grammar.RightSide{
+					&grammar.Identifier{
+						Name: IF,
+					},
+					&grammar.Sequence{
+						Items: []*grammar.Identifier{
+							{Name: IF},
+							{Name: "ElseIf"},
+						},
+					},
+				},
+			},
+		},
+		&grammar.NonTerminal{
+			Name: "ElseIf",
+			RightSide: &grammar.Choice{
+				Items: []grammar.RightSide{
+					&grammar.Sequence{
+						Items: []*grammar.Identifier{
+							{Name: "else"},
+							{Name: LBRACE},
+							{Name: RBRACE},
+						},
+					},
+					&grammar.Sequence{
+						Items: []*grammar.Identifier{
+							{Name: "else"},
+							{Name: "if"},
+							{Name: LPAREN},
+							{Name: RPAREN},
+							{Name: LBRACE},
+							{Name: RBRACE},
+						},
+					},
+					//&grammar.Sequence{
+					//	Items: []*grammar.Identifier{
+					//		{Name: "else"},
+					//		{Name: "if"},
+					//		{Name: "LPAREN"},
+					//		{Name: "RPAREN"},
+					//		{Name: "LBRACE"},
+					//		{Name: "RBRACE"},
+					//		{Name: "ElseIf"},
+					//	},
+					//},
+				},
 			},
 		},
 		&grammar.NonTerminal{
@@ -118,6 +169,7 @@ func TestGeneratedLrParserForBasicIfGrammar(t *testing.T) {
 			},
 		},
 		&grammar.Terminal{Name: "if", Regexp: "if"},
+		&grammar.Terminal{Name: "else", Regexp: "else"},
 		&grammar.Terminal{Name: LPAREN, Regexp: "\\("},
 		&grammar.Terminal{Name: RPAREN, Regexp: "\\)"},
 		&grammar.Terminal{Name: LBRACE, Regexp: "\\{"},
@@ -126,6 +178,8 @@ func TestGeneratedLrParserForBasicIfGrammar(t *testing.T) {
 
 	tests := []string{
 		"if () {}",
+		"if () {} else {}",
+		"if () {} else if () {}",
 	}
 
 	tg := &TableGenerator{}

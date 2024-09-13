@@ -17,9 +17,7 @@ const (
 	LPAREN     = "("
 	RPAREN     = ")"
 	IF         = "IF"
-	ELSE       = "else"
-	ELSEIF     = "elseif"
-	IFELSE     = "ifelse"
+	ELSE       = "ELSE"
 	LBRACE     = "{"
 	RBRACE     = "}"
 )
