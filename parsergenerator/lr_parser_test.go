@@ -142,17 +142,17 @@ func TestGeneratedLrParserForBasicIfGrammar(t *testing.T) {
 							{Name: RBRACE},
 						},
 					},
-					//&grammar.Sequence{
-					//	Items: []*grammar.Identifier{
-					//		{Name: "else"},
-					//		{Name: "if"},
-					//		{Name: "LPAREN"},
-					//		{Name: "RPAREN"},
-					//		{Name: "LBRACE"},
-					//		{Name: "RBRACE"},
-					//		{Name: "ElseIf"},
-					//	},
-					//},
+					&grammar.Sequence{
+						Items: []*grammar.Identifier{
+							{Name: "else"},
+							{Name: "if"},
+							{Name: LPAREN},
+							{Name: RPAREN},
+							{Name: LBRACE},
+							{Name: RBRACE},
+							{Name: "ElseIf"},
+						},
+					},
 				},
 			},
 		},
@@ -180,6 +180,8 @@ func TestGeneratedLrParserForBasicIfGrammar(t *testing.T) {
 		"if () {}",
 		"if () {} else {}",
 		"if () {} else if () {}",
+		"if () {} else if () {} else {}",
+		"if () {} else if () {} else if () {} else {}",
 	}
 
 	tg := &TableGenerator{}
