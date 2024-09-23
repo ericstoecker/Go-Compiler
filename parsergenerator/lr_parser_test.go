@@ -5,6 +5,19 @@ import (
 	"testing"
 )
 
+const (
+	GOAL       = "Goal"
+	LIST       = "List"
+	PAIR       = "Pair"
+	LEFTPAREN  = "("
+	RIGHTPAREN = ")"
+	LPAREN     = "("
+	RPAREN     = ")"
+	IF         = "IF"
+	LBRACE     = "{"
+	RBRACE     = "}"
+)
+
 func TestGeneratedLrParserOnValidInputs(t *testing.T) {
 	productions := []grammar.Production{
 		&grammar.NonTerminal{
