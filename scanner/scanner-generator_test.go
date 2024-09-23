@@ -104,7 +104,7 @@ func TestGeneratedScanner(t *testing.T) {
 	}
 
 	scannerGenerator := NewScannerGenerator()
-	dfa := scannerGenerator.GenerateScanner(token.TokenClassifications)
+	dfa := scannerGenerator.GenerateScanner(TokenClassifications)
 	s := NewTableDrivenScanner(input, dfa)
 
 	for i, tt := range tests {

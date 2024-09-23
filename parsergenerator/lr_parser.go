@@ -38,14 +38,14 @@ func New(productions []grammar.Production) *LrParser {
 	}
 }
 
-func extractTokenClassifications(productions []grammar.Production) []token.TokenClassification {
-	var tokenClassifications []token.TokenClassification
+func extractTokenClassifications(productions []grammar.Production) []scanner.TokenClassification {
+	var tokenClassifications []scanner.TokenClassification
 	precedence := 1
 
 	for _, prod := range productions {
 		switch t := prod.(type) {
 		case *grammar.Terminal:
-			tc := token.TokenClassification{
+			tc := scanner.TokenClassification{
 				TokenType:  token.TokenType(t.Name),
 				Regexp:     t.Regexp,
 				Precedence: precedence,

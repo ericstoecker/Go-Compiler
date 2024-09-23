@@ -5,7 +5,6 @@ import (
 	"compiler/evaluator"
 	"compiler/parser"
 	scannergenerator "compiler/scanner"
-	"compiler/token"
 	"fmt"
 	"io"
 )
@@ -16,7 +15,7 @@ func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 
 	generator := scannergenerator.NewScannerGenerator()
-	dfa := generator.GenerateScanner(token.TokenClassifications)
+	dfa := generator.GenerateScanner(scannergenerator.TokenClassifications)
 
 	e := evaluator.New()
 	for {
