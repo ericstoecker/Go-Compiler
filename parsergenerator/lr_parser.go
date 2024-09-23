@@ -3,6 +3,7 @@ package parsergenerator
 import (
 	"compiler/grammar"
 	"compiler/scanner"
+	"compiler/token"
 	"fmt"
 	"slices"
 )
@@ -15,13 +16,45 @@ type stackItem struct {
 type LrParser struct {
 	actionTable map[int]map[grammar.Category]parseAction
 	gotoTable   map[int]map[grammar.Category]int
+	dfa         *scanner.Dfa
 }
 
-func New(actionTable map[int]map[grammar.Category]parseAction, gotoTable map[int]map[grammar.Category]int) *LrParser {
+func New(productions []grammar.Production) *LrParser {
+	// Generate parse tables
+	tg := NewTableGenerator()
+	actionTable, gotoTable := tg.generateParseTables(productions)
+
+	// Extract token classifications from terminals
+	tokenClassifications := extractTokenClassifications(productions)
+
+	// Generate DFA for the scanner
+	sg := scanner.NewScannerGenerator()
+	dfa := sg.GenerateScanner(tokenClassifications)
+
 	return &LrParser{
 		actionTable: actionTable,
 		gotoTable:   gotoTable,
+		dfa:         dfa,
 	}
+}
+
+func extractTokenClassifications(productions []grammar.Production) []token.TokenClassification {
+	var tokenClassifications []token.TokenClassification
+	precedence := 1
+
+	for _, prod := range productions {
+		switch t := prod.(type) {
+		case *grammar.Terminal:
+			tc := token.TokenClassification{
+				TokenType:  token.TokenType(t.Name),
+				Regexp:     t.Regexp,
+				Precedence: precedence,
+			}
+			tokenClassifications = append(tokenClassifications, tc)
+		}
+	}
+
+	return tokenClassifications
 }
 
 func (lr *LrParser) Parse(input string) error {
@@ -35,10 +68,9 @@ func (lr *LrParser) Parse(input string) error {
 			0,
 		},
 	}
-	s := scanner.NewHandcodedScanner(input)
+	s := scanner.NewTableDrivenScanner(input, lr.dfa)
 	token := s.NextToken()
 
-	// todo add nil checks for table access
 	shouldContinue := true
 	for shouldContinue {
 		currentState := stack[len(stack)-1].state
@@ -71,7 +103,6 @@ func (lr *LrParser) Parse(input string) error {
 			token = s.NextToken()
 		case *accept:
 			shouldContinue = false
-			// todo can this be removed?
 		default:
 			return fmt.Errorf("error when parsing input")
 		}

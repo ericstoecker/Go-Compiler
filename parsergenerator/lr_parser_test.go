@@ -83,10 +83,7 @@ func TestGeneratedLrParserOnValidInputs(t *testing.T) {
 		"(())()",
 	}
 
-	tg := &TableGenerator{}
-	action, goTo := tg.generateParseTables(productions)
-
-	lrParser := New(action, goTo)
+	lrParser := New(productions)
 
 	for _, tt := range tests {
 		err := lrParser.Parse(tt)
@@ -184,10 +181,7 @@ func TestGeneratedLrParserForBasicIfGrammar(t *testing.T) {
 		"if () {} else if () {} else if () {} else {}",
 	}
 
-	tg := &TableGenerator{}
-	action, goTo := tg.generateParseTables(productions)
-
-	lrParser := New(action, goTo)
+	lrParser := New(productions)
 
 	for _, tt := range tests {
 		err := lrParser.Parse(tt)
