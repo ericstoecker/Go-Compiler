@@ -29,6 +29,10 @@ func (li *LrItem) String() string {
 		out.WriteString(string(item))
 	}
 
+	if li.position == len(li.right) {
+		out.WriteString(" ●")
+	}
+
 	out.WriteString(", ")
 	out.WriteString(string(li.lookahead))
 	out.WriteString("]")
