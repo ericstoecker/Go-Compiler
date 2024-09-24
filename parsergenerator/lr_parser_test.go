@@ -204,3 +204,60 @@ func TestGeneratedLrParserForBasicIfGrammar(t *testing.T) {
 		}
 	}
 }
+
+// sum -> num + num | sum + sum | num + sum | sum + num
+
+func TestAmbiguousGrammar(t *testing.T) {
+	productions := []grammar.Production{
+		&grammar.NonTerminal{
+			Name: GOAL,
+			RightSide: &grammar.Identifier{
+				Name: "sum",
+			},
+		},
+		&grammar.NonTerminal{
+			Name: "sum",
+			RightSide: &grammar.Choice{
+				Items: []grammar.RightSide{
+					&grammar.Sequence{
+						Items: []*grammar.Identifier{
+							{Name: "number"},
+							{Name: "plus"},
+							{Name: "number"},
+						},
+					},
+					&grammar.Sequence{
+						Items: []*grammar.Identifier{
+							{Name: "sum"},
+							{Name: "plus"},
+							{Name: "number"},
+						},
+					},
+					&grammar.Sequence{
+						Items: []*grammar.Identifier{
+							{Name: "number"},
+							{Name: "plus"},
+							{Name: "sum"},
+						},
+					},
+				},
+			},
+		},
+		&grammar.Terminal{Name: "number", Regexp: "[0-9]"},
+		&grammar.Terminal{Name: "plus", Regexp: "+"},
+	}
+
+	tests := []string{
+		"1 + 2",
+	}
+
+	lrParser := New(productions)
+
+	for _, tt := range tests {
+		err := lrParser.Parse(tt)
+
+		if err != nil {
+			t.Fatalf("error when parsing valid input '%s': %v", tt, err)
+		}
+	}
+}

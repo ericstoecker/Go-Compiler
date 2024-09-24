@@ -13,6 +13,7 @@ type parseAction interface {
 
 type shift struct {
 	toState int
+	lrItem  *LrItem
 }
 
 func (s *shift) parseAction() {}
@@ -20,6 +21,7 @@ func (s *shift) parseAction() {}
 type reduce struct {
 	toCategory   grammar.Category
 	lenRightSide int
+	lrItem       *LrItem
 }
 
 func (r *reduce) parseAction() {}
@@ -64,13 +66,16 @@ func (tg *TableGenerator) generateParseTables(productions []grammar.Production) 
 
 			isComplete := len(lrItem.right) == lrItem.position
 			if lrItem.left != "Goal" && isComplete {
-				if actionTable[i][lrItem.lookahead] != nil {
-					panic("redefined action")
+				if existingAction := actionTable[i][lrItem.lookahead]; isReduce(existingAction) {
+					conflictMessage := fmt.Sprintf("Reduce-Reduce Conflict at state %d on lookahead %s:\nExisting action: %s\nNew reduce action: %s",
+						i, lrItem.lookahead, actionToString(existingAction), actionToString(&reduce{toCategory: lrItem.left, lenRightSide: len(lrItem.right), lrItem: lrItem}))
+					panic(conflictMessage)
 				}
 
 				actionTable[i][lrItem.lookahead] = &reduce{
 					toCategory:   lrItem.left,
 					lenRightSide: len(lrItem.right),
+					lrItem:       lrItem,
 				}
 			} else if !isComplete && isFollowedByTerminal(lrItem, productions) {
 				followingTerminal := lrItem.right[lrItem.position]
@@ -82,11 +87,14 @@ func (tg *TableGenerator) generateParseTables(productions []grammar.Production) 
 
 				existingAction := actionTable[i][followingTerminal]
 				if isReduce(existingAction) {
-					panic("redefined action")
+					conflictMessage := fmt.Sprintf("Conflict at state %d on symbol %s:\nExisting action: %s\nNew shift action: %s",
+						i, followingTerminal, actionToString(existingAction), actionToString(&shift{toState: goToState, lrItem: lrItem}))
+					panic(conflictMessage)
 				}
 
 				actionTable[i][followingTerminal] = &shift{
 					toState: goToState,
+					lrItem:  lrItem,
 				}
 			} else if lrItem.left == "Goal" && isComplete && lrItem.lookahead == token.EOF {
 				if actionTable[i][token.EOF] != nil {
@@ -99,6 +107,19 @@ func (tg *TableGenerator) generateParseTables(productions []grammar.Production) 
 	}
 
 	return
+}
+
+func actionToString(action parseAction) string {
+	switch a := action.(type) {
+	case *shift:
+		return fmt.Sprintf("shift to state %d on %s", a.toState, a.lrItem)
+	case *reduce:
+		return fmt.Sprintf("reduce using rule %s", a.lrItem)
+	case *accept:
+		return "accept"
+	default:
+		return "unknown action"
+	}
 }
 
 func isReduce(action parseAction) bool {
