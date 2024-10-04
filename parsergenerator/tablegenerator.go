@@ -86,15 +86,11 @@ func (tg *TableGenerator) generateParseTables(productions []grammar.Production) 
 				}
 
 				existingAction := actionTable[i][followingTerminal]
-				if isReduce(existingAction) {
-					conflictMessage := fmt.Sprintf("Conflict at state %d on symbol %s:\nExisting action: %s\nNew shift action: %s",
-						i, followingTerminal, actionToString(existingAction), actionToString(&shift{toState: goToState, lrItem: lrItem}))
-					panic(conflictMessage)
-				}
-
-				actionTable[i][followingTerminal] = &shift{
-					toState: goToState,
-					lrItem:  lrItem,
+				if !isReduce(existingAction) {
+					actionTable[i][followingTerminal] = &shift{
+						toState: goToState,
+						lrItem:  lrItem,
+					}
 				}
 			} else if lrItem.left == "Goal" && isComplete && lrItem.lookahead == token.EOF {
 				if actionTable[i][token.EOF] != nil {
