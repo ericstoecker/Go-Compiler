@@ -30,21 +30,8 @@ type accept struct{}
 
 func (a *accept) parseAction() {}
 
-// TODO
-// make stateless
-// probably remove the entire struct since not necessary
-
-type TableGenerator struct {
-	firstSets   map[grammar.Category][]grammar.Category
-	productions map[grammar.Category][]grammar.Production
-}
-
-func NewTableGenerator() *TableGenerator {
-	return &TableGenerator{}
-}
-
-func (tg *TableGenerator) generateParseTables(productions []grammar.Production) (actionTable map[int]map[grammar.Category]parseAction, gotoTable map[int]map[grammar.Category]int) {
-	canonicalCollections, gotoTable := tg.generateCanonicalCollection(productions)
+func generateParseTables(productions []grammar.Production) (actionTable map[int]map[grammar.Category]parseAction, gotoTable map[int]map[grammar.Category]int) {
+	canonicalCollections, gotoTable := generateCanonicalCollection(productions)
 	actionTable = make(map[int]map[grammar.Category]parseAction)
 
 	for i, collection := range canonicalCollections {
@@ -159,9 +146,8 @@ func findProduction(productions []grammar.Production, identifier grammar.Categor
 	return nil
 }
 
-func (tg *TableGenerator) generateCanonicalCollection(input []grammar.Production) ([]map[string]*LrItem, map[int]map[grammar.Category]int) {
+func generateCanonicalCollection(input []grammar.Production) ([]map[string]*LrItem, map[int]map[grammar.Category]int) {
 	flattenedProductions, rootSymbol := groupProductionsByCategory(input)
-	tg.productions = flattenedProductions
 
 	ccZero := make(map[string]*LrItem)
 	for _, production := range flattenedProductions[rootSymbol] {
@@ -170,8 +156,8 @@ func (tg *TableGenerator) generateCanonicalCollection(input []grammar.Production
 		ccZero[lrItem.String()] = lrItem
 	}
 
-	tg.firstSets = first(flattenedProductions)
-	ccZero = closure(ccZero, flattenedProductions, tg.firstSets)
+	firstSets := first(flattenedProductions)
+	ccZero = closure(ccZero, flattenedProductions, firstSets)
 
 	transitions := make(map[int]map[grammar.Category]int)
 	canonicalCollections := []map[string]*LrItem{ccZero}
@@ -191,7 +177,7 @@ func (tg *TableGenerator) generateCanonicalCollection(input []grammar.Production
 				}
 
 				x := lrItem.right[lrItem.position]
-				temp := tg.goTo(collection, x)
+				temp := goTo(collection, x, flattenedProductions, firstSets)
 
 				if index := findCollectionInCanonicalCollections(canonicalCollections, temp); index == -1 {
 					tempsIndex := len(canonicalCollections)
@@ -235,7 +221,6 @@ func isCollectionEqual(a, b map[string]*LrItem) bool {
 }
 
 func productionToLrItem(prod grammar.Production) *LrItem {
-
 	var left grammar.Category
 	right := make([]grammar.Category, 0)
 
@@ -304,7 +289,7 @@ func closure(s map[string]*LrItem, productions map[grammar.Category][]grammar.Pr
 	return s
 }
 
-func (tg *TableGenerator) goTo(s map[string]*LrItem, x grammar.Category) map[string]*LrItem {
+func goTo(s map[string]*LrItem, x grammar.Category, productions map[grammar.Category][]grammar.Production, firstSets map[grammar.Category][]grammar.Category) map[string]*LrItem {
 	result := make(map[string]*LrItem)
 	for _, lrItem := range s {
 		if isAtEnd := len(lrItem.right) == lrItem.position; isAtEnd {
@@ -324,7 +309,7 @@ func (tg *TableGenerator) goTo(s map[string]*LrItem, x grammar.Category) map[str
 		}
 	}
 
-	return closure(result, tg.productions, tg.firstSets)
+	return closure(result, productions, firstSets)
 }
 
 func first(productionsGroupedBySymbol map[grammar.Category][]grammar.Production) map[grammar.Category][]grammar.Category {

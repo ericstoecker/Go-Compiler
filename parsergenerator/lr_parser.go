@@ -21,8 +21,7 @@ type LrParser struct {
 
 func New(productions []grammar.Production) *LrParser {
 	// Generate parse tables
-	tg := NewTableGenerator()
-	actionTable, gotoTable := tg.generateParseTables(productions)
+	actionTable, gotoTable := generateParseTables(productions)
 
 	// Extract token classifications from terminals
 	tokenClassifications := extractTokenClassifications(productions)
