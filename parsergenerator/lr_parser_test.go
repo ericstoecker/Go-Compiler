@@ -205,8 +205,6 @@ func TestGeneratedLrParserForBasicIfGrammar(t *testing.T) {
 	}
 }
 
-// sum -> num + num | sum + sum | num + sum | sum + num
-
 func TestAmbiguousGrammar(t *testing.T) {
 	productions := []grammar.Production{
 		&grammar.NonTerminal{

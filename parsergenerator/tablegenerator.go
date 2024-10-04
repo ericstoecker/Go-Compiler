@@ -33,10 +33,7 @@ func (a *accept) parseAction() {}
 // TODO
 // make stateless
 // probably remove the entire struct since not necessary
-// cleanup code
 
-// maybe need more information about previous acitons
-// to be able to present reduce/reduce and shift/reduce errors
 type TableGenerator struct {
 	firstSets   map[grammar.Category][]grammar.Category
 	productions map[grammar.Category][]grammar.Production
