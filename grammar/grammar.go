@@ -1,5 +1,7 @@
 package grammar
 
+import "compiler/ast"
+
 type Category string
 
 type Production interface {
@@ -9,6 +11,7 @@ type Production interface {
 type NonTerminal struct {
 	Name      Category
 	RightSide RightSide
+	Handler   func([]ast.Node) ast.Node
 }
 
 func NewNonTerminal(name Category, rightSide RightSide) *NonTerminal {
@@ -21,8 +24,9 @@ func NewNonTerminal(name Category, rightSide RightSide) *NonTerminal {
 func (n *NonTerminal) production() {}
 
 type Terminal struct {
-	Name   Category
-	Regexp string
+	Name    Category
+	Regexp  string
+	Handler func(string) ast.Node
 }
 
 func (t *Terminal) production() {}

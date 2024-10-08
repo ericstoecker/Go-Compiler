@@ -1,6 +1,7 @@
 package parsergenerator
 
 import (
+	"compiler/ast"
 	"compiler/grammar"
 	"compiler/scanner"
 	"compiler/token"
@@ -11,6 +12,7 @@ import (
 type stackItem struct {
 	category grammar.Category
 	state    int
+	node     ast.Node
 }
 
 type LrParser struct {
@@ -61,14 +63,16 @@ func (lr *LrParser) Parse(input string) error {
 		{
 			"",
 			-1,
+			nil,
 		},
 		{
 			"Goal",
 			0,
+			nil,
 		},
 	}
 	s := scanner.NewTableDrivenScanner(input, lr.dfa)
-	token := s.NextToken()
+	nextToken := s.NextToken()
 
 	shouldContinue := true
 	for shouldContinue {
@@ -77,29 +81,38 @@ func (lr *LrParser) Parse(input string) error {
 			return fmt.Errorf("error when parsing input: state was -1")
 		}
 
-		actionForStateAndType := lr.actionTable[currentState][grammar.Category(token.Type)]
+		actionForStateAndType := lr.actionTable[currentState][grammar.Category(nextToken.Type)]
 		if actionForStateAndType == nil {
-			return fmt.Errorf("error when parsing input: no action for state %d and token %s",
-				currentState, token.Type)
+			return fmt.Errorf("error when parsing input: no action for state %d and nextToken %s",
+				currentState, nextToken.Type)
 		}
 
 		switch action := actionForStateAndType.(type) {
 		case *reduce:
-			stack = slices.Delete(stack, len(stack)-action.lenRightSide, len(stack))
+			var node ast.Node
+			if hasTerminalHandler := action.lrItem.terminalHandler != nil; hasTerminalHandler {
+				node = action.lrItem.terminalHandler(nextToken.Literal)
+			} else if hasNonTerminalHandler := action.lrItem.nonTerminalHandler != nil; hasNonTerminalHandler {
+				nodesFromStack := extractNodes(stack, action.lenRightSide)
+				node = action.lrItem.nonTerminalHandler(nodesFromStack)
+			}
 
+			stack = slices.Delete(stack, len(stack)-action.lenRightSide, len(stack))
 			currentState := stack[len(stack)-1].state
 
 			stack = append(stack, &stackItem{
 				action.toCategory,
 				lr.gotoTable[currentState][action.toCategory],
+				node,
 			})
 		case *shift:
 			stack = append(stack, &stackItem{
-				grammar.Category(token.Type),
+				grammar.Category(nextToken.Type),
 				action.toState,
+				nil,
 			})
 
-			token = s.NextToken()
+			nextToken = s.NextToken()
 		case *accept:
 			shouldContinue = false
 		default:
@@ -108,4 +121,15 @@ func (lr *LrParser) Parse(input string) error {
 	}
 
 	return nil
+}
+
+func extractNodes(stack []*stackItem, from int) []ast.Node {
+	relevantStackItems := stack[len(stack)-from : len(stack)]
+
+	nodes := make([]ast.Node, len(relevantStackItems))
+	for i, stackItem := range relevantStackItems {
+		nodes[i] = stackItem.node
+	}
+
+	return nodes
 }

@@ -228,6 +228,7 @@ func productionToLrItem(prod grammar.Production) *LrItem {
 	case *grammar.Terminal:
 		left = typedProduction.Name
 		right = append(right, typedProduction.Name)
+		return &LrItem{left: left, right: right, position: 0, terminalHandler: typedProduction.Handler}
 	case *grammar.NonTerminal:
 		left = typedProduction.Name
 
@@ -244,9 +245,11 @@ func productionToLrItem(prod grammar.Production) *LrItem {
 			panic(fmt.Sprintf("encountered a %T when converting %T to LrItem but %T is not allowed",
 				rightSide, prod, rightSide))
 		}
-	}
 
-	return &LrItem{left: left, right: right, position: 0}
+		return &LrItem{left: left, right: right, position: 0, nonTerminalHandler: typedProduction.Handler}
+	default:
+		panic(fmt.Sprintf("unexpected production of type %T when converting to LrItem", prod))
+	}
 }
 
 func closure(s map[string]*LrItem, productions map[grammar.Category][]grammar.Production, first map[grammar.Category][]grammar.Category) map[string]*LrItem {
