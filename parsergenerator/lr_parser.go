@@ -90,9 +90,7 @@ func (lr *LrParser) Parse(input string) error {
 		switch action := actionForStateAndType.(type) {
 		case *reduce:
 			var node ast.Node
-			if hasTerminalHandler := action.lrItem.terminalHandler != nil; hasTerminalHandler {
-				node = action.lrItem.terminalHandler(nextToken.Literal)
-			} else if hasNonTerminalHandler := action.lrItem.nonTerminalHandler != nil; hasNonTerminalHandler {
+			if hasNonTerminalHandler := action.lrItem.nonTerminalHandler != nil; hasNonTerminalHandler {
 				nodesFromStack := extractNodes(stack, action.lenRightSide)
 				node = action.lrItem.nonTerminalHandler(nodesFromStack)
 			}
@@ -106,10 +104,15 @@ func (lr *LrParser) Parse(input string) error {
 				node,
 			})
 		case *shift:
+			var node ast.Node
+			if hasTerminalHandler := action.lrItem.terminalHandler != nil; hasTerminalHandler {
+				node = action.lrItem.terminalHandler(nextToken.Literal)
+			}
+
 			stack = append(stack, &stackItem{
 				grammar.Category(nextToken.Type),
 				action.toState,
-				nil,
+				node,
 			})
 
 			nextToken = s.NextToken()
