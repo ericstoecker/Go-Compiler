@@ -61,11 +61,6 @@ func extractTokenClassifications(productions []grammar.Production) []scanner.Tok
 func (lr *LrParser) Parse(input string) (ast.Node, error) {
 	stack := []*stackItem{
 		{
-			"",
-			-1,
-			nil,
-		},
-		{
 			"Goal",
 			0,
 			nil,
@@ -76,9 +71,6 @@ func (lr *LrParser) Parse(input string) (ast.Node, error) {
 
 	for {
 		currentState := stack[len(stack)-1].state
-		if currentState == -1 {
-			return nil, fmt.Errorf("error when parsing input: state was -1")
-		}
 
 		actionForStateAndType := lr.actionTable[currentState][grammar.Category(nextToken.Type)]
 		if actionForStateAndType == nil {
