@@ -58,7 +58,7 @@ func extractTokenClassifications(productions []grammar.Production) []scanner.Tok
 	return tokenClassifications
 }
 
-func (lr *LrParser) Parse(input string) error {
+func (lr *LrParser) Parse(input string) (ast.Node, error) {
 	stack := []*stackItem{
 		{
 			"",
@@ -74,16 +74,15 @@ func (lr *LrParser) Parse(input string) error {
 	s := scanner.NewTableDrivenScanner(input, lr.dfa)
 	nextToken := s.NextToken()
 
-	shouldContinue := true
-	for shouldContinue {
+	for {
 		currentState := stack[len(stack)-1].state
 		if currentState == -1 {
-			return fmt.Errorf("error when parsing input: state was -1")
+			return nil, fmt.Errorf("error when parsing input: state was -1")
 		}
 
 		actionForStateAndType := lr.actionTable[currentState][grammar.Category(nextToken.Type)]
 		if actionForStateAndType == nil {
-			return fmt.Errorf("error when parsing input: no action for state %d and nextToken %s",
+			return nil, fmt.Errorf("error when parsing input: no action for state %d and nextToken %s",
 				currentState, nextToken.Type)
 		}
 
@@ -117,13 +116,17 @@ func (lr *LrParser) Parse(input string) error {
 
 			nextToken = s.NextToken()
 		case *accept:
-			shouldContinue = false
+			var node ast.Node
+			if hasNonTerminalHandler := action.lrItem.nonTerminalHandler != nil; hasNonTerminalHandler {
+				nodesFromStack := extractNodes(stack, action.lenRightSide)
+				node = action.lrItem.nonTerminalHandler(nodesFromStack)
+			}
+
+			return node, nil
 		default:
-			return fmt.Errorf("error when parsing input")
+			return nil, fmt.Errorf("error when parsing input")
 		}
 	}
-
-	return nil
 }
 
 func extractNodes(stack []*stackItem, from int) []ast.Node {

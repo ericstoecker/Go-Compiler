@@ -26,7 +26,10 @@ type reduce struct {
 
 func (r *reduce) parseAction() {}
 
-type accept struct{}
+type accept struct {
+	lenRightSide int
+	lrItem       *LrItem
+}
 
 func (a *accept) parseAction() {}
 
@@ -81,7 +84,10 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 					panic("redefined action")
 				}
 
-				actionTable[i][token.EOF] = &accept{}
+				actionTable[i][token.EOF] = &accept{
+					lenRightSide: len(lrItem.right),
+					lrItem:       lrItem,
+				}
 			}
 		}
 	}

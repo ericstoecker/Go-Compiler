@@ -99,7 +99,7 @@ func TestGeneratedLrParserOnValidInputs(t *testing.T) {
 	lrParser := New(productions)
 
 	for _, tt := range tests {
-		err := lrParser.Parse(tt)
+		_, err := lrParser.Parse(tt)
 
 		if err != nil {
 			t.Fatalf("error when parsing valid input '%s': %v", tt, err)
@@ -197,7 +197,7 @@ func TestGeneratedLrParserForBasicIfGrammar(t *testing.T) {
 	lrParser := New(productions)
 
 	for _, tt := range tests {
-		err := lrParser.Parse(tt)
+		_, err := lrParser.Parse(tt)
 
 		if err != nil {
 			t.Fatalf("error when parsing valid input '%s': %v", tt, err)
@@ -252,7 +252,7 @@ func TestAmbiguousGrammar(t *testing.T) {
 	lrParser := New(productions)
 
 	for _, tt := range tests {
-		err := lrParser.Parse(tt)
+		_, err := lrParser.Parse(tt)
 
 		if err != nil {
 			t.Fatalf("error when parsing valid input '%s': %v", tt, err)
