@@ -1,6 +1,7 @@
 package parsergenerator
 
 import (
+	"compiler/ast"
 	"compiler/grammar"
 	"compiler/token"
 	"fmt"
@@ -14,6 +15,7 @@ type parseAction interface {
 type shift struct {
 	toState int
 	lrItem  *LrItem
+	handler func(string) ast.Node
 }
 
 func (s *shift) parseAction() {}
@@ -72,11 +74,14 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 					panic("no goto state defined")
 				}
 
+				handler := findHandlerForTerminal(followingTerminal, productions)
+
 				existingAction := actionTable[i][followingTerminal]
 				if !isReduce(existingAction) {
 					actionTable[i][followingTerminal] = &shift{
 						toState: goToState,
 						lrItem:  lrItem,
+						handler: handler,
 					}
 				}
 			} else if lrItem.left == "Goal" && isComplete && lrItem.lookahead == token.EOF {
@@ -93,6 +98,19 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 	}
 
 	return
+}
+
+func findHandlerForTerminal(terminal grammar.Category, productions []grammar.Production) func(string) ast.Node {
+	for _, production := range productions {
+		switch typedProduction := production.(type) {
+		case *grammar.Terminal:
+			if typedProduction.Name == terminal {
+				return typedProduction.Handler
+			}
+		}
+	}
+
+	return nil
 }
 
 func actionToString(action parseAction) string {
@@ -308,10 +326,12 @@ func goTo(s map[string]*LrItem, x grammar.Category, productions map[grammar.Cate
 		isBeforeX := lrItem.right[lrItem.position] == x
 		if isBeforeX {
 			newItem := &LrItem{
-				left:      lrItem.left,
-				right:     lrItem.right,
-				position:  lrItem.position + 1,
-				lookahead: lrItem.lookahead,
+				left:               lrItem.left,
+				right:              lrItem.right,
+				position:           lrItem.position + 1,
+				lookahead:          lrItem.lookahead,
+				terminalHandler:    lrItem.terminalHandler,
+				nonTerminalHandler: lrItem.nonTerminalHandler,
 			}
 
 			result[newItem.String()] = newItem

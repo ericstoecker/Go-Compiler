@@ -104,8 +104,8 @@ func (lr *LrParser) Parse(input string) (ast.Node, error) {
 			})
 		case *shift:
 			var node ast.Node
-			if hasTerminalHandler := action.lrItem.terminalHandler != nil; hasTerminalHandler {
-				node = action.lrItem.terminalHandler(nextToken.Literal)
+			if hasTerminalHandler := action.handler != nil; hasTerminalHandler {
+				node = action.handler(nextToken.Literal)
 			}
 
 			stack = append(stack, &stackItem{

@@ -1,7 +1,11 @@
 package parsergenerator
 
 import (
+	"compiler/ast"
 	"compiler/grammar"
+	"compiler/token"
+	"fmt"
+	"strconv"
 	"testing"
 )
 
@@ -256,6 +260,59 @@ func TestAmbiguousGrammar(t *testing.T) {
 
 		if err != nil {
 			t.Fatalf("error when parsing valid input '%s': %v", tt, err)
+		}
+	}
+}
+
+func TestAstConstruction(t *testing.T) {
+	productions := []grammar.Production{
+		&grammar.NonTerminal{
+			Name: GOAL,
+			RightSide: &grammar.Identifier{
+				Name: "number",
+			},
+			Handler: func(nodes []ast.Node) ast.Node {
+				if len(nodes) != 1 {
+					panic("Expected one node")
+				}
+				return nodes[0]
+			},
+		},
+		&grammar.Terminal{
+			Name:   "number",
+			Regexp: "[0-9]",
+			Handler: func(s string) ast.Node {
+				value, err := strconv.ParseInt(s, 0, 64)
+				if err != nil {
+					msg := fmt.Sprintf("Error when trying to parse %s to int", s)
+					panic(msg)
+				}
+				return &ast.IntegerLiteral{
+					Token: token.Token{
+						Type:    "number",
+						Literal: s,
+					},
+					Value: value,
+				}
+			},
+		},
+	}
+
+	tests := []string{
+		"1",
+	}
+
+	lrParser := New(productions)
+
+	for _, tt := range tests {
+		node, err := lrParser.Parse(tt)
+
+		if err != nil {
+			t.Fatalf("error when parsing valid input '%s': %v", tt, err)
+		}
+
+		if node == nil {
+			t.Fatalf("Expected node to be non-nil")
 		}
 	}
 }
