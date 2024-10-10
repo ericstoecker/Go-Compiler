@@ -267,12 +267,35 @@ func TestAmbiguousGrammar(t *testing.T) {
 func TestAstConstruction(t *testing.T) {
 	productions := []grammar.Production{
 		&grammar.NonTerminal{
+			Name: GOAL,
+			RightSide: &grammar.Identifier{
+				Name: "Sum",
+			},
+			Handler: func(nodes []ast.Node) ast.Node {
+				if len(nodes) != 1 {
+					panic(fmt.Sprintf("Expected 1 node. Got %d", len(nodes)))
+				}
+				return nodes[0]
+			},
+		},
+		&grammar.NonTerminal{
 			Name: "Sum",
-			RightSide: &grammar.Sequence{
-				Items: []*grammar.Identifier{
-					{Name: "number"},
-					{Name: "plus"},
-					{Name: "number"},
+			RightSide: &grammar.Choice{
+				Items: []grammar.RightSide{
+					&grammar.Sequence{
+						Items: []*grammar.Identifier{
+							{Name: "number"},
+							{Name: "plus"},
+							{Name: "number"},
+						},
+					},
+					&grammar.Sequence{
+						Items: []*grammar.Identifier{
+							{Name: "Sum"},
+							{Name: "plus"},
+							{Name: "number"},
+						},
+					},
 				},
 			},
 			Handler: func(nodes []ast.Node) ast.Node {
@@ -282,12 +305,12 @@ func TestAstConstruction(t *testing.T) {
 
 				leftExpression, ok := nodes[0].(ast.Expression)
 				if !ok {
-					panic(fmt.Sprintf("Expected node to be an Experssion. Got %T", nodes[0]))
+					panic(fmt.Sprintf("Expected node to be an Expression. Got %T", nodes[0]))
 				}
 
 				rightExpression, ok := nodes[2].(ast.Expression)
 				if !ok {
-					panic(fmt.Sprintf("Expected node to be an Experssion. Got %T", nodes[2]))
+					panic(fmt.Sprintf("Expected node to be an Expression. Got %T", nodes[2]))
 				}
 
 				return &ast.InfixExpression{
@@ -322,7 +345,7 @@ func TestAstConstruction(t *testing.T) {
 	}
 
 	tests := []string{
-		"1 + 1",
+		"1 + 2 + 3",
 	}
 
 	lrParser := New(productions)
@@ -343,12 +366,30 @@ func TestAstConstruction(t *testing.T) {
 			t.Fatalf("Expected node to be an InfixExpression. Got %T", node)
 		}
 
-		infixExpression.Left, ok = infixExpression.Left.(*ast.IntegerLiteral)
+		leftExpression, ok := infixExpression.Left.(*ast.InfixExpression)
 		if !ok {
-			t.Fatalf("Expected left to be an IntegerLiteral. Got %T", infixExpression.Left)
+			t.Fatalf("Expected left to be an InfixExpression. Got %T", infixExpression.Left)
 		}
 
-		infixExpression.Right, ok = infixExpression.Right.(*ast.IntegerLiteral)
+		leftExpressionSummand, ok := leftExpression.Left.(*ast.IntegerLiteral)
+		if !ok {
+			t.Fatalf("Expected left to be an IntegerLiteral. Got %T", leftExpression.Left)
+		}
+
+		if leftExpressionSummand.Value != 1 {
+			t.Fatalf("Expected left summand to be 1. Got %d", leftExpressionSummand.Value)
+		}
+
+		rightExpressionSummand, ok := leftExpression.Right.(*ast.IntegerLiteral)
+		if !ok {
+			t.Fatalf("Expected right to be an IntegerLiteral. Got %T", leftExpression.Right)
+		}
+
+		if rightExpressionSummand.Value != 2 {
+			t.Fatalf("Expected right summand to be 2. Got %d", rightExpressionSummand.Value)
+		}
+
+		_, ok = infixExpression.Right.(*ast.IntegerLiteral)
 		if !ok {
 			t.Fatalf("Expected right to be an IntegerLiteral. Got %T", infixExpression.Right)
 		}
