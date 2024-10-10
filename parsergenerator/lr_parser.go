@@ -81,9 +81,9 @@ func (lr *LrParser) Parse(input string) (ast.Node, error) {
 		switch action := actionForStateAndType.(type) {
 		case *reduce:
 			var node ast.Node
-			if hasNonTerminalHandler := action.lrItem.nonTerminalHandler != nil; hasNonTerminalHandler {
+			if hasNonTerminalHandler := action.handler != nil; hasNonTerminalHandler {
 				nodesFromStack := extractNodes(stack, action.lenRightSide)
-				node = action.lrItem.nonTerminalHandler(nodesFromStack)
+				node = action.handler(nodesFromStack)
 			}
 
 			stack = slices.Delete(stack, len(stack)-action.lenRightSide, len(stack))
@@ -109,9 +109,9 @@ func (lr *LrParser) Parse(input string) (ast.Node, error) {
 			nextToken = s.NextToken()
 		case *accept:
 			var node ast.Node
-			if hasNonTerminalHandler := action.lrItem.nonTerminalHandler != nil; hasNonTerminalHandler {
+			if hasNonTerminalHandler := action.handler != nil; hasNonTerminalHandler {
 				nodesFromStack := extractNodes(stack, action.lenRightSide)
-				node = action.lrItem.nonTerminalHandler(nodesFromStack)
+				node = action.handler(nodesFromStack)
 			}
 
 			return node, nil

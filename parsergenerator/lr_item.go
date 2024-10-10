@@ -2,7 +2,6 @@ package parsergenerator
 
 import (
 	"bytes"
-	"compiler/ast"
 	"compiler/grammar"
 )
 
@@ -12,9 +11,6 @@ type LrItem struct {
 	lookahead grammar.Category
 
 	position int
-
-	terminalHandler    func(string) ast.Node
-	nonTerminalHandler func([]ast.Node) ast.Node
 }
 
 func (li *LrItem) String() string {

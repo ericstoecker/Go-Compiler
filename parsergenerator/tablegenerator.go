@@ -24,13 +24,14 @@ type reduce struct {
 	toCategory   grammar.Category
 	lenRightSide int
 	lrItem       *LrItem
+	handler      func([]ast.Node) ast.Node
 }
 
 func (r *reduce) parseAction() {}
 
 type accept struct {
 	lenRightSide int
-	lrItem       *LrItem
+	handler      func([]ast.Node) ast.Node
 }
 
 func (a *accept) parseAction() {}
@@ -61,10 +62,13 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 					panic(conflictMessage)
 				}
 
+				handler := findHandlerForNonTerminal(lrItem.left, productions)
+
 				actionTable[i][lrItem.lookahead] = &reduce{
 					toCategory:   lrItem.left,
 					lenRightSide: len(lrItem.right),
 					lrItem:       lrItem,
+					handler:      handler,
 				}
 			} else if !isComplete && isFollowedByTerminal(lrItem, productions) {
 				followingTerminal := lrItem.right[lrItem.position]
@@ -89,9 +93,11 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 					panic("redefined action")
 				}
 
+				handler := findHandlerForNonTerminal(lrItem.left, productions)
+
 				actionTable[i][token.EOF] = &accept{
 					lenRightSide: len(lrItem.right),
-					lrItem:       lrItem,
+					handler:      handler,
 				}
 			}
 		}
@@ -105,6 +111,19 @@ func findHandlerForTerminal(terminal grammar.Category, productions []grammar.Pro
 		switch typedProduction := production.(type) {
 		case *grammar.Terminal:
 			if typedProduction.Name == terminal {
+				return typedProduction.Handler
+			}
+		}
+	}
+
+	return nil
+}
+
+func findHandlerForNonTerminal(nonTerminal grammar.Category, productions []grammar.Production) func([]ast.Node) ast.Node {
+	for _, production := range productions {
+		switch typedProduction := production.(type) {
+		case *grammar.NonTerminal:
+			if typedProduction.Name == nonTerminal {
 				return typedProduction.Handler
 			}
 		}
@@ -252,7 +271,7 @@ func productionToLrItem(prod grammar.Production) *LrItem {
 	case *grammar.Terminal:
 		left = typedProduction.Name
 		right = append(right, typedProduction.Name)
-		return &LrItem{left: left, right: right, position: 0, terminalHandler: typedProduction.Handler}
+		return &LrItem{left: left, right: right, position: 0}
 	case *grammar.NonTerminal:
 		left = typedProduction.Name
 
@@ -270,7 +289,7 @@ func productionToLrItem(prod grammar.Production) *LrItem {
 				rightSide, prod, rightSide))
 		}
 
-		return &LrItem{left: left, right: right, position: 0, nonTerminalHandler: typedProduction.Handler}
+		return &LrItem{left: left, right: right, position: 0}
 	default:
 		panic(fmt.Sprintf("unexpected production of type %T when converting to LrItem", prod))
 	}
@@ -326,12 +345,10 @@ func goTo(s map[string]*LrItem, x grammar.Category, productions map[grammar.Cate
 		isBeforeX := lrItem.right[lrItem.position] == x
 		if isBeforeX {
 			newItem := &LrItem{
-				left:               lrItem.left,
-				right:              lrItem.right,
-				position:           lrItem.position + 1,
-				lookahead:          lrItem.lookahead,
-				terminalHandler:    lrItem.terminalHandler,
-				nonTerminalHandler: lrItem.nonTerminalHandler,
+				left:      lrItem.left,
+				right:     lrItem.right,
+				position:  lrItem.position + 1,
+				lookahead: lrItem.lookahead,
 			}
 
 			result[newItem.String()] = newItem
