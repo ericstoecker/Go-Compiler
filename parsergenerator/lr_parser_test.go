@@ -267,7 +267,7 @@ func TestAmbiguousGrammar(t *testing.T) {
 func TestAstConstruction(t *testing.T) {
 	productions := []grammar.Production{
 		&grammar.NonTerminal{
-			Name: GOAL,
+			Name: "Sum",
 			RightSide: &grammar.Identifier{
 				Name: "number",
 			},

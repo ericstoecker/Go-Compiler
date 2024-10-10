@@ -37,6 +37,11 @@ type accept struct {
 func (a *accept) parseAction() {}
 
 func generateParseTables(productions []grammar.Production) (actionTable map[int]map[grammar.Category]parseAction, gotoTable map[int]map[grammar.Category]int) {
+	if len(productions) == 0 {
+		panic("no productions defined")
+	}
+	goalProduction := productions[0].(*grammar.NonTerminal).Name
+
 	canonicalCollections, gotoTable := generateCanonicalCollection(productions)
 	actionTable = make(map[int]map[grammar.Category]parseAction)
 
@@ -55,7 +60,7 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 			lrItem := collection[key]
 
 			isComplete := len(lrItem.right) == lrItem.position
-			if lrItem.left != "Goal" && isComplete {
+			if lrItem.left != goalProduction && isComplete {
 				if existingAction := actionTable[i][lrItem.lookahead]; isReduce(existingAction) {
 					conflictMessage := fmt.Sprintf("Reduce-Reduce Conflict at state %d on lookahead %s:\nExisting action: %s\nNew reduce action: %s",
 						i, lrItem.lookahead, actionToString(existingAction), actionToString(&reduce{toCategory: lrItem.left, lenRightSide: len(lrItem.right), lrItem: lrItem}))
@@ -88,7 +93,7 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 						handler: handler,
 					}
 				}
-			} else if lrItem.left == "Goal" && isComplete && lrItem.lookahead == token.EOF {
+			} else if lrItem.left == goalProduction && isComplete && lrItem.lookahead == token.EOF {
 				if actionTable[i][token.EOF] != nil {
 					panic("redefined action")
 				}

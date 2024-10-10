@@ -61,7 +61,7 @@ func extractTokenClassifications(productions []grammar.Production) []scanner.Tok
 func (lr *LrParser) Parse(input string) (ast.Node, error) {
 	stack := []*stackItem{
 		{
-			"Goal",
+			"",
 			0,
 			nil,
 		},
