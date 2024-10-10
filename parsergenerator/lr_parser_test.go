@@ -268,14 +268,33 @@ func TestAstConstruction(t *testing.T) {
 	productions := []grammar.Production{
 		&grammar.NonTerminal{
 			Name: "Sum",
-			RightSide: &grammar.Identifier{
-				Name: "number",
+			RightSide: &grammar.Sequence{
+				Items: []*grammar.Identifier{
+					{Name: "number"},
+					{Name: "plus"},
+					{Name: "number"},
+				},
 			},
 			Handler: func(nodes []ast.Node) ast.Node {
-				if len(nodes) != 1 {
-					panic("Expected one node")
+				if len(nodes) != 3 {
+					panic(fmt.Sprintf("Expected 3 nodes. Got %d", len(nodes)))
 				}
-				return nodes[0]
+
+				leftExpression, ok := nodes[0].(ast.Expression)
+				if !ok {
+					panic(fmt.Sprintf("Expected node to be an Experssion. Got %T", nodes[0]))
+				}
+
+				rightExpression, ok := nodes[2].(ast.Expression)
+				if !ok {
+					panic(fmt.Sprintf("Expected node to be an Experssion. Got %T", nodes[2]))
+				}
+
+				return &ast.InfixExpression{
+					Left:     leftExpression,
+					Operator: token.PLUS,
+					Right:    rightExpression,
+				}
 			},
 		},
 		&grammar.Terminal{
@@ -296,10 +315,14 @@ func TestAstConstruction(t *testing.T) {
 				}
 			},
 		},
+		&grammar.Terminal{
+			Name:   "plus",
+			Regexp: "+",
+		},
 	}
 
 	tests := []string{
-		"1",
+		"1 + 1",
 	}
 
 	lrParser := New(productions)
@@ -313,6 +336,25 @@ func TestAstConstruction(t *testing.T) {
 
 		if node == nil {
 			t.Fatalf("Expected node to be non-nil")
+		}
+
+		infixExpression, ok := node.(*ast.InfixExpression)
+		if !ok {
+			t.Fatalf("Expected node to be an InfixExpression. Got %T", node)
+		}
+
+		infixExpression.Left, ok = infixExpression.Left.(*ast.IntegerLiteral)
+		if !ok {
+			t.Fatalf("Expected left to be an IntegerLiteral. Got %T", infixExpression.Left)
+		}
+
+		infixExpression.Right, ok = infixExpression.Right.(*ast.IntegerLiteral)
+		if !ok {
+			t.Fatalf("Expected right to be an IntegerLiteral. Got %T", infixExpression.Right)
+		}
+
+		if infixExpression.Operator != token.PLUS {
+			t.Fatalf("Expected operator to be '+'. Got %s", infixExpression.Operator)
 		}
 	}
 }
