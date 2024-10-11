@@ -51,7 +51,7 @@ func New(l scanner.Scanner) *Parser {
 	p.precedences[token.LT] = LESSGREATER
 	p.precedences[token.PLUS] = SUM
 	p.precedences[token.MINUS] = SUM
-	p.precedences[token.ASTERIK] = PRODUCT
+	p.precedences[token.ASTERISK] = PRODUCT
 	p.precedences[token.SLASH] = PRODUCT
 	p.precedences[token.LPAREN] = CALL
 	p.precedences[token.LBRACKET] = INDEX
@@ -79,7 +79,7 @@ func New(l scanner.Scanner) *Parser {
 	p.infixParseFunctions[token.LT] = p.parseInfixExpression
 	p.infixParseFunctions[token.PLUS] = p.parseInfixExpression
 	p.infixParseFunctions[token.MINUS] = p.parseInfixExpression
-	p.infixParseFunctions[token.ASTERIK] = p.parseInfixExpression
+	p.infixParseFunctions[token.ASTERISK] = p.parseInfixExpression
 	p.infixParseFunctions[token.SLASH] = p.parseInfixExpression
 	p.infixParseFunctions[token.AND] = p.parseInfixExpression
 	p.infixParseFunctions[token.OR] = p.parseInfixExpression

@@ -318,7 +318,7 @@ func evaluateIntegerInfixExpression(operator token.TokenType, left *object.Integ
 		return &object.Integer{Value: left.Value + right.Value}
 	case token.MINUS:
 		return &object.Integer{Value: left.Value - right.Value}
-	case token.ASTERIK:
+	case token.ASTERISK:
 		return &object.Integer{Value: left.Value * right.Value}
 	case token.EQUALS:
 		return newBool(left.Value == right.Value)

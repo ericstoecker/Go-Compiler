@@ -58,7 +58,7 @@ func (s *HandcodedScanner) NextToken() token.Token {
 	case '/':
 		tok = newToken(token.SLASH, s.ch)
 	case '*':
-		tok = newToken(token.ASTERIK, s.ch)
+		tok = newToken(token.ASTERISK, s.ch)
 	case ':':
 		tok = newToken(token.COLON, s.ch)
 	case '<':

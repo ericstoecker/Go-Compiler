@@ -19,10 +19,10 @@ const (
 	PLUS   = "+"
 	MINUS  = "-"
 
-	SLASH   = "/"
-	ASTERIK = "*"
-	LT      = "<"
-	GT      = ">"
+	SLASH    = "/"
+	ASTERISK = "*"
+	LT       = "<"
+	GT       = ">"
 
 	COMMA     = ","
 	SEMICOLON = ";"
