@@ -3,6 +3,7 @@ package parsergenerator
 import (
 	"bytes"
 	"compiler/grammar"
+	"strconv"
 )
 
 type LrItem struct {
@@ -10,7 +11,8 @@ type LrItem struct {
 	right     []grammar.Category
 	lookahead grammar.Category
 
-	position int
+	position   int
+	precedence int
 }
 
 func (li *LrItem) String() string {
@@ -34,7 +36,11 @@ func (li *LrItem) String() string {
 	}
 
 	out.WriteString(", ")
+	out.WriteString("lookahead: ")
 	out.WriteString(string(li.lookahead))
+	out.WriteString(", ")
+	out.WriteString("precedence: ")
+	out.WriteString(strconv.Itoa(li.precedence))
 	out.WriteString("]")
 
 	return out.String()

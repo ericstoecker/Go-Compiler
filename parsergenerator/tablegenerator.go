@@ -13,9 +13,10 @@ type parseAction interface {
 }
 
 type shift struct {
-	toState int
-	lrItem  *LrItem
-	handler func(string) ast.Node
+	toState    int
+	lrItem     *LrItem
+	handler    func(string) ast.Node
+	precedence int
 }
 
 func (s *shift) parseAction() {}
@@ -25,6 +26,7 @@ type reduce struct {
 	lenRightSide int
 	lrItem       *LrItem
 	handler      func([]ast.Node) ast.Node
+	precedence   int
 }
 
 func (r *reduce) parseAction() {}
@@ -61,6 +63,7 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 
 			isComplete := len(lrItem.right) == lrItem.position
 			if lrItem.left != goalProduction && isComplete {
+				// TODO Probably need to handle existing shift actions
 				if existingAction := actionTable[i][lrItem.lookahead]; isReduce(existingAction) {
 					conflictMessage := fmt.Sprintf("Reduce-Reduce Conflict at state %d on lookahead %s:\nExisting action: %s\nNew reduce action: %s",
 						i, lrItem.lookahead, actionToString(existingAction), actionToString(&reduce{toCategory: lrItem.left, lenRightSide: len(lrItem.right), lrItem: lrItem}))
@@ -74,6 +77,7 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 					lenRightSide: len(lrItem.right),
 					lrItem:       lrItem,
 					handler:      handler,
+					precedence:   lrItem.precedence,
 				}
 			} else if !isComplete && isFollowedByTerminal(lrItem, productions) {
 				followingTerminal := lrItem.right[lrItem.position]
@@ -83,22 +87,25 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 					panic("no goto state defined")
 				}
 
-				existingAction := actionTable[i][followingTerminal]
-				if isReduce(existingAction) && !isLrItemEqual(existingAction.(*reduce).lrItem, lrItem) {
-					conflictMessage := fmt.Sprintf("Conflict at state %d on symbol %s:\nExisting action: %s\nNew shift action: %s",
-						i, followingTerminal, actionToString(existingAction), actionToString(&shift{toState: goToState, lrItem: lrItem}))
-					panic(conflictMessage)
-				} else if isReduce(existingAction) && isLrItemEqual(existingAction.(*reduce).lrItem, lrItem) {
-					continue
-				}
-
 				handler := findHandlerForTerminal(followingTerminal, productions)
-				actionTable[i][followingTerminal] = &shift{
-					toState: goToState,
-					lrItem:  lrItem,
-					handler: handler,
+				shiftAction := &shift{
+					toState:    goToState,
+					lrItem:     lrItem,
+					handler:    handler,
+					precedence: lrItem.precedence,
 				}
 
+				existingAction := actionTable[i][followingTerminal]
+				if isReduce(existingAction) {
+					action, err := resolveShiftReduceConflict(existingAction.(*reduce), shiftAction)
+					if err != nil {
+						panic(err)
+					}
+
+					actionTable[i][followingTerminal] = action
+				} else {
+					actionTable[i][followingTerminal] = shiftAction
+				}
 			} else if lrItem.left == goalProduction && isComplete && lrItem.lookahead == token.EOF {
 				if actionTable[i][token.EOF] != nil {
 					panic("redefined action")
@@ -115,6 +122,25 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 	}
 
 	return
+}
+
+func resolveShiftReduceConflict(reduceAction *reduce, shiftAction *shift) (parseAction, error) {
+	if shiftAction.precedence == reduceAction.precedence {
+		if isLrItemEqual(shiftAction.lrItem, reduceAction.lrItem) {
+			return reduceAction, nil
+		}
+
+		return nil, fmt.Errorf(
+			"cannot resolve shift-reduce conflict: Actions have the same precedence %d and are not resulting from the same grammar rule.\nShift action: %s,\nReduce action: %s",
+			shiftAction.precedence,
+			actionToString(shiftAction),
+			actionToString(reduceAction),
+		)
+	} else if shiftAction.precedence > reduceAction.precedence {
+		return shiftAction, nil
+	} else {
+		return reduceAction, nil
+	}
 }
 
 func isLrItemEqual(a, b *LrItem) bool {
@@ -318,7 +344,7 @@ func productionToLrItem(prod grammar.Production) *LrItem {
 				rightSide, prod, rightSide))
 		}
 
-		return &LrItem{left: left, right: right, position: 0}
+		return &LrItem{left: left, right: right, position: 0, precedence: typedProduction.Precedence}
 	default:
 		panic(fmt.Sprintf("unexpected production of type %T when converting to LrItem", prod))
 	}
@@ -374,10 +400,11 @@ func goTo(s map[string]*LrItem, x grammar.Category, productions map[grammar.Cate
 		isBeforeX := lrItem.right[lrItem.position] == x
 		if isBeforeX {
 			newItem := &LrItem{
-				left:      lrItem.left,
-				right:     lrItem.right,
-				position:  lrItem.position + 1,
-				lookahead: lrItem.lookahead,
+				left:       lrItem.left,
+				right:      lrItem.right,
+				position:   lrItem.position + 1,
+				lookahead:  lrItem.lookahead,
+				precedence: lrItem.precedence,
 			}
 
 			result[newItem.String()] = newItem
@@ -503,7 +530,7 @@ func flattenNonTerminal(nt *grammar.NonTerminal) []grammar.Production {
 	case *grammar.Choice:
 		flattenedChoice := make([]grammar.Production, len(rightSide.Items))
 		for i, production := range rightSide.Items {
-			flattenedChoice[i] = grammar.NewNonTerminal(nt.Name, production)
+			flattenedChoice[i] = grammar.NewNonTerminal(nt.Name, production, production.Precedence())
 		}
 		return flattenedChoice
 	}

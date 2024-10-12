@@ -418,20 +418,16 @@ func TestPrecedence(t *testing.T) {
 			Name: "expression",
 			RightSide: &grammar.Choice{
 				Items: []grammar.RightSide{
-					//&grammar.Sequence{
-					//	Items: []*grammar.Identifier{
-					//		{Name: "expression"},
-					//		{Name: "times"},
-					//		{Name: "expression"},
-					//	},
-					//},
-					&grammar.Sequence{
-						Items: []*grammar.Identifier{
-							{Name: "expression"},
-							{Name: "plus"},
-							{Name: "expression"},
-						},
-					},
+					grammar.NewSequence([]*grammar.Identifier{
+						{Name: "expression"},
+						{Name: "times"},
+						{Name: "expression"},
+					}, 2),
+					grammar.NewSequence([]*grammar.Identifier{
+						{Name: "expression"},
+						{Name: "plus"},
+						{Name: "expression"},
+					}, 1),
 					&grammar.Identifier{Name: "number"},
 				},
 			},
