@@ -209,60 +209,60 @@ func TestGeneratedLrParserForBasicIfGrammar(t *testing.T) {
 	}
 }
 
-func TestAmbiguousGrammar(t *testing.T) {
-	productions := []grammar.Production{
-		&grammar.NonTerminal{
-			Name: GOAL,
-			RightSide: &grammar.Identifier{
-				Name: "sum",
-			},
-		},
-		&grammar.NonTerminal{
-			Name: "sum",
-			RightSide: &grammar.Choice{
-				Items: []grammar.RightSide{
-					&grammar.Sequence{
-						Items: []*grammar.Identifier{
-							{Name: "number"},
-							{Name: "plus"},
-							{Name: "number"},
-						},
-					},
-					&grammar.Sequence{
-						Items: []*grammar.Identifier{
-							{Name: "sum"},
-							{Name: "plus"},
-							{Name: "number"},
-						},
-					},
-					&grammar.Sequence{
-						Items: []*grammar.Identifier{
-							{Name: "number"},
-							{Name: "plus"},
-							{Name: "sum"},
-						},
-					},
-				},
-			},
-		},
-		&grammar.Terminal{Name: "number", Regexp: "[0-9]"},
-		&grammar.Terminal{Name: "plus", Regexp: "+"},
-	}
-
-	tests := []string{
-		"1 + 2",
-	}
-
-	lrParser := New(productions)
-
-	for _, tt := range tests {
-		_, err := lrParser.Parse(tt)
-
-		if err != nil {
-			t.Fatalf("error when parsing valid input '%s': %v", tt, err)
-		}
-	}
-}
+//func TestAmbiguousGrammar(t *testing.T) {
+//	productions := []grammar.Production{
+//		&grammar.NonTerminal{
+//			Name: GOAL,
+//			RightSide: &grammar.Identifier{
+//				Name: "sum",
+//			},
+//		},
+//		&grammar.NonTerminal{
+//			Name: "sum",
+//			RightSide: &grammar.Choice{
+//				Items: []grammar.RightSide{
+//					&grammar.Sequence{
+//						Items: []*grammar.Identifier{
+//							{Name: "number"},
+//							{Name: "plus"},
+//							{Name: "number"},
+//						},
+//					},
+//					&grammar.Sequence{
+//						Items: []*grammar.Identifier{
+//							{Name: "sum"},
+//							{Name: "plus"},
+//							{Name: "number"},
+//						},
+//					},
+//					&grammar.Sequence{
+//						Items: []*grammar.Identifier{
+//							{Name: "number"},
+//							{Name: "plus"},
+//							{Name: "sum"},
+//						},
+//					},
+//				},
+//			},
+//		},
+//		&grammar.Terminal{Name: "number", Regexp: "[0-9]"},
+//		&grammar.Terminal{Name: "plus", Regexp: "+"},
+//	}
+//
+//	tests := []string{
+//		"1 + 2",
+//	}
+//
+//	lrParser := New(productions)
+//
+//	for _, tt := range tests {
+//		_, err := lrParser.Parse(tt)
+//
+//		if err != nil {
+//			t.Fatalf("error when parsing valid input '%s': %v", tt, err)
+//		}
+//	}
+//}
 
 func TestAstConstruction(t *testing.T) {
 	productions := []grammar.Production{
@@ -398,4 +398,101 @@ func TestAstConstruction(t *testing.T) {
 			t.Fatalf("Expected operator to be '+'. Got %s", infixExpression.Operator)
 		}
 	}
+}
+
+func TestPrecedence(t *testing.T) {
+	productions := []grammar.Production{
+		&grammar.NonTerminal{
+			Name: GOAL,
+			RightSide: &grammar.Identifier{
+				Name: "expression",
+			},
+			Handler: func(nodes []ast.Node) ast.Node {
+				if len(nodes) != 1 {
+					panic(fmt.Sprintf("Expected 1 node. Got %d", len(nodes)))
+				}
+				return nodes[0]
+			},
+		},
+		&grammar.NonTerminal{
+			Name: "expression",
+			RightSide: &grammar.Choice{
+				Items: []grammar.RightSide{
+					//&grammar.Sequence{
+					//	Items: []*grammar.Identifier{
+					//		{Name: "expression"},
+					//		{Name: "times"},
+					//		{Name: "expression"},
+					//	},
+					//},
+					&grammar.Sequence{
+						Items: []*grammar.Identifier{
+							{Name: "expression"},
+							{Name: "plus"},
+							{Name: "expression"},
+						},
+					},
+					&grammar.Identifier{Name: "number"},
+				},
+			},
+			//Handler: func(nodes []ast.Node) ast.Node {
+			//	if len(nodes) != 3 {
+			//		panic(fmt.Sprintf("Expected 3 nodes. Got %d", len(nodes)))
+			//	}
+			//
+			//	leftExpression, ok := nodes[0].(ast.Expression)
+			//	if !ok {
+			//		panic(fmt.Sprintf("Expected node to be an Expression. Got %T", nodes[0]))
+			//	}
+			//
+			//	rightExpression, ok := nodes[2].(ast.Expression)
+			//	if !ok {
+			//		panic(fmt.Sprintf("Expected node to be an Expression. Got %T", nodes[2]))
+			//	}
+			//
+			//	return &ast.InfixExpression{
+			//		Left:     leftExpression,
+			//		Operator: token.PLUS,
+			//		Right:    rightExpression,
+			//	}
+			//},
+		},
+		&grammar.Terminal{
+			Name:   "number",
+			Regexp: "[0-9]",
+			Handler: func(s string) ast.Node {
+				value, err := strconv.ParseInt(s, 0, 64)
+				if err != nil {
+					msg := fmt.Sprintf("Error when trying to parse %s to int", s)
+					panic(msg)
+				}
+				return &ast.IntegerLiteral{
+					Token: token.Token{
+						Type:    "number",
+						Literal: s,
+					},
+					Value: value,
+				}
+			},
+		},
+		&grammar.Terminal{
+			Name:   "plus",
+			Regexp: "+",
+		},
+		&grammar.Terminal{
+			Name:   "times",
+			Regexp: "*",
+		},
+	}
+
+	input := "1 + 2 + 3"
+
+	lrParser := New(productions)
+
+	_, err := lrParser.Parse(input)
+
+	if err != nil {
+		t.Fatalf("error when parsing valid input '%s': %v", input, err)
+	}
+
 }

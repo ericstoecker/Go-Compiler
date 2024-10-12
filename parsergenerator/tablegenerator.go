@@ -83,16 +83,22 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 					panic("no goto state defined")
 				}
 
-				handler := findHandlerForTerminal(followingTerminal, productions)
-
 				existingAction := actionTable[i][followingTerminal]
-				if !isReduce(existingAction) {
-					actionTable[i][followingTerminal] = &shift{
-						toState: goToState,
-						lrItem:  lrItem,
-						handler: handler,
-					}
+				if isReduce(existingAction) && !isLrItemEqual(existingAction.(*reduce).lrItem, lrItem) {
+					conflictMessage := fmt.Sprintf("Conflict at state %d on symbol %s:\nExisting action: %s\nNew shift action: %s",
+						i, followingTerminal, actionToString(existingAction), actionToString(&shift{toState: goToState, lrItem: lrItem}))
+					panic(conflictMessage)
+				} else if isReduce(existingAction) && isLrItemEqual(existingAction.(*reduce).lrItem, lrItem) {
+					continue
 				}
+
+				handler := findHandlerForTerminal(followingTerminal, productions)
+				actionTable[i][followingTerminal] = &shift{
+					toState: goToState,
+					lrItem:  lrItem,
+					handler: handler,
+				}
+
 			} else if lrItem.left == goalProduction && isComplete && lrItem.lookahead == token.EOF {
 				if actionTable[i][token.EOF] != nil {
 					panic("redefined action")
@@ -109,6 +115,24 @@ func generateParseTables(productions []grammar.Production) (actionTable map[int]
 	}
 
 	return
+}
+
+func isLrItemEqual(a, b *LrItem) bool {
+	if a.left != b.left {
+		return false
+	}
+
+	if len(a.right) != len(b.right) {
+		return false
+	}
+
+	for i := range a.right {
+		if a.right[i] != b.right[i] {
+			return false
+		}
+	}
+
+	return true
 }
 
 func findHandlerForTerminal(terminal grammar.Category, productions []grammar.Production) func(string) ast.Node {
