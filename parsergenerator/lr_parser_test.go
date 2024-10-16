@@ -402,6 +402,7 @@ func TestAstConstruction(t *testing.T) {
 
 func TestPrecedence(t *testing.T) {
 	productions := []grammar.Production{
+		// Goal Production
 		&grammar.NonTerminal{
 			Name: GOAL,
 			RightSide: &grammar.Identifier{
@@ -414,25 +415,33 @@ func TestPrecedence(t *testing.T) {
 				return nodes[0]
 			},
 		},
+		// Expression Production with Choice and Precedence
 		&grammar.NonTerminal{
 			Name: "expression",
 			RightSide: &grammar.Choice{
 				Items: []grammar.RightSide{
+					// expression -> expression times expression (Higher Precedence)
 					&grammar.Sequence{
 						Items: []*grammar.Identifier{
 							{Name: "expression"},
 							{Name: "times"},
 							{Name: "expression"},
 						},
+						Precedence: 2, // Higher precedence for 'times'
 					},
+					// expression -> expression plus expression (Lower Precedence)
 					&grammar.Sequence{
 						Items: []*grammar.Identifier{
 							{Name: "expression"},
 							{Name: "plus"},
 							{Name: "expression"},
 						},
+						Precedence: 1, // Lower precedence for 'plus'
 					},
-					&grammar.Identifier{Name: "number"},
+					// expression -> number
+					&grammar.Identifier{
+						Name: "number",
+					},
 				},
 			},
 			Handler: func(nodes []ast.Node) ast.Node {
@@ -457,7 +466,7 @@ func TestPrecedence(t *testing.T) {
 						panic(fmt.Sprintf("Unknown operator: %s", operatorToken.Value))
 					}
 					return &ast.InfixExpression{
-						Token:    token.Token{Type: operator, Literal: operatorToken.Value},
+						Token:    token.Token{Type: string(operator), Literal: operatorToken.Value},
 						Left:     left,
 						Operator: operator,
 						Right:    right,
@@ -466,11 +475,12 @@ func TestPrecedence(t *testing.T) {
 				panic("Invalid number of nodes for expression")
 			},
 		},
+		// Terminal: number
 		&grammar.Terminal{
 			Name:   "number",
-			Regexp: "[0-9]",
+			Regexp: `[0-9]+`,
 			Handler: func(s string) ast.Node {
-				value, err := strconv.ParseInt(s, 0, 64)
+				value, err := strconv.ParseInt(s, 10, 64)
 				if err != nil {
 					msg := fmt.Sprintf("Error when trying to parse %s to int", s)
 					panic(msg)
@@ -484,12 +494,12 @@ func TestPrecedence(t *testing.T) {
 				}
 			},
 		},
+		// Terminal: plus
 		&grammar.Terminal{
 			Name:   "plus",
-			Regexp: "+",
+			Regexp: `\+`,
 			Handler: func(s string) ast.Node {
-				// Usually, operators don't carry AST nodes themselves,
-				// but to simplify handler access, we use Identifier nodes.
+				// Operators are represented as Identifiers for simplicity
 				return &ast.Identifier{
 					Token: token.Token{
 						Type:    "plus",
@@ -499,9 +509,10 @@ func TestPrecedence(t *testing.T) {
 				}
 			},
 		},
+		// Terminal: times
 		&grammar.Terminal{
 			Name:   "times",
-			Regexp: "*",
+			Regexp: `\*`,
 			Handler: func(s string) ast.Node {
 				return &ast.Identifier{
 					Token: token.Token{
