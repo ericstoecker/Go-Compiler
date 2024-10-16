@@ -403,7 +403,7 @@ func TestAstConstruction(t *testing.T) {
 func TestPrecedence(t *testing.T) {
 	productions := []grammar.Production{
 		&grammar.NonTerminal{
-			Name: GOAL,
+			Name: "Goal",
 			RightSide: &grammar.Identifier{
 				Name: "expression",
 			},
@@ -431,27 +431,6 @@ func TestPrecedence(t *testing.T) {
 					&grammar.Identifier{Name: "number"},
 				},
 			},
-			//Handler: func(nodes []ast.Node) ast.Node {
-			//	if len(nodes) != 3 {
-			//		panic(fmt.Sprintf("Expected 3 nodes. Got %d", len(nodes)))
-			//	}
-			//
-			//	leftExpression, ok := nodes[0].(ast.Expression)
-			//	if !ok {
-			//		panic(fmt.Sprintf("Expected node to be an Expression. Got %T", nodes[0]))
-			//	}
-			//
-			//	rightExpression, ok := nodes[2].(ast.Expression)
-			//	if !ok {
-			//		panic(fmt.Sprintf("Expected node to be an Expression. Got %T", nodes[2]))
-			//	}
-			//
-			//	return &ast.InfixExpression{
-			//		Left:     leftExpression,
-			//		Operator: token.PLUS,
-			//		Right:    rightExpression,
-			//	}
-			//},
 		},
 		&grammar.Terminal{
 			Name:   "number",
@@ -481,14 +460,69 @@ func TestPrecedence(t *testing.T) {
 		},
 	}
 
-	input := "1 + 2 + 3"
+	// TODO build ast
+
+	input := "1 + 2 * 3"
 
 	lrParser := New(productions)
 
-	_, err := lrParser.Parse(input)
+	node, err := lrParser.Parse(input)
 
 	if err != nil {
 		t.Fatalf("error when parsing valid input '%s': %v", input, err)
 	}
 
+	if node == nil {
+		t.Fatalf("Expected node to be non-nil")
+	}
+
+	infixExpression, ok := node.(*ast.InfixExpression)
+	if !ok {
+		t.Fatalf("Expected node to be an InfixExpression. Got %T", node)
+	}
+
+	leftExpression, ok := infixExpression.Left.(*ast.InfixExpression)
+	if !ok {
+		t.Fatalf("Expected left to be an InfixExpression. Got %T", infixExpression.Left)
+	}
+
+	leftExpressionSummand, ok := leftExpression.Left.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("Expected left to be an IntegerLiteral. Got %T", leftExpression.Left)
+	}
+
+	if leftExpression.Operator != token.PLUS {
+		t.Fatalf("Expected operator to be '+'. Got %s", leftExpression.Operator)
+	}
+
+	if leftExpressionSummand.Value != 1 {
+		t.Fatalf("Expected left summand to be 1. Got %d", leftExpressionSummand.Value)
+	}
+
+	rightExpression, ok := leftExpression.Right.(*ast.InfixExpression)
+	if !ok {
+		t.Fatalf("Expected right to be an InfixExpression. Got %T", leftExpression.Right)
+	}
+
+	rightExpressionMultiplier, ok := rightExpression.Left.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("Expected right to be an IntegerLiteral. Got %T", rightExpression.Left)
+	}
+
+	if rightExpressionMultiplier.Value != 2 {
+		t.Fatalf("Expected right summand to be 2. Got %d", rightExpressionMultiplier.Value)
+	}
+
+	rightExpressionLeftMultiplier, ok := rightExpression.Left.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("Expected right to be an IntegerLiteral. Got %T", rightExpression.Left)
+	}
+
+	if rightExpression.Operator != token.ASTERISK {
+		t.Fatalf("Expected operator to be '*'. Got %s", rightExpression.Operator)
+	}
+
+	if rightExpressionLeftMultiplier.Value != 3 {
+		t.Fatalf("Expected right summand to be 3. Got %d", rightExpressionLeftMultiplier.Value)
+	}
 }
