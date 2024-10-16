@@ -403,13 +403,13 @@ func TestAstConstruction(t *testing.T) {
 func TestPrecedence(t *testing.T) {
 	productions := []grammar.Production{
 		&grammar.NonTerminal{
-			Name: "Goal",
+			Name: GOAL,
 			RightSide: &grammar.Identifier{
 				Name: "expression",
 			},
 			Handler: func(nodes []ast.Node) ast.Node {
 				if len(nodes) != 1 {
-					panic(fmt.Sprintf("Expected 1 node. Got %d", len(nodes)))
+					panic(fmt.Sprintf("Expected 1 node for GOAL. Got %d", len(nodes)))
 				}
 				return nodes[0]
 			},
@@ -418,18 +418,52 @@ func TestPrecedence(t *testing.T) {
 			Name: "expression",
 			RightSide: &grammar.Choice{
 				Items: []grammar.RightSide{
-					grammar.NewSequence([]*grammar.Identifier{
-						{Name: "expression"},
-						{Name: "times"},
-						{Name: "expression"},
-					}, 2),
-					grammar.NewSequence([]*grammar.Identifier{
-						{Name: "expression"},
-						{Name: "plus"},
-						{Name: "expression"},
-					}, 1),
+					&grammar.Sequence{
+						Items: []*grammar.Identifier{
+							{Name: "expression"},
+							{Name: "times"},
+							{Name: "expression"},
+						},
+					},
+					&grammar.Sequence{
+						Items: []*grammar.Identifier{
+							{Name: "expression"},
+							{Name: "plus"},
+							{Name: "expression"},
+						},
+					},
 					&grammar.Identifier{Name: "number"},
 				},
+			},
+			Handler: func(nodes []ast.Node) ast.Node {
+				if len(nodes) == 1 {
+					// expression -> number
+					return nodes[0]
+				} else if len(nodes) == 3 {
+					// expression -> expression operator expression
+					left, ok1 := nodes[0].(ast.Expression)
+					operatorToken, ok2 := nodes[1].(*ast.Identifier)
+					right, ok3 := nodes[2].(ast.Expression)
+					if !ok1 || !ok2 || !ok3 {
+						panic("Invalid node types for expression -> expression operator expression")
+					}
+					var operator token.TokenType
+					switch operatorToken.Value {
+					case "plus":
+						operator = token.PLUS
+					case "times":
+						operator = token.ASTERISK
+					default:
+						panic(fmt.Sprintf("Unknown operator: %s", operatorToken.Value))
+					}
+					return &ast.InfixExpression{
+						Token:    token.Token{Type: operatorToken.Value, Literal: operatorToken.Value},
+						Left:     left,
+						Operator: operator,
+						Right:    right,
+					}
+				}
+				panic("Invalid number of nodes for expression")
 			},
 		},
 		&grammar.Terminal{
@@ -453,10 +487,30 @@ func TestPrecedence(t *testing.T) {
 		&grammar.Terminal{
 			Name:   "plus",
 			Regexp: "+",
+			Handler: func(s string) ast.Node {
+				// Usually, operators don't carry AST nodes themselves,
+				// but to simplify handler access, we use Identifier nodes.
+				return &ast.Identifier{
+					Token: token.Token{
+						Type:    "plus",
+						Literal: "plus",
+					},
+					Value: "plus",
+				}
+			},
 		},
 		&grammar.Terminal{
 			Name:   "times",
 			Regexp: "*",
+			Handler: func(s string) ast.Node {
+				return &ast.Identifier{
+					Token: token.Token{
+						Type:    "times",
+						Literal: "times",
+					},
+					Value: "times",
+				}
+			},
 		},
 	}
 
