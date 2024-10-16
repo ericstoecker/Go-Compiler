@@ -404,7 +404,7 @@ func TestPrecedence(t *testing.T) {
 	productions := []grammar.Production{
 		// Goal Production
 		&grammar.NonTerminal{
-			Name: GOAL,
+			Name: "GOAL",
 			RightSide: &grammar.Identifier{
 				Name: "expression",
 			},
@@ -414,6 +414,7 @@ func TestPrecedence(t *testing.T) {
 				}
 				return nodes[0]
 			},
+			Precedence: 0, // Precedence is not used for NonTerminals here
 		},
 		// Expression Production with Choice and Precedence
 		&grammar.NonTerminal{
@@ -421,27 +422,25 @@ func TestPrecedence(t *testing.T) {
 			RightSide: &grammar.Choice{
 				Items: []grammar.RightSide{
 					// expression -> expression times expression (Higher Precedence)
-					&grammar.Sequence{
-						Items: []*grammar.Identifier{
+					grammar.NewSequence(
+						[]*grammar.Identifier{
 							{Name: "expression"},
 							{Name: "times"},
 							{Name: "expression"},
 						},
-						Precedence: 2, // Higher precedence for 'times'
-					},
+						2, // Higher precedence for 'times'
+					),
 					// expression -> expression plus expression (Lower Precedence)
-					&grammar.Sequence{
-						Items: []*grammar.Identifier{
+					grammar.NewSequence(
+						[]*grammar.Identifier{
 							{Name: "expression"},
 							{Name: "plus"},
 							{Name: "expression"},
 						},
-						Precedence: 1, // Lower precedence for 'plus'
-					},
+						1, // Lower precedence for 'plus'
+					),
 					// expression -> number
-					&grammar.Identifier{
-						Name: "number",
-					},
+					&grammar.Identifier{Name: "number"},
 				},
 			},
 			Handler: func(nodes []ast.Node) ast.Node {
@@ -474,6 +473,7 @@ func TestPrecedence(t *testing.T) {
 				}
 				panic("Invalid number of nodes for expression")
 			},
+			Precedence: 0, // Precedence is managed within the Sequences
 		},
 		// Terminal: number
 		&grammar.Terminal{
