@@ -69,54 +69,44 @@ func (c *NfaToDfaConverter) Convert() *Dfa {
 		}
 	}
 
+	// Build and return the DFA
 	return &Dfa{
 		Transitions:     transitions,
+		AcceptingStates: acceptingStates,
 		InitialState:    0,
-		AcceptingStates: filterDuplicates(acceptingStates),
 		TypeTable:       typeTable,
 	}
 }
 
 func (c *NfaToDfaConverter) followEpsilon(states []int) []int {
-	epsilonTransitions := c.nfa.Transitions[EPSILON]
-	if len(epsilonTransitions) == 0 {
-		return states
-	}
-
+	visited := make(map[int]bool)
 	result := make([]int, 0)
-	result = append(result, states...)
 	for _, state := range states {
-		epsilonTransitionsForCurrentState := c.followEpsilonFromState(state)
-		result = append(result, epsilonTransitionsForCurrentState...)
+		closure := c.followEpsilonFromState(state, visited)
+		result = append(result, closure...)
 	}
 
 	return filterDuplicates(result)
 }
 
+func (c *NfaToDfaConverter) followEpsilonFromState(state int, visited map[int]bool) []int {
+	if visited[state] {
+		return []int{}
+	}
+	visited[state] = true
+
+	result := []int{state}
+
+	epsilonTransitionsForState := c.nfa.Transitions[EPSILON][state]
+	for _, neighbor := range epsilonTransitionsForState {
+		result = append(result, c.followEpsilonFromState(neighbor, visited)...)
+	}
+	return result
+}
+
 func filterDuplicates(a []int) []int {
 	slices.Sort(a)
 	return slices.Compact(a)
-}
-
-func (c *NfaToDfaConverter) followEpsilonFromState(state int) []int {
-	epsilonTransitions := c.nfa.Transitions[EPSILON]
-	if len(epsilonTransitions) == 0 {
-		return []int{state}
-	}
-
-	epsilonTransitionsForState := epsilonTransitions[state]
-	if len(epsilonTransitionsForState) == 0 {
-		return []int{state}
-	}
-
-	directNeighborsThroughEpsilon := c.delta([]int{state}, EPSILON)
-	result := make([]int, 0)
-	for _, neighboringState := range directNeighborsThroughEpsilon {
-		indirectNeighbors := c.followEpsilonFromState(neighboringState)
-		result = append(result, indirectNeighbors...)
-		result = append(result, neighboringState)
-	}
-	return result
 }
 
 func (c *NfaToDfaConverter) delta(states []int, char string) []int {
@@ -129,7 +119,7 @@ func (c *NfaToDfaConverter) delta(states []int, char string) []int {
 	for _, state := range states {
 		transitionsForCurrentState, ok := transitionsForCharacter[state]
 		if ok {
-			result = append(result, transitionsForCurrentState...)
+			result = append(result, transitionsForCurrentState)
 		}
 	}
 	return result
