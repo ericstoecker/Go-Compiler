@@ -402,7 +402,6 @@ func TestAstConstruction(t *testing.T) {
 
 func TestPrecedence(t *testing.T) {
 	productions := []grammar.Production{
-		// Goal Production
 		&grammar.NonTerminal{
 			Name: "GOAL",
 			RightSide: &grammar.Identifier{
@@ -416,12 +415,10 @@ func TestPrecedence(t *testing.T) {
 			},
 			Precedence: 0, // Precedence is not used for NonTerminals here
 		},
-		// Expression Production with Choice and Precedence
 		&grammar.NonTerminal{
 			Name: "expression",
 			RightSide: &grammar.Choice{
 				Items: []grammar.RightSide{
-					// expression -> expression times expression (Higher Precedence)
 					grammar.NewSequence(
 						[]*grammar.Identifier{
 							{Name: "expression"},
@@ -430,7 +427,6 @@ func TestPrecedence(t *testing.T) {
 						},
 						2, // Higher precedence for 'times'
 					),
-					// expression -> expression plus expression (Lower Precedence)
 					grammar.NewSequence(
 						[]*grammar.Identifier{
 							{Name: "expression"},
@@ -439,16 +435,13 @@ func TestPrecedence(t *testing.T) {
 						},
 						1, // Lower precedence for 'plus'
 					),
-					// expression -> number
 					&grammar.Identifier{Name: "number"},
 				},
 			},
 			Handler: func(nodes []ast.Node) ast.Node {
 				if len(nodes) == 1 {
-					// expression -> number
 					return nodes[0]
 				} else if len(nodes) == 3 {
-					// expression -> expression operator expression
 					left, ok1 := nodes[0].(ast.Expression)
 					operatorToken, ok2 := nodes[1].(*ast.Identifier)
 					right, ok3 := nodes[2].(ast.Expression)
@@ -475,10 +468,9 @@ func TestPrecedence(t *testing.T) {
 			},
 			Precedence: 0, // Precedence is managed within the Sequences
 		},
-		// Terminal: number
 		&grammar.Terminal{
 			Name:   "number",
-			Regexp: `[0-9]+`,
+			Regexp: "[0-9]",
 			Handler: func(s string) ast.Node {
 				value, err := strconv.ParseInt(s, 10, 64)
 				if err != nil {
@@ -494,12 +486,10 @@ func TestPrecedence(t *testing.T) {
 				}
 			},
 		},
-		// Terminal: plus
 		&grammar.Terminal{
 			Name:   "plus",
-			Regexp: `\+`,
+			Regexp: "\\+",
 			Handler: func(s string) ast.Node {
-				// Operators are represented as Identifiers for simplicity
 				return &ast.Identifier{
 					Token: token.Token{
 						Type:    "plus",
@@ -509,10 +499,9 @@ func TestPrecedence(t *testing.T) {
 				}
 			},
 		},
-		// Terminal: times
 		&grammar.Terminal{
 			Name:   "times",
-			Regexp: `\*`,
+			Regexp: "\\*",
 			Handler: func(s string) ast.Node {
 				return &ast.Identifier{
 					Token: token.Token{
@@ -524,8 +513,6 @@ func TestPrecedence(t *testing.T) {
 			},
 		},
 	}
-
-	// TODO build ast
 
 	input := "1 + 2 * 3"
 
@@ -546,27 +533,22 @@ func TestPrecedence(t *testing.T) {
 		t.Fatalf("Expected node to be an InfixExpression. Got %T", node)
 	}
 
-	leftExpression, ok := infixExpression.Left.(*ast.InfixExpression)
+	leftExpression, ok := infixExpression.Left.(*ast.IntegerLiteral)
 	if !ok {
-		t.Fatalf("Expected left to be an InfixExpression. Got %T", infixExpression.Left)
+		t.Fatalf("Expected left to be an IntegerLiteral. Got %T", infixExpression.Left)
 	}
 
-	leftExpressionSummand, ok := leftExpression.Left.(*ast.IntegerLiteral)
+	if leftExpression.Value != 1 {
+		t.Fatalf("Expected left summand to be 1. Got %d", leftExpression.Value)
+	}
+
+	if infixExpression.Operator != token.PLUS {
+		t.Fatalf("Expected operator to be '+'. Got %s", infixExpression.Operator)
+	}
+
+	rightExpression, ok := infixExpression.Right.(*ast.InfixExpression)
 	if !ok {
-		t.Fatalf("Expected left to be an IntegerLiteral. Got %T", leftExpression.Left)
-	}
-
-	if leftExpression.Operator != token.PLUS {
-		t.Fatalf("Expected operator to be '+'. Got %s", leftExpression.Operator)
-	}
-
-	if leftExpressionSummand.Value != 1 {
-		t.Fatalf("Expected left summand to be 1. Got %d", leftExpressionSummand.Value)
-	}
-
-	rightExpression, ok := leftExpression.Right.(*ast.InfixExpression)
-	if !ok {
-		t.Fatalf("Expected right to be an InfixExpression. Got %T", leftExpression.Right)
+		t.Fatalf("Expected right to be an InfixExpression. Got %T", infixExpression.Right)
 	}
 
 	rightExpressionMultiplier, ok := rightExpression.Left.(*ast.IntegerLiteral)
@@ -575,10 +557,10 @@ func TestPrecedence(t *testing.T) {
 	}
 
 	if rightExpressionMultiplier.Value != 2 {
-		t.Fatalf("Expected right summand to be 2. Got %d", rightExpressionMultiplier.Value)
+		t.Fatalf("Expected right sides left multiplier to be 2. Got %d", rightExpressionMultiplier.Value)
 	}
 
-	rightExpressionLeftMultiplier, ok := rightExpression.Left.(*ast.IntegerLiteral)
+	rightExpressionLeftMultiplier, ok := rightExpression.Right.(*ast.IntegerLiteral)
 	if !ok {
 		t.Fatalf("Expected right to be an IntegerLiteral. Got %T", rightExpression.Left)
 	}
@@ -588,6 +570,6 @@ func TestPrecedence(t *testing.T) {
 	}
 
 	if rightExpressionLeftMultiplier.Value != 3 {
-		t.Fatalf("Expected right summand to be 3. Got %d", rightExpressionLeftMultiplier.Value)
+		t.Fatalf("Expected right multiplier to be 3. Got %d", rightExpressionLeftMultiplier.Value)
 	}
 }
