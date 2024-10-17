@@ -464,7 +464,7 @@ func TestPrecedence(t *testing.T) {
 		},
 		&grammar.Terminal{
 			Name:   "number",
-			Regexp: "[0-9]",
+			Regexp: `[0-9]+`,
 			Handler: func(s string) ast.Node {
 				value, err := strconv.ParseInt(s, 10, 64)
 				if err != nil {
@@ -482,7 +482,7 @@ func TestPrecedence(t *testing.T) {
 		},
 		&grammar.Terminal{
 			Name:   "plus",
-			Regexp: "\\+",
+			Regexp: `\+`,
 			Handler: func(s string) ast.Node {
 				return &ast.Identifier{
 					Token: token.Token{
@@ -495,7 +495,7 @@ func TestPrecedence(t *testing.T) {
 		},
 		&grammar.Terminal{
 			Name:   "times",
-			Regexp: "\\*",
+			Regexp: `\*`,
 			Handler: func(s string) ast.Node {
 				return &ast.Identifier{
 					Token: token.Token{
