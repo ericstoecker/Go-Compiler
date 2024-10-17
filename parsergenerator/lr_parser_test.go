@@ -438,22 +438,22 @@ func TestPrecedence(t *testing.T) {
 					return nodes[0]
 				} else if len(nodes) == 3 {
 					left, ok1 := nodes[0].(ast.Expression)
-					operatorToken, ok2 := nodes[1].(*ast.Identifier)
+					operatorNode, ok2 := nodes[1].(*ast.Identifier)
 					right, ok3 := nodes[2].(ast.Expression)
 					if !ok1 || !ok2 || !ok3 {
 						panic("Invalid node types for expression -> expression operator expression")
 					}
 					var operator token.TokenType
-					switch operatorToken.Value {
+					switch operatorNode.Token.Type {
 					case "plus":
 						operator = token.PLUS
 					case "times":
 						operator = token.ASTERISK
 					default:
-						panic(fmt.Sprintf("Unknown operator: %s", operatorToken.Value))
+						panic(fmt.Sprintf("Unknown operator: %s", operatorNode.Value))
 					}
 					return &ast.InfixExpression{
-						Token:    token.Token{Type: operator, Literal: operatorToken.Value},
+						Token:    token.Token{Type: operator, Literal: operatorNode.Value},
 						Left:     left,
 						Operator: operator,
 						Right:    right,
@@ -487,9 +487,9 @@ func TestPrecedence(t *testing.T) {
 				return &ast.Identifier{
 					Token: token.Token{
 						Type:    "plus",
-						Literal: "plus",
+						Literal: "+",
 					},
-					Value: "plus",
+					Value: "+",
 				}
 			},
 		},
@@ -500,9 +500,9 @@ func TestPrecedence(t *testing.T) {
 				return &ast.Identifier{
 					Token: token.Token{
 						Type:    "times",
-						Literal: "times",
+						Literal: "*",
 					},
-					Value: "times",
+					Value: "*",
 				}
 			},
 		},
