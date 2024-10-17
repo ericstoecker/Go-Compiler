@@ -14,6 +14,7 @@ const (
 	ALTERNATION
 	CONCATENATION
 	KLEENE
+	ONE_OR_MORE
 	PARENTHESIS
 )
 
@@ -30,6 +31,7 @@ func NewRegexpToNfaConverter(input string) *RegexpToNfaConverter {
 	precedences := map[string]int{
 		"|": ALTERNATION,
 		"*": KLEENE,
+		"+": ONE_OR_MORE,
 		"(": PARENTHESIS,
 		")": CLOSING,
 	}
@@ -51,7 +53,7 @@ func (c *RegexpToNfaConverter) Convert() (*Nfa, error) {
 	}
 
 	if c.position < len(c.regexp)-1 && c.regexp[c.position+1] == ')' {
-		return nil, fmt.Errorf("expected opening ')'")
+		return nil, fmt.Errorf("expected matching ')'")
 	}
 
 	if nfa.TypeTable == nil {
@@ -121,7 +123,7 @@ func (c *RegexpToNfaConverter) parseRange() (*Nfa, error) {
 	c.readCharacter()
 	upperBound := c.ch
 	if lowerBound >= upperBound {
-		return nil, fmt.Errorf("lower bound greater or equal to upper bound '[%s-%s]'", string(lowerBound), string(upperBound))
+		return nil, fmt.Errorf("invalid range '[%s-%s]'", string(lowerBound), string(upperBound))
 	}
 
 	c.readCharacter()
@@ -165,6 +167,8 @@ func (c *RegexpToNfaConverter) parseInfixExpression(left *Nfa) (*Nfa, error) {
 		return c.parseAlternation(left)
 	case "*":
 		return c.parseKleeneStar(left), nil
+	case "+":
+		return c.parseOneOrMore(left), nil
 	default:
 		return c.parseConcatenation(left)
 	}
@@ -174,6 +178,10 @@ func (c *RegexpToNfaConverter) parseKleeneStar(left *Nfa) *Nfa {
 	return left.Kleene()
 }
 
+func (c *RegexpToNfaConverter) parseOneOrMore(left *Nfa) *Nfa {
+	return left.Concatenation(left.Kleene())
+}
+
 func (c *RegexpToNfaConverter) parseAlternation(left *Nfa) (*Nfa, error) {
 	c.readCharacter()
 	right, err := c.parseExpression(ALTERNATION)
@@ -181,7 +189,7 @@ func (c *RegexpToNfaConverter) parseAlternation(left *Nfa) (*Nfa, error) {
 		return nil, err
 	}
 	if right == nil {
-		return nil, fmt.Errorf("expected right side of |")
+		return nil, fmt.Errorf("expected right side of '|'")
 	}
 
 	return left.Union(right), nil
