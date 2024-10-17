@@ -413,7 +413,6 @@ func TestPrecedence(t *testing.T) {
 				}
 				return nodes[0]
 			},
-			Precedence: 0, // Precedence is not used for NonTerminals here
 		},
 		&grammar.NonTerminal{
 			Name: "expression",
@@ -425,7 +424,7 @@ func TestPrecedence(t *testing.T) {
 							{Name: "times"},
 							{Name: "expression"},
 						},
-						2, // Higher precedence for 'times'
+						2,
 					),
 					grammar.NewSequence(
 						[]*grammar.Identifier{
@@ -433,7 +432,7 @@ func TestPrecedence(t *testing.T) {
 							{Name: "plus"},
 							{Name: "expression"},
 						},
-						1, // Lower precedence for 'plus'
+						1,
 					),
 					&grammar.Identifier{Name: "number"},
 				},
@@ -466,7 +465,6 @@ func TestPrecedence(t *testing.T) {
 				}
 				panic("Invalid number of nodes for expression")
 			},
-			Precedence: 0, // Precedence is managed within the Sequences
 		},
 		&grammar.Terminal{
 			Name:   "number",
