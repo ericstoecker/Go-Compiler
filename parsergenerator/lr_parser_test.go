@@ -344,59 +344,55 @@ func TestAstConstruction(t *testing.T) {
 		},
 	}
 
-	tests := []string{
-		"1 + 2 + 3",
-	}
+	tt := "1 + 2 + 3"
 
 	lrParser := New(productions)
 
-	for _, tt := range tests {
-		node, err := lrParser.Parse(tt)
+	node, err := lrParser.Parse(tt)
 
-		if err != nil {
-			t.Fatalf("error when parsing valid input '%s': %v", tt, err)
-		}
+	if err != nil {
+		t.Fatalf("error when parsing valid input '%s': %v", tt, err)
+	}
 
-		if node == nil {
-			t.Fatalf("Expected node to be non-nil")
-		}
+	if node == nil {
+		t.Fatalf("Expected node to be non-nil")
+	}
 
-		infixExpression, ok := node.(*ast.InfixExpression)
-		if !ok {
-			t.Fatalf("Expected node to be an InfixExpression. Got %T", node)
-		}
+	infixExpression, ok := node.(*ast.InfixExpression)
+	if !ok {
+		t.Fatalf("Expected node to be an InfixExpression. Got %T", node)
+	}
 
-		leftExpression, ok := infixExpression.Left.(*ast.InfixExpression)
-		if !ok {
-			t.Fatalf("Expected left to be an InfixExpression. Got %T", infixExpression.Left)
-		}
+	leftExpression, ok := infixExpression.Left.(*ast.InfixExpression)
+	if !ok {
+		t.Fatalf("Expected left to be an InfixExpression. Got %T", infixExpression.Left)
+	}
 
-		leftExpressionSummand, ok := leftExpression.Left.(*ast.IntegerLiteral)
-		if !ok {
-			t.Fatalf("Expected left to be an IntegerLiteral. Got %T", leftExpression.Left)
-		}
+	leftExpressionSummand, ok := leftExpression.Left.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("Expected left to be an IntegerLiteral. Got %T", leftExpression.Left)
+	}
 
-		if leftExpressionSummand.Value != 1 {
-			t.Fatalf("Expected left summand to be 1. Got %d", leftExpressionSummand.Value)
-		}
+	if leftExpressionSummand.Value != 1 {
+		t.Fatalf("Expected left summand to be 1. Got %d", leftExpressionSummand.Value)
+	}
 
-		rightExpressionSummand, ok := leftExpression.Right.(*ast.IntegerLiteral)
-		if !ok {
-			t.Fatalf("Expected right to be an IntegerLiteral. Got %T", leftExpression.Right)
-		}
+	rightExpressionSummand, ok := leftExpression.Right.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("Expected right to be an IntegerLiteral. Got %T", leftExpression.Right)
+	}
 
-		if rightExpressionSummand.Value != 2 {
-			t.Fatalf("Expected right summand to be 2. Got %d", rightExpressionSummand.Value)
-		}
+	if rightExpressionSummand.Value != 2 {
+		t.Fatalf("Expected right summand to be 2. Got %d", rightExpressionSummand.Value)
+	}
 
-		_, ok = infixExpression.Right.(*ast.IntegerLiteral)
-		if !ok {
-			t.Fatalf("Expected right to be an IntegerLiteral. Got %T", infixExpression.Right)
-		}
+	_, ok = infixExpression.Right.(*ast.IntegerLiteral)
+	if !ok {
+		t.Fatalf("Expected right to be an IntegerLiteral. Got %T", infixExpression.Right)
+	}
 
-		if infixExpression.Operator != token.PLUS {
-			t.Fatalf("Expected operator to be '+'. Got %s", infixExpression.Operator)
-		}
+	if infixExpression.Operator != token.PLUS {
+		t.Fatalf("Expected operator to be '+'. Got %s", infixExpression.Operator)
 	}
 }
 
