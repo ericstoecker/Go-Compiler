@@ -465,7 +465,7 @@ func TestPrecedence(t *testing.T) {
 						panic(fmt.Sprintf("Unknown operator: %s", operatorToken.Value))
 					}
 					return &ast.InfixExpression{
-						Token:    token.Token{Type: string(operator), Literal: operatorToken.Value},
+						Token:    token.Token{Type: operator, Literal: operatorToken.Value},
 						Left:     left,
 						Operator: operator,
 						Right:    right,
