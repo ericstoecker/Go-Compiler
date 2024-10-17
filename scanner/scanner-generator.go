@@ -47,6 +47,7 @@ func (s *ScannerGenerator) GenerateScanner(tokenClassifications []TokenClassific
 var TokenClassifications = []TokenClassification{
 	{"=", token.ASSIGN, 1},
 	{"+", token.PLUS, 1},
+	{"\\*", token.ASTERISK, 1},
 	{"-", token.MINUS, 1},
 	{",", token.COMMA, 1},
 	{";", token.SEMICOLON, 1},
