@@ -119,7 +119,7 @@ func (c *NfaToDfaConverter) delta(states []int, char string) []int {
 	for _, state := range states {
 		transitionsForCurrentState, ok := transitionsForCharacter[state]
 		if ok {
-			result = append(result, transitionsForCurrentState)
+			result = append(result, transitionsForCurrentState...)
 		}
 	}
 	return result
