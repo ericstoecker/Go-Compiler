@@ -210,8 +210,7 @@ func runEvaluatorTests(t *testing.T, tests []evaluatorTest) {
 
 	for _, tt := range tests {
 		l := scanner.NewHandcodedScanner(tt.input)
-		p := parser.New(l)
-
+		p := parser.NewGeneratedParser(l) // Use the generated parser
 		program := p.ParseProgram()
 		checkParserErrors(t, p)
 		evaluator := New()
@@ -328,15 +327,15 @@ func TestErrorHandling(t *testing.T) {
 	}
 }
 
-func checkParserErrors(t *testing.T, p *parser.Parser) {
-	errors := p.Errors
-	if len(errors) == 0 {
-		return
-	}
+func checkParserErrors(t *testing.T, p *parser.GeneratedParser) {
+    errors := p.parser.Errors() // Access errors from the generated parser
+    if len(errors) == 0 {
+        return
+    }
 
-	t.Errorf("parser had %d errors", len(errors))
-	for _, msg := range errors {
-		t.Errorf("parser error: %q", msg)
-	}
-	t.FailNow()
+    t.Errorf("parser had %d errors", len(errors))
+    for _, msg := range errors {
+        t.Errorf("parser error: %q", msg)
+    }
+    t.FailNow()
 }

@@ -15,8 +15,7 @@ func TestLetStatement(t *testing.T) {
     `
 
 	l := scanner.NewHandcodedScanner(input)
-	p := New(l)
-
+	p := parser.NewGeneratedParser(l) // Use the generated parser
 	program := p.ParseProgram()
 	checkParserErrors(t, p)
 
