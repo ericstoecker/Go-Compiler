@@ -66,6 +66,36 @@ func (c *Choice) Precedence() int {
 
 func (c *Choice) rightSide() {}
 
+// **Add Missing Types**
+
+type Empty struct{}
+
+func (e *Empty) rightSide() {}
+
+func (e *Empty) Precedence() int {
+	return 0
+}
+
+type Optional struct {
+	Item RightSide
+}
+
+func (o *Optional) rightSide() {}
+
+func (o *Optional) Precedence() int {
+	return 0
+}
+
+type ZeroOrMore struct {
+	Item RightSide
+}
+
+func (z *ZeroOrMore) rightSide() {}
+
+func (z *ZeroOrMore) Precedence() int {
+	return 0
+}
+
 type Identifier struct {
 	Name Category
 }
