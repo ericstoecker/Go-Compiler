@@ -2,24 +2,88 @@ package parser
 
 import (
 	"compiler/ast"
+	"compiler/grammar"
+	"compiler/parsergenerator"
 	"compiler/scanner"
 	"compiler/token"
 	"testing"
 )
 
+var productions = []grammar.Production{
+	// todo add productions
+	&grammar.NonTerminal{
+		Name: "Program",
+		RightSide: &grammar.Choice{
+			Items: []grammar.RightSide{
+				&grammar.Identifier{Name: "Statement"},
+				&grammar.Sequence{
+					Items: []*grammar.Identifier{
+						&grammar.Identifier{Name: "Statement"},
+						&grammar.Identifier{Name: "Program"},
+					},
+				},
+			},
+		},
+		Handler: nil,
+	},
+	&grammar.NonTerminal{
+		Name:      "Statement",
+		RightSide: &grammar.Identifier{Name: "LetStatement"},
+	},
+	&grammar.NonTerminal{
+		Name: "LetStatement",
+		RightSide: &grammar.Sequence{
+			Items: []*grammar.Identifier{
+				&grammar.Identifier{Name: "Let"},
+				&grammar.Identifier{Name: "Identifier"},
+				&grammar.Identifier{Name: "Assign"},
+				&grammar.Identifier{Name: "Integer"},
+				&grammar.Identifier{Name: "Semicolon"},
+			},
+		},
+	},
+	// todo add precedence for terminals
+	&grammar.Terminal{
+		Name:   "Let",
+		Regexp: "let",
+	},
+	&grammar.Terminal{
+		Name:   "Assign",
+		Regexp: "=",
+	},
+	&grammar.Terminal{
+		Name:   "Semicolon",
+		Regexp: ";",
+	},
+	&grammar.Terminal{
+		Name: "Identifier",
+		// Regexp: "[a-z]([a-z]|[A-Z])*",
+		Regexp: "x",
+	},
+	&grammar.Terminal{
+		Name:   "Integer",
+		Regexp: "[0-9]([0-9])*",
+	},
+}
+var generatedParser = parsergenerator.New(productions)
+
 func TestLetStatement(t *testing.T) {
 	input := `
     let x = 5;
-    let y = 10;
-    let foobar = 6934;
-    `
+	`
+	// let y = 10;
+	// let foobar = 6934; `
 
-	l := scanner.NewHandcodedScanner(input)
-	p := New(l)
+	// checkParserErrors(t, p)
+	node, err := generatedParser.Parse(input)
+	if err != nil {
+		t.Fatalf("error when parsing input '%s': %v", input, err)
+	}
 
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
-
+	program, ok := node.(*ast.Program)
+	if !ok {
+		t.Fatalf("Expected a program. Got %T", node)
+	}
 	expectNotNil(t, program)
 
 	if len(program.Statements) != 3 {

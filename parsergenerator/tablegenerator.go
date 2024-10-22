@@ -534,5 +534,5 @@ func flattenNonTerminal(nt *grammar.NonTerminal) []grammar.Production {
 		}
 		return flattenedChoice
 	}
-	panic(fmt.Sprintf("unexpected Right Side of type %T when flattening NonTerminal", nt))
+	panic(fmt.Sprintf("unexpected Right Side of type %T when flattening NonTerminal '%s'", nt, nt.Name))
 }
