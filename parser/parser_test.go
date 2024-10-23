@@ -56,9 +56,8 @@ var productions = []grammar.Production{
 		Regexp: ";",
 	},
 	&grammar.Terminal{
-		Name: "Identifier",
-		// Regexp: "[a-z]([a-z]|[A-Z])*",
-		Regexp: "x",
+		Name:   "Identifier",
+		Regexp: "[a-z]([a-z]|[A-Z])*",
 	},
 	&grammar.Terminal{
 		Name:   "Integer",
